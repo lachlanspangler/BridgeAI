@@ -5,12 +5,13 @@
  */
 import { createCanvas, loadImage, type Image } from '@napi-rs/canvas';
 import { spawn } from 'node:child_process';
-import { resolve } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import type { Asset, Timeline } from '../../core/schema.ts';
 import { drawFrame, type FrameOptions } from '../../core/scenes/frame.ts';
 import type { Ctx, Img } from '../../core/scenes/kit.ts';
 import { ensureFonts } from '../fonts.ts';
-import { requireFfmpeg } from '../ffmpeg.ts';
+import { requireFfmpeg, runFfmpeg } from '../ffmpeg.ts';
 
 export interface RenderOptions extends FrameOptions {
   out: string;
@@ -44,10 +45,14 @@ export async function renderVideo(
 ): Promise<{ frames: number; ms: number }> {
   ensureFonts();
   const ff = requireFfmpeg();
+  const totalFrames = Math.ceil(tl.duration * tl.fps);
+  const { workerCount } = await import('./parts.ts');
+  const n = workerCount(totalFrames);
+  if (n > 1) return renderParallel(tl, opts, totalFrames, n);
   const assets = await loadAssets(opts.jobDir, opts.assets);
   const W = tl.width;
   const H = tl.height;
-  const total = Math.ceil(tl.duration * tl.fps);
+  const total = totalFrames;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d') as unknown as Ctx;
   const args = [
@@ -140,4 +145,31 @@ export async function renderStill(
   const canvas = createCanvas(tl.width, tl.height);
   drawFrame(canvas.getContext('2d') as unknown as Ctx, tl, t, imgs, opts);
   return canvas.toBuffer('image/png');
+}
+
+/** Long videos: parallel parts, then a lossless concat muxed with audio (+ subtitles). */
+async function renderParallel(tl: Timeline, opts: RenderOptions, total: number, n: number): Promise<{ frames: number; ms: number }> {
+  const t0 = performance.now();
+  const { renderParts } = await import('./parts.ts');
+  const tmp = join(opts.jobDir, 'tmp');
+  mkdirSync(tmp, { recursive: true });
+  const frame: FrameOptions = { burnCaptions: opts.burnCaptions, origin: opts.origin, engine: opts.engine, kicker: opts.kicker };
+  const parts = await renderParts(
+    { tl, jobDir: opts.jobDir, assets: opts.assets, frame, preset: opts.preset ?? 'fast', crf: opts.crf ?? 20 },
+    total,
+    n,
+    tmp,
+    (done) => opts.onProgress?.(Math.min(done, total - 1), total),
+    opts.signal,
+  );
+  const list = join(tmp, 'parts.txt');
+  writeFileSync(list, parts.map((p) => `file '${p.replace(/'/g, "'\\''")}'`).join('\n'));
+  const args = ['-f', 'concat', '-safe', '0', '-i', list, '-i', opts.audioWav];
+  if (opts.srt) args.push('-i', opts.srt);
+  args.push('-map', '0:v', '-map', '1:a');
+  if (opts.srt) args.push('-map', '2:s', '-c:s', 'mov_text', '-metadata:s:s:0', 'language=eng');
+  args.push('-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart', '-t', tl.duration.toFixed(3), opts.out);
+  await runFfmpeg(args);
+  opts.onProgress?.(total, total);
+  return { frames: total, ms: Math.round(performance.now() - t0) };
 }
