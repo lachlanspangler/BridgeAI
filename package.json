@@ -1,0 +1,57 @@
+{
+  "name": "bridge-explainer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bridge: paste a paper, project or images, get a short, colourful, faithful explainer video. Local-first, free path with zero keys.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "bin": {
+    "bridge": "./bin/bridge.mjs"
+  },
+  "scripts": {
+    "bridge": "tsx src/cli/main.ts",
+    "dev": "tsx scripts/dev.ts",
+    "build:web": "vite build --config web/vite.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "fmt": "prettier --write .",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "ideas": "tsx scripts/ideas.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.18",
+    "@napi-rs/canvas": "^1.1.0",
+    "@napi-rs/keyring": "^1.3.0",
+    "fflate": "^0.8.3",
+    "hono": "^4.13.16",
+    "kokoro-js": "^1.2.1",
+    "node-llama-cpp": "^3.22.2",
+    "pdfjs-dist": "^4.10.38",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "@playwright/test": "1.56",
+    "@types/node": "^20.19.43",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.10",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "5.9",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^7.3.7",
+    "vitest": "3.2"
+  }
+}

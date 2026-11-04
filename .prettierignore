@@ -1,0 +1,9 @@
+node_modules
+dist
+web/dist
+artifacts
+docs
+evals/sources
+tests/fixtures
+*.md
+package-lock.json

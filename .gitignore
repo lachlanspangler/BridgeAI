@@ -1,0 +1,17 @@
+node_modules/
+dist/
+web/dist/
+.bridge/
+artifacts/
+test-results/
+playwright-report/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+*.tmp
+.DS_Store
+# secrets: never commit
+keys.json
+*.key

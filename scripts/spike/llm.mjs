@@ -1,0 +1,14 @@
+import { getLlama, LlamaChatSession } from 'node-llama-cpp';
+const t0 = performance.now();
+const llama = await getLlama();
+const model = await llama.loadModel({ modelPath: process.env.HOME + '/Library/Application Support/LachedInAI/models/Qwen3.5-4B-Q4_K_M.gguf' });
+const ctx = await model.createContext({ contextSize: 8192 });
+const session = new LlamaChatSession({ contextSequence: ctx.getSequence() });
+console.log('load ms', Math.round(performance.now() - t0));
+const grammar = await llama.createGrammarForJsonSchema({ type: 'object', properties: { ideas: { type: 'array', items: { type: 'object', properties: { idea: { type: 'string' }, importance: { type: 'integer' } }, required: ['idea','importance'] } } }, required: ['ideas'] });
+const abs = 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles, by over 2 BLEU.';
+const t1 = performance.now();
+let n = 0;
+const out = await session.prompt(`List the 3 most important ideas of this abstract, importance 1-5.\n\n${abs}`, { grammar, maxTokens: 400, onTextChunk: () => n++ , budgets: { thoughtTokens: 0 } });
+const ms = performance.now() - t1;
+console.log(out); console.log('gen ms', Math.round(ms), 'chunks', n, 'tok/s~', (n / (ms/1000)).toFixed(1));
