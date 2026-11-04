@@ -97,7 +97,7 @@ ${segments.map((s) => renderSegment(s)).join('\n')}
 ${figText}
 TASK: find the ${maxIdeas} most important ideas in this source for a learner, most important first.
 - statement: one plain sentence (≤ 20 words) in simple words. It must be true according to the source.
-- importance: 5 = the main point the source exists to make; 4 = a key result or the core method; 3 = useful support; 1–2 = detail.
+- importance: 5 = the main point the source exists to make (for a project: what it IS and what it does, from the README's opening, not one API example); 4 = a key result or the core method; 3 = useful support; 1–2 = detail.
 - evidence: 1–2 items. segmentId must be one of the [ids] above. quote must be copied exactly from that segment (≤ 25 words).
 - numbers: the numbers in your quotes that matter, copied exactly with units (e.g. "28.4 BLEU"). [] if none.
 - terms: 1–3 key words or names, copied from the source.
