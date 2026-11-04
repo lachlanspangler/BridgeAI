@@ -5,7 +5,7 @@
  */
 import { createCanvas, loadImage, type Image } from '@napi-rs/canvas';
 import { spawn } from 'node:child_process';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import type { Asset, Timeline } from '../../core/schema.ts';
 import { drawFrame, type FrameOptions } from '../../core/scenes/frame.ts';
 import type { Ctx, Img } from '../../core/scenes/kit.ts';
@@ -29,7 +29,7 @@ export async function loadAssets(jobDir: string, assets: Asset[]): Promise<Map<s
   const out = new Map<string, Img>();
   for (const a of assets) {
     try {
-      const img: Image = await loadImage(join(jobDir, a.path));
+      const img: Image = await loadImage(resolve(jobDir, a.path));
       out.set(a.id, { image: img as unknown as CanvasImageSource, width: img.width, height: img.height });
     } catch {
       /* a missing asset renders as a statement fallback */
