@@ -121,7 +121,7 @@ export async function runPipeline(
   onProgress({ stage: 'faith', progress: 0, message: 'Checking every claim against the source' });
   const faith = await lap('faith', async () => {
     script = repairCitations(script, src).script;
-    const checks = checkScript(script, src);
+    const checks = checkScript(script, src, { judgeNumbers: !!engines.judge });
     const judged = new Map<string, boolean>();
     if (engines.judge) {
       for (const c of checks)

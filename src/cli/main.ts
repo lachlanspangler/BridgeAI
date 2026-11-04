@@ -44,8 +44,8 @@ async function make(args: string[]): Promise<void> {
   let src;
   if (input === '-') src = ingestText(readFileSync(0, 'utf8'), 'pasted text');
   else if (/^https?:\/\//.test(input)) src = await ingestInput({ url: input }, srcDir);
-  else if (statSync(input).isDirectory()) src = await ingestInput({ files: readTree(input) }, srcDir);
-  else src = await ingestInput({ files: [{ name: basename(input), data: readFileSync(input) }] }, srcDir);
+  else if (statSync(input).isDirectory()) src = await ingestInput({ files: readTree(input), text: flag(args, 'note') }, srcDir);
+  else src = await ingestInput({ files: [{ name: basename(input), data: readFileSync(input) }], text: flag(args, 'note') }, srcDir);
   src = { ...src, assets: src.assets.map((a) => ({ ...a, path: resolve(srcDir, a.path) })) };
   console.log(
     `source   ${src.kind} · "${src.title}" · ${src.stats.words} words · ${src.segments.length} segments · ${src.assets.length} figures${src.warnings.length ? ` · ${src.warnings.join('; ')}` : ''}`,

@@ -21,6 +21,8 @@ import {
 export interface CheckOptions {
   /** Minimum content-word overlap for a claim to pass without the judge. */
   minOverlap?: number;
+  /** Send every claim that contains a number to the judge (set when a judge exists). */
+  judgeNumbers?: boolean;
 }
 
 export interface BeatCheck {
@@ -275,6 +277,19 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       continue;
     }
     const ov = coverage(c.text, sup);
+    // numbers are where small models mislead most ("9 new each year" when 9 is emissions and 4 is net): a claim
+    // with a number always goes to the judge (when one is available; without a judge, overlap decides)
+    if (ov >= minOverlap && numbers(c.text).length && opts.judgeNumbers) {
+      needsJudge.push({ claim: c.text, support: sup, context: beat.narration });
+      verdicts.push({
+        beatId: beat.id,
+        claim: c.text,
+        verdict: 'unsupported',
+        by: 'overlap',
+        reason: 'number claim (needs judge)',
+      });
+      continue;
+    }
     if (ov >= minOverlap)
       verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'supported', by: 'overlap' });
     else {

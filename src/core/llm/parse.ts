@@ -235,17 +235,28 @@ export function toVisual(
           .filter((n) => s(n.label))
           .slice(0, 5)
           .map((n, i) => ({
-            id: s(n.id) || `n${i}`,
+            id: `n${i}`,
+            orig: s(n.id),
             label: clampW(s(n.label), 4),
             tone: TONES[i % TONES.length]!,
           }));
         if (ns.length < 2) return fallback;
-        const ids = new Set(ns.map((n) => n.id));
-        let edges = ((Array.isArray(v.edges) ? v.edges : []) as { from?: string; to?: string }[])
-          .filter((e) => ids.has(s(e.from)) && ids.has(s(e.to)) && s(e.from) !== s(e.to))
-          .map((e) => ({ from: s(e.from), to: s(e.to) }));
+        // models reuse or omit ids; our ids are positional. Edges are kept only if the model's ids were unique.
+        const origs = ns.map((n) => n.orig);
+        const unique = origs.every((o) => o) && new Set(origs).size === origs.length;
+        const idOf = new Map(ns.map((n) => [n.orig, n.id]));
+        let edges = unique
+          ? ((Array.isArray(v.edges) ? v.edges : []) as { from?: string; to?: string }[])
+              .filter((e) => idOf.has(s(e.from)) && idOf.has(s(e.to)) && s(e.from) !== s(e.to))
+              .map((e) => ({ from: idOf.get(s(e.from))!, to: idOf.get(s(e.to))! }))
+          : [];
         if (!edges.length) edges = ns.slice(1).map((n, i) => ({ from: ns[i]!.id, to: n.id }));
-        return Visual.parse({ type: 'flow', title: s(v.title) || undefined, nodes: ns, edges });
+        return Visual.parse({
+          type: 'flow',
+          title: s(v.title) || undefined,
+          nodes: ns.map(({ orig: _o, ...n }) => n),
+          edges,
+        });
       }
       case 'compare':
         return Visual.parse({
@@ -404,5 +415,46 @@ export function parseScript(raw: unknown, src: Source, targetSeconds: number, en
         highlight: lb.keywords.slice(0, 1),
       },
     };
+  ensureFigure(beats, src);
   return Script.parse({ schema: 'bridge.script/1', title: src.title, targetSeconds, beats, engine });
+}
+
+/**
+ * Real pictures beat drawn ones: if the source has figures/images and no beat shows one, the idea beat whose
+ * words best match a figure's caption/OCR (or, for image sets, the first idea beat) shows that figure instead.
+ */
+export function ensureFigure(beats: Beat[], src: Source): void {
+  const figs = src.assets.filter((a) => a.kind !== 'page');
+  if (!figs.length || beats.some((b) => b.visual.type === 'figure')) return;
+  const candidates = beats
+    .map((b, i) => ({ b, i }))
+    .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway' && b.visual.type !== 'bigNumber');
+  if (!candidates.length) return;
+  let best = { i: -1, a: figs[0]!, score: -1 };
+  for (const { b, i } of candidates) {
+    for (const a of figs) {
+      const score = coverageOf(b.narration, `${a.caption ?? ''} ${a.ocr ?? ''}`);
+      if (score > best.score) best = { i, a, score };
+    }
+  }
+  if (src.kind !== 'images' && best.score < 0.25) return; // papers: only when a figure clearly matches
+  const i = best.i >= 0 && best.score > 0 ? best.i : candidates[0]!.i;
+  const b = beats[i]!;
+  beats[i] = {
+    ...b,
+    visual: {
+      type: 'figure',
+      assetId: best.a.id,
+      caption: trimSentence(b.narration, 7).replace(/[.!?]$/, ''),
+    },
+  };
+}
+
+function coverageOf(a: string, b: string): number {
+  const A = new Set(contentWords(a).map(stem));
+  const B = new Set(contentWords(b).map(stem));
+  if (!A.size) return 0;
+  let n = 0;
+  for (const w of A) if (B.has(w)) n++;
+  return n / A.size;
 }

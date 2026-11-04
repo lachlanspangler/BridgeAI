@@ -152,7 +152,7 @@ export async function ingestImages(files: InputFile[], dir: string, notes?: stri
     noteLines[0] && wordCount(noteLines[0]) <= 12
       ? noteLines[0]
       : assets.length === 1
-        ? assets[0]!.caption!
+        ? assets[0]!.caption!.charAt(0).toUpperCase() + assets[0]!.caption!.slice(1)
         : `${assets.length} images`;
   return {
     schema: 'bridge.source/1',

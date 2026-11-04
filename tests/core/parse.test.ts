@@ -220,3 +220,20 @@ describe('script de-duplication', () => {
     expect(s.beats.length).toBeLessThanOrEqual(4);
   });
 });
+
+describe('visual repairs', () => {
+  it('flow nodes with duplicate model ids still get distinct positions and a chain of edges', () => {
+    const f = toVisual({ type: 'flow', title: 't', nodes: [{ id: 's1', label: 'A' }, { id: 's1', label: 'B' }, { id: 's1', label: 'C' }], edges: [{ from: 's1', to: 's1' }] }, src, 'n', []);
+    expect(f.type).toBe('flow');
+    if (f.type === 'flow') {
+      expect(new Set(f.nodes.map((n) => n.id)).size).toBe(3);
+      expect(f.edges).toEqual([{ from: 'n0', to: 'n1' }, { from: 'n1', to: 'n2' }]);
+    }
+  });
+  it('an image source always shows its image somewhere', () => {
+    const img = { ...src, kind: 'images' as const, assets: [{ id: 'a1', kind: 'image' as const, path: 'x.png', width: 10, height: 10, caption: 'carbon cycle', loc: {} }] };
+    const b = (role: string, narration: string) => ({ role, narration, visual: { type: 'statement', text: narration, highlight: [] }, claims: [{ text: narration, support: [abs], kind: 'fact' }], keywords: [] });
+    const s = parseScript({ title: 't', beats: [b('hook', 'Look at this.'), b('idea', 'Carbon moves between air and sea.'), b('takeaway', 'Carbon cycles.')] }, img, 20, 'test');
+    expect(s.beats.some((x) => x.visual.type === 'figure')).toBe(true);
+  });
+});
