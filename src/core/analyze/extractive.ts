@@ -211,7 +211,12 @@ export function rawNumbers(text: string): string[] {
 export function garbled(t: string): boolean {
   const ws = t.split(/\s+/).filter(Boolean);
   if (!ws.length) return true;
-  if (ws.some((w) => /^[A-Za-z]{19,}$/.test(w) && !/^[a-z]+$/.test(w))) return true; // glued words
+  // glued words from figure text: a long token made of several little words ("TheLawwillneverbe")
+  const glued = (w: string) =>
+    w.length >= 12 &&
+    /^[A-Za-z]+$/.test(w) &&
+    (w.toLowerCase().match(/the|will|never|and|that|with|be|is|of|to|was|are/g) ?? []).length >= 3;
+  if (ws.some(glued)) return true;
   const letters = (t.match(/[A-Za-z]/g) ?? []).length;
   if (letters / t.length < 0.6) return true; // mostly symbols/math
   const short = ws.filter((w) => w.replace(/[^A-Za-z]/g, '').length <= 1).length;
