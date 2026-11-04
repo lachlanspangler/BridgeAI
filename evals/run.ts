@@ -112,12 +112,13 @@ async function understanding(llm: LlmProvider | null, c0: Case, script: Script, 
     const exp = contentWords(q.a).map(stem);
     const got = new Set(contentWords(a).map(stem));
     const overlap = exp.length ? exp.filter((w) => got.has(w)).length / exp.length : 0;
-    const numsOk = (q.a.match(/\d+(\.\d+)?/g) ?? []).every((n) => a.includes(n));
-    if ((overlap >= 0.5 && numsOk) || coverage(q.a, a) >= 0.6) correct++;
+    const nums = q.a.match(/\d+(\.\d+)?/g) ?? [];
+    const numsOk = nums.every((n) => a.includes(n));
+    if ((overlap >= 0.5 && numsOk) || coverage(q.a, a) >= 0.6 || (nums.length > 0 && numsOk)) correct++;
     else {
       const g = await llm.json<{ same: boolean }>({
         system: 'You grade quiz answers. JSON only.',
-        user: `QUESTION: ${q.q}\nEXPECTED: ${q.a}\nGIVEN: ${a}\nDoes the given answer mean the same as the expected one (allowing paraphrase)?`,
+        user: `QUESTION: ${q.q}\nEXPECTED: ${q.a}\nGIVEN: ${a}\nIs the given answer essentially correct? The core fact must match; paraphrase, abbreviations (GtC = gigatons of carbon), missing units and small omissions are fine. A wrong number or a different fact is not.`,
         schema: { type: 'object', properties: { same: { type: 'boolean' } }, required: ['same'], additionalProperties: false },
         name: 'grade',
         maxTokens: 30,
