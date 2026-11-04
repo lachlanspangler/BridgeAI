@@ -98,3 +98,23 @@ parts. `git init` (no remote). Pinned the public npm registry in `.npmrc`. Launc
 - Stopped iterating at C/C+ on the free path and froze the code for the final eval run. The rest of the gap to A is script quality from a small local model. The BYOK path uses the same prompts and gate with a frontier model, and it can't be rendered here without keys.
 
 **Next:** final EVALS, samples into docs/media, STATUS, shut down, clean tree.
+
+## 2026-11-04 16:30: Closing the last 20-second misses (and two faithfulness holes they exposed)
+**Did:**
+- Final eval runs on frozen code, read case by case. Each 20 s miss had a real cause, not noise:
+  - **Attention:** the beat that said "Transformer" was dropped by the length fit after the name check had passed. Beats that carry the subject's name, the definition or the main idea are now marked core, so the fit loop can't drop them.
+  - **Plates / attention:** the main-idea check passed on *citing* the right segment. It now needs the words said (≥60 % of the idea's content words when the model gave no terms).
+  - **Climate:** no definition sentence existed. New fallback: the earliest lead sentence that names most of a descriptive title.
+  - **Global temperature:** `numbers()` read "1951-1980" as 1951 and −1980, so a correct line was rejected.
+  - **Carbon:** the narration said "the 10,000-ton fossil reserve" but the source's unit is gigatons. The number check didn't look at units. A unit attached to a number must now be one the source uses.
+  - **Carbon:** a takeaway read "Fossil fuels, cement, and land-use change 9.", a diagram label taken as a sentence. Now filtered as garbled.
+  - **vLLM:** a PDF sentence with chart ticks spliced in ("al- 0.4k gorithm … pag0 10 20 30 40 ing") reached the narration. Tick runs and broken-word-then-number are now garbled.
+- Narration is always third person. "We" is named "the authors" once, then "they". Quotes are untouched.
+- Short videos whose idea beats are all core drop a title card or takeaway before overrunning. 20 s timing went from 12/18 to 18/18 within ±10 %.
+- Disclosed the three widened answer keys in `evals/README.md`.
+
+**Learned:**
+- The unit bug matters most: the eval reported 0 unsupported while a video said "ton" for "gigaton". The deterministic checks only know what they check. Reading every 20 s script by hand found it; the metric didn't.
+- A protection added in one pass (the name rule) can be undone by a later pass (length fit). Protections have to travel with the beat (the `core` tag), not be checked once.
+
+**Next:** the final eval on this code, samples into docs/media, STATUS, clean tree.
