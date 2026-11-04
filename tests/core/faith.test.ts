@@ -90,3 +90,11 @@ describe('faithfulness checks', () => {
     expect(g.report.verdicts.some((v) => v.by === 'judge' && v.verdict === 'supported')).toBe(true);
   });
 });
+
+describe('overstatement check', () => {
+  it('rejects hype and absolutes the source does not use', () => {
+    expect(checkBeat(beat('The Transformer translates better than ever before.'), src).ok).toBe(false);
+    expect(checkBeat(beat('Attention beats recurrence every time.'), src).ok).toBe(false);
+    expect(checkBeat(beat('The Transformer is based solely on attention mechanisms.'), src).ok).toBe(true);
+  });
+});

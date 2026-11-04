@@ -158,14 +158,14 @@ WRITE A ${b.seconds}-SECOND VIDEO SCRIPT for ${LEVEL_TEXT[ctx.level]}.
 LENGTH: about ${b.words} spoken words in total (${b.wordsPerSecond} words per second). Each beat's narration: ${b.wordsPerBeat.min}–${b.wordsPerBeat.max} words. Count them.
 SHAPE: ${shape}
 RULES:
-1. Hook (first beat): start with the most surprising or useful fact, a sharp question, or the result first. No "hi", no "in this video", no "today". Visual: the one that SHOWS the hook fact (compare, bigNumber, flow…); use "title" only if nothing else fits.
+1. Hook (first beat): start with the most surprising or useful FACT FROM THE EVIDENCE (it is fact-checked like every other beat), a sharp question, or the result first. No "hi", no "in this video", no "today". Visual: the one that SHOWS the hook fact (compare, bigNumber, flow…); use "title" only if nothing else fits.
 2. One idea per beat. Short sentences (≤ 15 words). Active voice. Talk to the viewer ("you").
-3. Use ONLY facts in EVIDENCE. Copy numbers exactly (you may round to 2 significant figures). Never invent numbers, names, comparisons or causes.
+3. Use ONLY facts in EVIDENCE. Copy numbers exactly (you may round to 2 significant figures). Never invent numbers, names, comparisons or causes. No hype or absolutes the source doesn't use ("ever", "always", "every time", "revolutionary").
 4. Every beat has claims: the facts it says, each with the [segment ids] that support them. Use kind "framing" only for a sentence with no facts (like "Here's the trick."). Mark an analogy as kind "analogy".
 5. Concrete before abstract: show the specific example or number, then the general idea.
 6. Every number gets a comparison or a meaning from the source ("over 2 BLEU better than the best before").
 7. keywords: 1–3 words from the narration to highlight on screen when they are said.
-8. Last beat: role "takeaway", visual "takeaway": the one thing to remember, ≤ 12 words.
+8. Exactly ONE takeaway: the last beat, role "takeaway", visual "takeaway": the one thing to remember, ≤ 12 words. Never repeat a point you already made.
 
 ${VISUAL_GUIDE}
 

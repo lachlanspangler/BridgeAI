@@ -84,6 +84,14 @@ export function missingNames(claim: string, haystack: string): string[] {
   });
 }
 
+/** Hype and absolutes that small models add ("than ever before", "every time"). Allowed only if the source says them. */
+const ABSOLUTES = /\b(than ever( before)?|every time|always|never|revolutioni[sz]\w*|game[- ]chang\w*|perfect(ly)?|guarantee[sd]?|completely|totally|unbeatable|the best ever|forever|instantly|flawless(ly)?|magic(al)?|smash(ing|es)? (old )?records?|blow(s)? away|crush(es|ing)?)\b/gi;
+
+export function missingAbsolutes(claim: string, support: string): string[] {
+  const hay = support.toLowerCase();
+  return [...new Set((claim.match(ABSOLUTES) ?? []).map((m) => m.toLowerCase()))].filter((m) => !hay.includes(m));
+}
+
 /** Acronyms and model-style names (BLEU, GPT-4, Qwen3) missing from the haystack. */
 export function missingAcronyms(text: string, haystack: string): string[] {
   const hay = haystack.toLowerCase();
@@ -176,6 +184,11 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       });
       continue;
     }
+    const hype = missingAbsolutes(c.text, sup);
+    if (hype.length) {
+      verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'unsupported', by: 'names', reason: `overstates: "${hype.join('", "')}" is not in the source` });
+      continue;
+    }
     const names = missingNames(c.text, `${sup}\n${src.title}`);
     if (names.length) {
       verdicts.push({
@@ -220,6 +233,11 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       ...visualStrings(beat.visual).map((s) => ['screen', s] as const),
     ] as const) {
       if (!text) continue;
+      const hype = missingAbsolutes(text, everything);
+      if (hype.length) {
+        verdicts.push({ beatId: beat.id, claim: text, verdict: 'unsupported', by: 'names', reason: `${what === 'screen' ? 'screen' : 'narration'} overstates: "${hype.join('", "')}"` });
+        continue;
+      }
       const nums = missingNumbers(text, hay);
       // on-screen labels are often Title Case, so only acronyms / model names count as names there
       const names =

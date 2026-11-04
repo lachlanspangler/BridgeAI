@@ -190,3 +190,18 @@ describe('model output parsing', () => {
     expect(sc).not.toContain('oneOf');
   });
 });
+
+describe('script de-duplication', () => {
+  it('keeps one takeaway and drops repeated beats', () => {
+    const b = (role: string, narration: string) => ({ role, narration, visual: { type: 'statement', text: narration, highlight: [] }, claims: [{ text: narration, support: [abs], kind: 'fact' }], keywords: [] });
+    const s = parseScript(
+      { title: 't', beats: [b('hook', 'The Transformer uses only attention.'), b('idea', 'It trains in 3.5 days on eight GPUs.'), b('takeaway', 'Attention alone replaces recurrence.'), b('takeaway', 'Attention alone replaces recurrence for speed.'), b('takeaway', 'The Transformer proves attention is all you need.')] },
+      src,
+      60,
+      'test',
+    );
+    expect(s.beats.filter((x) => x.role === 'takeaway').length).toBe(1);
+    expect(s.beats[s.beats.length - 1]!.role).toBe('takeaway');
+    expect(s.beats.length).toBeLessThanOrEqual(4);
+  });
+});

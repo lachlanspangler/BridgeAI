@@ -360,6 +360,26 @@ export function parseScript(raw: unknown, src: Source, targetSeconds: number, en
     });
   }
   if (!beats.length) throw new Error('the model returned no usable beats');
+  // one idea per beat, no filler: drop beats that repeat an earlier beat, keep only the LAST takeaway
+  const bag = (t: string) => new Set(contentWords(t).map(stem));
+  for (let i = beats.length - 1; i > 0; i--) {
+    const b = bag(beats[i]!.narration);
+    const dup = beats.slice(0, i).some((p) => {
+      const o = bag(p.narration);
+      let common = 0;
+      for (const w of b) if (o.has(w)) common++;
+      return common / Math.max(1, Math.min(b.size, o.size)) > 0.7;
+    });
+    if (dup && beats.length > 2) beats.splice(i, 1);
+  }
+  const lastTake = beats.map((b) => b.role).lastIndexOf('takeaway');
+  for (let i = beats.length - 2; i >= 1; i--) {
+    if (beats[i]!.role === 'takeaway' && i !== lastTake) {
+      // a mid-script "takeaway" is usually a repeat; keep it only as an idea if it's not near the end
+      if (i >= beats.length - 3) beats.splice(i, 1);
+      else beats[i] = { ...beats[i]!, role: 'idea' };
+    }
+  }
   // shape guarantees: first beat is a hook with a title card, last is a takeaway
   if (beats[0]!.role !== 'hook') beats[0] = { ...beats[0]!, role: 'hook' };
   // a title card on the hook always shows the source's real title (model titles can overclaim)
