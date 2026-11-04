@@ -340,17 +340,19 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
       const bottom = block.y - 2;
       if (bottom - top < pg.h * 0.08) continue;
       const page = await doc.getPage(block.page);
-      const vp = page.getViewport({ scale: FIG_SCALE });
+      const base = page.getViewport({ scale: 1 });
+      const scale = Math.min(FIG_SCALE, 6000 / Math.max(base.width, base.height)); // huge MediaBox guard
+      const vp = page.getViewport({ scale });
       // render with pdfjs's own canvas factory (its bundled @napi-rs/canvas); mixing canvas builds hangs render()
       const factory = (doc as unknown as { canvasFactory: CanvasFactory }).canvasFactory;
       const full = factory.create(Math.ceil(vp.width), Math.ceil(vp.height));
       full.context.fillStyle = '#fff';
       full.context.fillRect(0, 0, full.canvas.width, full.canvas.height);
       await page.render({ canvasContext: full.context, viewport: vp } as never).promise;
-      const sx = Math.floor(left * FIG_SCALE);
-      const sy = Math.floor(top * FIG_SCALE);
-      const sw = Math.ceil((right - left) * FIG_SCALE);
-      const sh = Math.ceil((bottom - top) * FIG_SCALE);
+      const sx = Math.floor(left * scale);
+      const sy = Math.floor(top * scale);
+      const sw = Math.ceil((right - left) * scale);
+      const sh = Math.ceil((bottom - top) * scale);
       const crop = factory.create(sw, sh);
       crop.context.drawImage(full.canvas, sx, sy, sw, sh, 0, 0, sw, sh);
       factory.destroy(full);

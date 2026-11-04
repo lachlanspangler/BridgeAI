@@ -12,6 +12,7 @@ import { RenderSettings } from '../core/schema.ts';
 import { ingestText } from '../core/ingest/text.ts';
 import { runPipeline, type Progress } from '../node/pipeline.ts';
 import { pickEngines } from '../node/select.ts';
+import { redact } from '../node/keys/redact.ts';
 import { loadConfig, saveConfig } from '../node/config.ts';
 import { existsSync } from 'node:fs';
 import { paths } from '../node/paths.ts';
@@ -134,6 +135,25 @@ async function main(): Promise<void> {
       return make(rest);
     case 'models':
       return models(rest);
+    case 'keys': {
+      const { keyStatus, setKey, removeKey, isProvider } = await import('../node/keys/keystore.ts');
+      const [sub, prov] = rest;
+      if ((sub === 'set' || sub === 'remove') && (!prov || !isProvider(prov))) throw new Error('usage: bridge keys set|remove <anthropic|openai|gemini|openrouter|elevenlabs>');
+      if (sub === 'set') {
+        // read the key from stdin so it never lands in shell history or argv
+        const key = readFileSync(0, 'utf8').trim();
+        await setKey(prov as never, key);
+        console.log(`✓ ${prov} key saved`);
+        return;
+      }
+      if (sub === 'remove') {
+        await removeKey(prov as never);
+        console.log(`✓ ${prov} key removed`);
+        return;
+      }
+      for (const k of await keyStatus()) console.log(`${k.present ? '✓' : '·'} ${k.provider.padEnd(11)} ${k.present ? `${k.masked} (${k.source})` : 'not set'}`);
+      return;
+    }
     case 'doctor':
     case 'heal': {
       const { runDoctor, formatChecks } = await import('../node/doctor.ts');
@@ -148,6 +168,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((e: unknown) => {
-  console.error(`✗ ${e instanceof Error ? e.message : String(e)}`);
+  console.error(`✗ ${redact(e instanceof Error ? e.message : String(e))}`);
   process.exit(1);
 });

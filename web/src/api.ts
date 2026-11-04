@@ -142,7 +142,8 @@ export const api = {
     fetch(`/api/keys/${p}/test`, json('POST', {})).then((r) =>
       j<{ ok: boolean; error?: string; model?: string }>(r),
     ),
-  openRouterStart: () => fetch('/api/oauth/openrouter/start').then((r) => j<{ url: string }>(r)),
+  openRouterStart: () =>
+    fetch('/api/oauth/openrouter/start', json('POST', {})).then((r) => j<{ url: string }>(r)),
   events: (id: string, onJob: (j: Job) => void): (() => void) => {
     const es = new EventSource(`/api/jobs/${id}/events`);
     es.onmessage = (e) => onJob(JSON.parse(e.data as string) as Job);

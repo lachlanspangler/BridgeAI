@@ -285,12 +285,24 @@ function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): vo
   const icon = v.icon && v.icon in ICONS ? v.icon : iconFor(`${v.highlight.join(' ')} ${v.text}`);
   const layout = (p.variant ?? 0) % 3;
   const tone = [p.theme.tone.primary, p.theme.tone.secondary, p.theme.tone.positive][layout]!;
-  const text = { maxPx: TYPE.headline * s, minPx: TYPE.body * s, maxLines: 4, weight: 700, enterAt: 0.12 } as const;
+  const text = {
+    maxPx: TYPE.headline * s,
+    minPx: TYPE.body * s,
+    maxLines: 4,
+    weight: 700,
+    enterAt: 0.12,
+  } as const;
   if (layout === 2) {
     // centred: icon above, words below
     const r = Math.min(b.h * 0.2, 130 * s);
     iconDisc(p, icon, W / 2, b.y + r * 1.25, r, tone, 0);
-    richText(p, v.text, v.highlight, { x: b.x + b.w * 0.06, y: b.y + r * 2.6, w: b.w * 0.88, h: b.h - r * 2.6 }, { ...text, maxLines: 3, align: 'center', tone });
+    richText(
+      p,
+      v.text,
+      v.highlight,
+      { x: b.x + b.w * 0.06, y: b.y + r * 2.6, w: b.w * 0.88, h: b.h - r * 2.6 },
+      { ...text, maxLines: 3, align: 'center', tone },
+    );
     return;
   }
   const r = Math.min(b.h * 0.3, 210 * s);

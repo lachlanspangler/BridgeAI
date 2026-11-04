@@ -325,23 +325,34 @@ export type LengthPreset = z.infer<typeof LengthPreset>;
 export const Level = z.enum(['newcomer', 'practitioner', 'expert']);
 export type Level = z.infer<typeof Level>;
 
+/** Engine ids: a fixed set, optionally with a model slug ("openrouter:anthropic/claude-sonnet-5.5"). Never a path. */
+export const EngineSpec = z
+  .string()
+  .regex(
+    /^(auto|local|extractive|system|kokoro|openai-tts|anthropic|openai|gemini|openrouter|elevenlabs)(:[A-Za-z0-9._/-]{1,100})?$/,
+  )
+  .refine((x) => !x.includes('..'), 'bad engine id');
+
 export const RenderSettings = z.object({
   seconds: z.number().min(10).max(900),
   level: Level.default('newcomer'),
   /** Kokoro voice id or provider voice. */
-  voice: z.string().default('af_heart'),
+  voice: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{0,64}$/)
+    .default('af_heart'),
   captions: z.enum(['burned', 'track', 'both', 'off']).default('both'),
   music: z.boolean().default(true),
   sfx: z.boolean().default(true),
   /** Provider ids per stage; "auto" picks the best available. */
-  llm: z.string().default('auto'),
-  tts: z.string().default('auto'),
-  width: z.number().int().default(1920),
-  height: z.number().int().default(1080),
-  fps: z.number().int().default(30),
+  llm: EngineSpec.default('auto'),
+  tts: EngineSpec.default('auto'),
+  width: z.number().int().min(320).max(3840).default(1920),
+  height: z.number().int().min(180).max(2160).default(1080),
+  fps: z.number().int().min(12).max(60).default(30),
   seed: z.number().int().default(7),
   /** Pinned/dropped idea ids from the review step. */
-  pin: z.array(z.string()).default([]),
-  drop: z.array(z.string()).default([]),
+  pin: z.array(z.string().max(40)).max(200).default([]),
+  drop: z.array(z.string().max(40)).max(200).default([]),
 });
 export type RenderSettings = z.infer<typeof RenderSettings>;

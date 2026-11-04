@@ -55,7 +55,7 @@ export async function pickEngines(opts: {
   const p = opts.providers ? await opts.providers(opts.llm) : null;
   if (!p)
     throw new Error(
-      `provider "${opts.llm}" is not configured: add a key in Settings or run \`bridge keys set ${opts.llm}\``,
+      `provider "${opts.llm}" is not configured: add a key in Settings or run \`echo <key> | npx tsx src/cli/main.ts keys set ${opts.llm}\``,
     );
   return { engines: aiEngines(p, tts, opts.log), label: `${p.id}:${p.model}` };
 }

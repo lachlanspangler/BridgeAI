@@ -2,13 +2,15 @@
  * Bridge's local HTTP API + the built web app. Created by `createApp` so tests can drive it without a socket.
  * Bound to 127.0.0.1 by src/server/main.ts. See ADR 0006 for the localhost threat model.
  */
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { stream } from 'hono/streaming';
 import { appendFileSync, createReadStream, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
+import { extname, join, resolve, sep } from 'node:path';
+import { createHash } from 'node:crypto';
+import { bodyLimit } from 'hono/body-limit';
 import { Readable } from 'node:stream';
 import { budgetFor, describeBudget, PRESETS } from '../core/budget.ts';
-import { RenderSettings, Source, type Analysis } from '../core/schema.ts';
+import { EngineSpec, RenderSettings, Source, type Analysis } from '../core/schema.ts';
 import { runDoctor } from '../node/doctor.ts';
 import { ingestInput, MAX_UPLOAD_BYTES, type InputFile } from '../node/ingest/index.ts';
 import { JobQueue, jobDir, newId, sourceDir, ID_RE, type JobRecord } from '../node/jobs/queue.ts';
@@ -70,6 +72,10 @@ function summary(src: Source) {
   };
 }
 
+/** Cached analysis per engine; the engine id is hashed so it can never become a path. */
+const analysisFile = (srcId: string, llm: string) =>
+  join(sourceDir(srcId), `analysis-${createHash('sha256').update(llm).digest('hex').slice(0, 16)}.json`);
+
 function loadSource(id: string): Source | null {
   const f = join(sourceDir(id), 'source.json');
   return existsSync(f) ? Source.parse(JSON.parse(readFileSync(f, 'utf8'))) : null;
@@ -78,6 +84,18 @@ function loadSource(id: string): Source | null {
 export function createApp(opts: AppOptions) {
   const app = new Hono();
   app.use('*', guard(opts.port));
+  // body limits apply while streaming, not after buffering (chunked uploads have no content-length)
+  const tooBig = (c: Context) =>
+    c.json({ error: `upload too large (limit ${MAX_UPLOAD_BYTES / 1e6} MB)` }, 413);
+  app.use('/api/sources', bodyLimit({ maxSize: MAX_UPLOAD_BYTES + 1_000_000, onError: tooBig }));
+  app.use('/api/*', async (c, next) =>
+    c.req.path === '/api/sources' ? next() : bodyLimit({ maxSize: 256 * 1024, onError: tooBig })(c, next),
+  );
+  // never leak internals (or a key inside an error) to stderr or the client
+  app.onError((e, c) => {
+    console.error(redact(String((e as Error)?.stack ?? e)));
+    return c.json({ error: 'internal error' }, 500);
+  });
 
   const defaultRunner: ConstructorParameters<typeof JobQueue>[0] = async (job, onProgress, signal) => {
     const src = loadSource(job.sourceId);
@@ -96,7 +114,7 @@ export function createApp(opts: AppOptions) {
       log,
     });
     // reuse the reviewed idea list if the user looked at it (pins/drops apply on top)
-    const cached = join(sourceDir(job.sourceId), `analysis-${job.settings.llm}.json`);
+    const cached = analysisFile(job.sourceId, job.settings.llm);
     if (existsSync(cached)) {
       const a = JSON.parse(readFileSync(cached, 'utf8')) as Analysis;
       engines.analyze = async () => a;
@@ -172,7 +190,7 @@ export function createApp(opts: AppOptions) {
         const j = (await c.req.json()) as { text?: string; url?: string; title?: string };
         input = { text: j.text, url: j.url, title: j.title };
       }
-      const src = Source.parse(await ingestInput(input, dir));
+      const src = Source.parse(await ingestInput(input, dir, AbortSignal.timeout(120_000)));
       writeFileSync(join(dir, 'source.json'), JSON.stringify(src));
       return c.json({ id, source: summary(src) });
     } catch (e) {
@@ -196,8 +214,10 @@ export function createApp(opts: AppOptions) {
     const src = loadSource(id);
     if (!src) return c.json({ error: 'not found' }, 404);
     const body = (await c.req.json().catch(() => ({}))) as { seconds?: number; llm?: string };
-    const llm = typeof body.llm === 'string' && /^[a-z0-9:/._-]{1,80}$/i.test(body.llm) ? body.llm : 'auto';
-    const cached = join(sourceDir(id), `analysis-${llm}.json`);
+    const spec = EngineSpec.safeParse(body.llm ?? 'auto');
+    if (!spec.success) return c.json({ error: 'bad engine id' }, 400);
+    const llm = spec.data;
+    const cached = analysisFile(id, llm);
     if (existsSync(cached)) return c.json(JSON.parse(readFileSync(cached, 'utf8')));
     try {
       const { engines } = await pickEngines({ llm, tts: 'system', providers: providerFromKeys });
@@ -217,7 +237,7 @@ export function createApp(opts: AppOptions) {
     const a = src?.assets.find((x) => x.id === asset);
     if (!a) return c.json({ error: 'not found' }, 404);
     const file = resolve(sourceDir(id), a.path);
-    if (!file.startsWith(sourceDir(id))) return c.json({ error: 'bad path' }, 400);
+    if (!file.startsWith(sourceDir(id) + sep)) return c.json({ error: 'bad path' }, 400);
     return new Response(readFileSync(file), {
       headers: { 'content-type': a.path.endsWith('.jpg') ? 'image/jpeg' : 'image/png' },
     });
@@ -306,8 +326,17 @@ export function createApp(opts: AppOptions) {
       headers['content-disposition'] = `attachment; filename="bridge-${id}-${name}"`;
     const range = c.req.header('range')?.match(/^bytes=(\d*)-(\d*)$/);
     if (range && name === 'video.mp4') {
-      const start = range[1] ? Number(range[1]) : 0;
-      const end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      let start: number;
+      let end: number;
+      if (!range[1]) {
+        const n = Number(range[2]);
+        if (!n) return new Response(null, { status: 416, headers: { 'content-range': `bytes */${size}` } });
+        start = Math.max(0, size - n);
+        end = size - 1;
+      } else {
+        start = Number(range[1]);
+        end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      }
       if (start >= size || start > end)
         return new Response(null, { status: 416, headers: { 'content-range': `bytes */${size}` } });
       return new Response(Readable.toWeb(createReadStream(file, { start, end })) as ReadableStream, {
@@ -372,7 +401,7 @@ export function createApp(opts: AppOptions) {
   });
 
   // ───── OpenRouter "link your account" (PKCE) ─────
-  app.get('/api/oauth/openrouter/start', (c) => c.json(startOpenRouter(opts.port)));
+  app.post('/api/oauth/openrouter/start', (c) => c.json(startOpenRouter(opts.port)));
 
   app.get('/oauth/openrouter/callback', async (c) => {
     const code = c.req.query('code') ?? '';
@@ -399,9 +428,15 @@ export function createApp(opts: AppOptions) {
   app.get('*', (c) => {
     if (!dist || !existsSync(dist))
       return c.text('Web app not built: run `make web` (or use `make dev`).', 404);
-    const rel = decodeURIComponent(new URL(c.req.url).pathname).replace(/^\/+/, '');
+    let rel: string;
+    try {
+      rel = decodeURIComponent(new URL(c.req.url).pathname).replace(/^\/+/, '');
+    } catch {
+      return c.text('bad path', 400);
+    }
+    const root = resolve(dist) + sep;
     let file = resolve(dist, rel || 'index.html');
-    if (!file.startsWith(resolve(dist)) || !existsSync(file) || statSync(file).isDirectory())
+    if (!file.startsWith(root) || !existsSync(file) || statSync(file).isDirectory())
       file = join(dist, 'index.html');
     const type = MIME[extname(file)] ?? 'application/octet-stream';
     return new Response(readFileSync(file), {

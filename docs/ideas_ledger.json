@@ -1053,11 +1053,13 @@
    "value": 3,
    "effort": 1,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "Navigation",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 Part n of N chips for ≥150 s videos"
+   ]
   },
   {
    "id": "I-075",

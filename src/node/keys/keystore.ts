@@ -100,9 +100,9 @@ async function getBackend(): Promise<Backend> {
       const k = (await import('@napi-rs/keyring')) as unknown as {
         Entry: ConstructorParameters<typeof KeychainBackend>[0];
       };
+      // probe the raw API: some Linux setups have no Secret Service; fall back rather than fail later on set()
+      new k.Entry(SERVICE, 'probe').getPassword();
       const kb = new KeychainBackend(k.Entry);
-      // probe: some Linux setups have no Secret Service; fall back rather than fail
-      await kb.get('anthropic');
       backend = kb;
       return backend;
     } catch {

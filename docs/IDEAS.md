@@ -2,7 +2,7 @@
 
 _Generated from `docs/ideas_ledger.json` by `npm run ideas -- render`. Do not edit by hand._
 
-Score = value × confidence ÷ effort. 85 ideas: 48 done, 2 doing, 22 open, 1 blocked, 4 parked, 8 rejected.
+Score = value × confidence ÷ effort. 85 ideas: 49 done, 2 doing, 21 open, 1 blocked, 4 parked, 8 rejected.
 
 ## accessibility
 
@@ -105,7 +105,7 @@ Score = value × confidence ÷ effort. 85 ideas: 48 done, 2 doing, 22 open, 1 bl
 |---|---|---|---|---|---|---|---|
 | I-072 | Quiz card at the end (one retrieval question) for 1 min+ | 3 | 2 | 0.5 | 0.75 | open | Retrieval practice from MasterDoc research; optional so it doesn’t eat the budget |
 | I-073 | “Explain like I’m new” vs “expert” level toggle | 4 | 2 | 0.6 | 1.2 | done | Same source, different audiences — 2026-11-04 level select in UI + prompt LEVEL_TEXT |
-| I-074 | Chapters for 3–5 min videos | 3 | 1 | 0.7 | 2.1 | open | Navigation |
+| I-074 | Chapters for 3–5 min videos | 3 | 1 | 0.7 | 2.1 | done | Navigation — 2026-11-04 Part n of N chips for ≥150 s videos |
 | I-075 | Talking-head avatar presenter | 1 | 4 | 0.6 | 0.15 | rejected | Uncanny, costly, distracts from the content (coherence principle) |
 | I-076 | Background stock footage | 1 | 3 | 0.7 | 0.23 | rejected | Decorative, licence-heavy, not tied to the source |
 

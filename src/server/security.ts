@@ -16,7 +16,13 @@ export function guard(port: number): MiddlewareHandler {
     const host = c.req.header('host') ?? '';
     if (!hosts.has(host)) return c.text('Forbidden host', 403);
     const site = c.req.header('sec-fetch-site');
-    if (site === 'cross-site') return c.text('Cross-site requests are not allowed', 403);
+    // the one cross-site request we expect: OpenRouter's top-level redirect back to the OAuth callback
+    // (protected by the single-use, unguessable state; it can't read anything and only stores a key)
+    const oauthCallback =
+      c.req.method === 'GET' &&
+      c.req.path === '/oauth/openrouter/callback' &&
+      c.req.header('sec-fetch-mode') === 'navigate';
+    if (site === 'cross-site' && !oauthCallback) return c.text('Cross-site requests are not allowed', 403);
     const method = c.req.method;
     if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
       const origin = c.req.header('origin');

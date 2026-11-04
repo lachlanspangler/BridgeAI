@@ -79,6 +79,7 @@ export function drawFrame(
   if (t >= last.end) endCard(ctx, tl, t - last.end, theme, opts);
   else chrome(ctx, tl, t, theme);
   if (tl.beats[0] && tl.beats[0].beat.visual.type !== 'title') sourceTag(ctx, tl, t, theme, opts);
+  if (t < last.end) chapterChip(ctx, tl, t, theme);
   if (opts.burnCaptions && t < last.end) captions(ctx, tl, t, theme, s);
   ctx.restore();
 }
@@ -212,6 +213,31 @@ function captions(ctx: Ctx, tl: Timeline, t: number, theme: Theme, s: number): v
     x += widths[i]! + space;
   });
   ctx.restore();
+}
+
+/** Chapters for long videos (≥ 150 s): each "idea" beat starts a part; show "Part n of N" briefly. */
+export function chapters(tl: Timeline): { start: number; n: number; of: number }[] {
+  if (tl.duration < 150) return [];
+  const starts = tl.beats.filter((b) => b.beat.role === 'idea');
+  if (starts.length < 3) return [];
+  return starts.map((b, i) => ({ start: b.start, n: i + 1, of: starts.length }));
+}
+
+function chapterChip(ctx: Ctx, tl: Timeline, t: number, theme: Theme): void {
+  const ch = chapters(tl).find((c) => t >= c.start && t < c.start + 2.6);
+  if (!ch) return;
+  const s = tl.height / 1080;
+  const k = easeOutCubic(prog(t, ch.start + 0.1, 0.35)) * (1 - prog(t, ch.start + 2.2, 0.4));
+  pill(
+    ctx,
+    `Part ${ch.n} of ${ch.of}`,
+    tl.width / 2,
+    72 * s,
+    TYPE.kicker * 0.85 * s,
+    theme.tone.secondary,
+    theme.onTone.secondary,
+    k,
+  );
 }
 
 /** When the hook isn't a title card: a pill naming the source for the first seconds (no logo intro, rule 7). */

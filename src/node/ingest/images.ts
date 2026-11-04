@@ -14,6 +14,40 @@ import type { InputFile } from './index.ts';
 
 const MAX_SIDE = 2400;
 const MAX_IMAGES = 24;
+const MAX_PIXELS = 50_000_000;
+
+/** Width/height from the PNG / JPEG / GIF / WebP header, without decoding the bitmap (memory-bomb guard). */
+export function imageSize(d: Uint8Array): { w: number; h: number } | null {
+  const v = new DataView(d.buffer, d.byteOffset, d.byteLength);
+  if (d.length > 24 && d[0] === 0x89 && d[1] === 0x50) return { w: v.getUint32(16), h: v.getUint32(20) };
+  if (d.length > 10 && d[0] === 0x47 && d[1] === 0x49)
+    return { w: v.getUint16(6, true), h: v.getUint16(8, true) };
+  if (d.length > 30 && d[0] === 0x52 && d[8] === 0x57) {
+    const tag = String.fromCharCode(d[12]!, d[13]!, d[14]!, d[15]!);
+    if (tag === 'VP8X')
+      return {
+        w: 1 + (d[24]! | (d[25]! << 8) | (d[26]! << 16)),
+        h: 1 + (d[27]! | (d[28]! << 8) | (d[29]! << 16)),
+      };
+    if (tag === 'VP8 ') return { w: v.getUint16(26, true) & 0x3fff, h: v.getUint16(28, true) & 0x3fff };
+    if (tag === 'VP8L') {
+      const b = v.getUint32(21, true);
+      return { w: 1 + (b & 0x3fff), h: 1 + ((b >> 14) & 0x3fff) };
+    }
+  }
+  if (d[0] === 0xff && d[1] === 0xd8) {
+    let i = 2;
+    while (i + 9 < d.length) {
+      if (d[i] !== 0xff) return null;
+      const marker = d[i + 1]!;
+      const len = v.getUint16(i + 2);
+      if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker))
+        return { w: v.getUint16(i + 7), h: v.getUint16(i + 5) };
+      i += 2 + len;
+    }
+  }
+  return null;
+}
 
 export async function ocr(png: Buffer): Promise<string> {
   if (process.env.BRIDGE_OCR === 'off') return '';
@@ -57,6 +91,11 @@ export async function ingestImages(files: InputFile[], dir: string, notes?: stri
     warnings.push(`only the first ${MAX_IMAGES} of ${files.length} images were used`);
   if (noteLines.length) segs.push({ id: 's1', kind: 'abstract', text: noteLines.join(' '), loc: {} });
   for (const [i, f] of files.slice(0, MAX_IMAGES).entries()) {
+    const dims = imageSize(f.data);
+    if (dims && dims.w * dims.h > MAX_PIXELS) {
+      warnings.push(`${f.name}: too large (${dims.w}×${dims.h}); resize it below 50 megapixels`);
+      continue;
+    }
     let img;
     try {
       img = await loadImage(Buffer.from(f.data));

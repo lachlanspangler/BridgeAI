@@ -3,7 +3,7 @@
  * Always local. Lower quality than Kokoro; used when Kokoro isn't available so a video always has a voice.
  */
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { decodeWav } from '../../core/audio/mix.ts';
@@ -49,8 +49,18 @@ export class SystemTts implements TtsEngine {
       const wav = join(dir, 'out.wav');
       const speed = opts.speed ?? 1;
       const b = this.backend();
+      // text goes through a file, never argv (a line starting with "-" must not become a flag)
+      const inFile = join(dir, 'in.txt');
+      writeFileSync(inFile, text);
       if (b === 'say') {
-        const r = spawnSync('say', ['-r', String(Math.round(185 * speed)), '-o', `${raw}.aiff`, text]);
+        const r = spawnSync('say', [
+          '-r',
+          String(Math.round(185 * speed)),
+          '-o',
+          `${raw}.aiff`,
+          '-f',
+          inFile,
+        ]);
         if (r.status !== 0) throw new Error('say failed');
         await runFfmpeg(['-i', `${raw}.aiff`, '-ac', '1', '-ar', '24000', wav]);
       } else if (b === 'sapi') {
@@ -59,7 +69,7 @@ export class SystemTts implements TtsEngine {
         if (r.status !== 0) throw new Error('SAPI failed');
         await runFfmpeg(['-i', `${raw}.wav`, '-ac', '1', '-ar', '24000', wav]);
       } else if (b) {
-        const r = spawnSync(b, ['-s', String(Math.round(165 * speed)), '-w', `${raw}.wav`, text]);
+        const r = spawnSync(b, ['-s', String(Math.round(165 * speed)), '-w', `${raw}.wav`, '-f', inFile]);
         if (r.status !== 0) throw new Error(`${b} failed`);
         await runFfmpeg(['-i', `${raw}.wav`, '-ac', '1', '-ar', '24000', wav]);
       } else throw new Error('no system voice available');

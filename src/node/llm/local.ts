@@ -18,7 +18,12 @@ export class LocalLlm implements LlmProvider {
   readonly id = 'local';
   readonly locality = 'local' as const;
   readonly model: string;
-  private state: Promise<{ llama: Llama; model: LlamaModel; ctx: LlamaContext; seq: LlamaContextSequence }> | null = null;
+  private state: Promise<{
+    llama: Llama;
+    model: LlamaModel;
+    ctx: LlamaContext;
+    seq: LlamaContextSequence;
+  }> | null = null;
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(private readonly opts: LocalOptions) {

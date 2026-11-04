@@ -5,6 +5,7 @@
 import { serve } from '@hono/node-server';
 import { join } from 'node:path';
 import { createApp } from './app.ts';
+import { secureHome } from '../node/paths.ts';
 
 export const HOST = '127.0.0.1';
 
@@ -18,6 +19,7 @@ export function start(port = Number(process.env.BRIDGE_PORT ?? 7411)) {
       'Bridge only binds to 127.0.0.1 in this version (see docs/adr/0006-localhost-security.md)',
     );
   }
+  secureHome();
   const { app, queue } = createApp({ port, webDist: join(import.meta.dirname, '..', '..', 'web', 'dist') });
   const server = serve({ fetch: app.fetch, port, hostname: HOST }, (info) => {
     console.log(`Bridge is running at http://127.0.0.1:${info.port}  (local only)`);

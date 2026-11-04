@@ -132,7 +132,9 @@ export function composeExtractive(src: Source, analysis: Analysis, budget: Budge
   // long videos need more beats than there are top ideas: top up with the source's own ranked sentences
   let ideas = analysis.ideas.slice(0, Math.max(budget.ideas.max, 1));
   if (ideas.length < maxIdeaBeats) {
-    const extra = analyzeExtractive(src, maxIdeaBeats + 4).ideas.filter((x) => !ideas.some((i) => i.evidence[0]?.quote === x.evidence[0]?.quote || i.statement === x.statement));
+    const extra = analyzeExtractive(src, maxIdeaBeats + 4).ideas.filter(
+      (x) => !ideas.some((i) => i.evidence[0]?.quote === x.evidence[0]?.quote || i.statement === x.statement),
+    );
     ideas = [...ideas, ...extra.map((x, k) => ({ ...x, id: `x${k + 1}` }))].slice(0, maxIdeaBeats);
   }
   for (const idea of ideas) {

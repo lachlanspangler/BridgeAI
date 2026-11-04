@@ -5,22 +5,21 @@
 const known = new Set<string>();
 
 const PATTERNS: RegExp[] = [
-  /sk-ant-[A-Za-z0-9_-]{8,}/g, // Anthropic
-  /sk-or-v1-[A-Za-z0-9]{8,}/g, // OpenRouter
-  /sk-(proj-)?[A-Za-z0-9_-]{16,}/g, // OpenAI
+  /(?<![A-Za-z0-9])sk-ant-[A-Za-z0-9_-]{8,}/g, // Anthropic
+  /(?<![A-Za-z0-9])sk-or-v1-[A-Za-z0-9]{8,}/g, // OpenRouter
+  /(?<![A-Za-z0-9])sk-(proj-)?[A-Za-z0-9_-]{16,}/g, // OpenAI
+  /(?<![A-Za-z0-9])sk_[a-f0-9]{32,}/g, // ElevenLabs
   /AIza[0-9A-Za-z_-]{20,}/g, // Google
-  /xi-[A-Za-z0-9]{16,}/g, // ElevenLabs style
-  /hf_[A-Za-z0-9]{20,}/g, // Hugging Face
-  /(authorization|x-api-key|xi-api-key|x-goog-api-key)\s*[:=]\s*("?)(bearer\s+)?[^\s",}]+/gi,
+  /(?<![A-Za-z0-9])hf_[A-Za-z0-9]{20,}/g, // Hugging Face
+  /(authorization|x-api-key|xi-api-key|x-goog-api-key)"?\s*[:=]\s*"?(bearer\s+)?[^\s",}\\]+/gi,
 ];
 
 export function registerSecret(s: string | undefined | null): void {
   if (s && s.length >= 8) known.add(s);
 }
 
-export function forgetSecret(s: string): void {
-  known.delete(s);
-}
+/** Removed keys stay registered for the life of the process, so an in-flight error carrying one is still scrubbed. */
+export function forgetSecret(_s: string): void {}
 
 export function redact(text: string): string {
   let out = text;
@@ -42,5 +41,6 @@ export function mask(key: string): string {
 
 /** Redact any value (deep) before serialising it to disk or a response. */
 export function redactDeep<T>(v: T): T {
-  return JSON.parse(redact(JSON.stringify(v))) as T;
+  // redact leaf strings, never the serialised JSON (which could break escaping)
+  return JSON.parse(JSON.stringify(v, (_k, x: unknown) => (typeof x === 'string' ? redact(x) : x))) as T;
 }

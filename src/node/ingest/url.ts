@@ -3,38 +3,74 @@
  * Only public http(s) URLs; hosts that resolve to private/loopback addresses are refused (SSRF guard).
  */
 import { lookup } from 'node:dns/promises';
-import { isIP } from 'node:net';
+import { BlockList, isIP, isIPv4, isIPv6 } from 'node:net';
+import { lookup as dnsLookup, type LookupAddress } from 'node:dns';
+import { Agent, fetch as undiciFetch } from 'undici';
 import { ingestText } from '../../core/ingest/text.ts';
 import type { Source } from '../../core/schema.ts';
 
 const MAX = 60 * 1024 * 1024;
 
+const blocked = new BlockList();
+for (const [addr, prefix] of [
+  ['0.0.0.0', 8],
+  ['10.0.0.0', 8],
+  ['100.64.0.0', 10],
+  ['127.0.0.0', 8],
+  ['169.254.0.0', 16],
+  ['172.16.0.0', 12],
+  ['192.0.0.0', 24],
+  ['192.168.0.0', 16],
+  ['198.18.0.0', 15],
+  ['224.0.0.0', 3],
+] as const)
+  blocked.addSubnet(addr, prefix, 'ipv4');
+for (const [addr, prefix] of [
+  ['::', 128],
+  ['::1', 128],
+  ['fc00::', 7],
+  ['fe80::', 10],
+  ['fec0::', 10],
+  ['ff00::', 8],
+  ['64:ff9b::', 96],
+  ['2002::', 16],
+] as const)
+  blocked.addSubnet(addr, prefix, 'ipv6');
+
+/** Private, loopback, link-local, CGNAT, multicast… (IPv4-mapped IPv6 is unwrapped first, in dotted or hex form). */
 export function isPrivateAddress(ip: string): boolean {
-  if (ip.includes(':')) {
-    const l = ip.toLowerCase();
-    return (
-      l === '::1' ||
-      l.startsWith('fc') ||
-      l.startsWith('fd') ||
-      l.startsWith('fe80') ||
-      l === '::' ||
-      l.startsWith('::ffff:127.') ||
-      l.startsWith('::ffff:10.') ||
-      l.startsWith('::ffff:192.168.')
-    );
+  let a = ip.toLowerCase().replace(/^\[|\]$/g, '');
+  const m = a.match(/^::ffff:(?:(\d+\.\d+\.\d+\.\d+)|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
+  if (m) {
+    if (m[1]) a = m[1];
+    else {
+      const hi = parseInt(m[2]!, 16);
+      const lo = parseInt(m[3]!, 16);
+      a = [hi >> 8, hi & 255, lo >> 8, lo & 255].join('.');
+    }
   }
-  const [a, b] = ip.split('.').map(Number) as [number, number];
-  return (
-    a === 10 ||
-    a === 127 ||
-    a === 0 ||
-    (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    (a === 100 && b >= 64 && b <= 127) ||
-    a >= 224
-  );
+  if (isIPv4(a)) return blocked.check(a, 'ipv4');
+  if (isIPv6(a)) return blocked.check(a, 'ipv6');
+  return true; // not an IP we understand: refuse
 }
+
+/** undici dispatcher that re-checks every address at connect time (defeats DNS rebinding between check and use). */
+const publicOnly = new Agent({
+  connect: {
+    lookup: ((
+      host: string,
+      opts: object,
+      cb: (err: NodeJS.ErrnoException | null, addrs: LookupAddress[]) => void,
+    ) =>
+      dnsLookup(host, { ...opts, all: true }, (err, addrs) => {
+        if (err) return cb(err, []);
+        const list = addrs as LookupAddress[];
+        if (!list.length || list.some((x) => isPrivateAddress(x.address)))
+          return cb(new Error('that link points to a private or local address'), []);
+        cb(null, list);
+      })) as never,
+  },
+});
 
 export async function assertPublicUrl(raw: string): Promise<URL> {
   let u: URL;
@@ -74,29 +110,41 @@ export function resolveSpecial(u: URL): { kind: 'pdf' | 'github' | 'page'; url: 
   return { kind: 'page', url: u.href, name: u.hostname + u.pathname };
 }
 
-async function fetchCapped(url: string, signal?: AbortSignal): Promise<{ data: Uint8Array; type: string }> {
-  await assertPublicUrl(url);
-  const res = await fetch(url, {
-    signal,
-    redirect: 'follow',
-    headers: { 'user-agent': 'Bridge/0.1 (local explainer-video app)' },
-  });
-  if (!res.ok || !res.body) throw new Error(`could not fetch the link (HTTP ${res.status})`);
-  await assertPublicUrl(res.url); // the redirect target must be public too
-  const chunks: Uint8Array[] = [];
-  let n = 0;
-  for await (const c of res.body as unknown as AsyncIterable<Uint8Array>) {
-    n += c.length;
-    if (n > MAX) throw new Error('that download is larger than 60 MB');
-    chunks.push(c);
+async function fetchCapped(
+  url: string,
+  signal: AbortSignal = AbortSignal.timeout(90_000),
+): Promise<{ data: Uint8Array; type: string }> {
+  let u = url;
+  for (let hop = 0; hop < 6; hop++) {
+    await assertPublicUrl(u); // every hop is checked before it is requested
+    const res = await undiciFetch(u, {
+      signal,
+      redirect: 'manual',
+      dispatcher: publicOnly,
+      headers: { 'user-agent': 'Bridge/0.1 (local explainer-video app)' },
+    });
+    const loc = res.headers.get('location');
+    if (res.status >= 300 && res.status < 400 && loc) {
+      u = new URL(loc, u).href;
+      continue;
+    }
+    if (!res.ok || !res.body) throw new Error(`could not fetch the link (HTTP ${res.status})`);
+    const chunks: Uint8Array[] = [];
+    let n = 0;
+    for await (const c of res.body as unknown as AsyncIterable<Uint8Array>) {
+      n += c.length;
+      if (n > MAX) throw new Error('that download is larger than 60 MB');
+      chunks.push(c);
+    }
+    const data = new Uint8Array(n);
+    let o = 0;
+    for (const c of chunks) {
+      data.set(c, o);
+      o += c.length;
+    }
+    return { data, type: res.headers.get('content-type') ?? '' };
   }
-  const data = new Uint8Array(n);
-  let o = 0;
-  for (const c of chunks) {
-    data.set(c, o);
-    o += c.length;
-  }
-  return { data, type: res.headers.get('content-type') ?? '' };
+  throw new Error('too many redirects');
 }
 
 export function htmlToMarkdown(html: string): { title: string; text: string } {

@@ -193,9 +193,24 @@ describe('model output parsing', () => {
 
 describe('script de-duplication', () => {
   it('keeps one takeaway and drops repeated beats', () => {
-    const b = (role: string, narration: string) => ({ role, narration, visual: { type: 'statement', text: narration, highlight: [] }, claims: [{ text: narration, support: [abs], kind: 'fact' }], keywords: [] });
+    const b = (role: string, narration: string) => ({
+      role,
+      narration,
+      visual: { type: 'statement', text: narration, highlight: [] },
+      claims: [{ text: narration, support: [abs], kind: 'fact' }],
+      keywords: [],
+    });
     const s = parseScript(
-      { title: 't', beats: [b('hook', 'The Transformer uses only attention.'), b('idea', 'It trains in 3.5 days on eight GPUs.'), b('takeaway', 'Attention alone replaces recurrence.'), b('takeaway', 'Attention alone replaces recurrence for speed.'), b('takeaway', 'The Transformer proves attention is all you need.')] },
+      {
+        title: 't',
+        beats: [
+          b('hook', 'The Transformer uses only attention.'),
+          b('idea', 'It trains in 3.5 days on eight GPUs.'),
+          b('takeaway', 'Attention alone replaces recurrence.'),
+          b('takeaway', 'Attention alone replaces recurrence for speed.'),
+          b('takeaway', 'The Transformer proves attention is all you need.'),
+        ],
+      },
       src,
       60,
       'test',

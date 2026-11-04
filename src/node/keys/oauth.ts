@@ -20,6 +20,8 @@ export function pkcePair(): { verifier: string; challenge: string } {
 
 export function startOpenRouter(port: number, now = Date.now()): { url: string; state: string } {
   for (const [k, v] of pending) if (now - v.at > TTL) pending.delete(k);
+  // bounded: keep only the newest few sign-in attempts
+  while (pending.size >= 20) pending.delete(pending.keys().next().value!);
   const { verifier, challenge } = pkcePair();
   const state = b64url(randomBytes(18));
   pending.set(state, { verifier, at: now });

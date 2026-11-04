@@ -293,7 +293,11 @@ export async function runPipeline(
       script,
       analysis,
       faith,
-      durations: { target: settings.seconds, actual: timeline.duration, withinTolerance: Math.abs(timeline.duration - settings.seconds) <= settings.seconds * 0.1 },
+      durations: {
+        target: settings.seconds,
+        actual: timeline.duration,
+        withinTolerance: Math.abs(timeline.duration - settings.seconds) <= settings.seconds * 0.1,
+      },
       timings,
       engines: { analyze: analysis.engine, script: script.engine, tts: engines.tts.id },
     };
