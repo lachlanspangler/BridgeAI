@@ -142,10 +142,16 @@ function ideaVisual(idea: Idea, src: Source, budget: Budget): Visual {
 
 /** A paper's "we/our" read aloud by a narrator becomes "the authors/their" (same claim, right voice). */
 export function thirdPerson(t: string): string {
+  // the first "we" names the authors; later ones become "they" ("…and we wonder how we can help" →
+  // "…and the authors wonder how they can help")
+  let named = false;
   return t
-    .replace(/^We\b/, 'The authors')
+    .replace(/\b([Ww]e)\b/g, (_m, w: string) => {
+      const first = !named;
+      named = true;
+      return first ? (w === 'We' ? 'The authors' : 'the authors') : w === 'We' ? 'They' : 'they';
+    })
     .replace(/^Our\b/, 'Their')
-    .replace(/\bwe\b/g, 'the authors')
     .replace(/\bour\b/g, 'their')
     .replace(/\bus\b/g, 'them');
 }

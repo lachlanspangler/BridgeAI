@@ -404,7 +404,7 @@ export async function runPipeline(
     const sayer = script.beats.find((b) => b.role !== 'takeaway' && says(b));
     if (sayer && !sayer.ideas.includes('core')) sayer.ideas = [...sayer.ideas, 'core'];
     if (!sayer) {
-      const text = trimSentence(top.statement, budget.wordsPerBeat.max + 4, top.terms);
+      const text = thirdPerson(trimSentence(top.statement, budget.wordsPerBeat.max + 4, top.terms));
       const nb: Beat = {
         id: 'bt',
         role: 'idea',
@@ -474,7 +474,7 @@ export async function runPipeline(
       let take = script.beats[ti]!;
       if (!ok(take.narration)) {
         for (const idea of analysis.ideas.slice(0, 5)) {
-          const text = trimSentence(idea.statement, 14, idea.terms);
+          const text = thirdPerson(trimSentence(idea.statement, 14, idea.terms));
           if (!ok(text)) continue;
           const cand: Beat = {
             ...take,

@@ -99,3 +99,13 @@ describe('whatIsIt', () => {
     expect(whatIsIt({ ...src, title: '3 images' } as never)).toBeNull();
   });
 });
+
+describe('thirdPerson', () => {
+  it('names the authors once, then says they', async () => {
+    const { thirdPerson } = await import('../../src/core/script/extractive.ts');
+    expect(thirdPerson('and we, as experts, may wonder how we can help.')).toBe(
+      'and the authors, as experts, may wonder how they can help.',
+    );
+    expect(thirdPerson('We describe our method.')).toBe('The authors describe their method.');
+  });
+});
