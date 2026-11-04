@@ -366,7 +366,7 @@ export async function runPipeline(
           action: 'rewritten',
           reason: "added the source's own definition of its subject",
         });
-        if (scriptWords(script) > budget.words * 1.15) {
+        if (scriptWords(script) > budget.words * (budget.seconds <= 30 ? 1.0 : 1.15)) {
           const weakest = script.beats
             .map((b, i) => ({ b, i }))
             .filter(({ b, i }) => i > pos && b.role !== 'takeaway' && !b.ideas.includes('core'))
@@ -427,7 +427,7 @@ export async function runPipeline(
           reason: "added the source's main idea (it was missing)",
         });
         // keep the length: drop the weakest idea beat if we're now over budget
-        if (scriptWords(script) > budget.words * 1.15) {
+        if (scriptWords(script) > budget.words * (budget.seconds <= 30 ? 1.0 : 1.15)) {
           const weakest = script.beats
             .map((b, i) => ({ b, i }))
             .filter(({ b, i }) => i > pos && b.role !== 'takeaway' && !b.ideas.includes('core'))
