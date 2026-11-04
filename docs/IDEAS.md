@@ -2,7 +2,7 @@
 
 _Generated from `docs/ideas_ledger.json` by `npm run ideas -- render`. Do not edit by hand._
 
-Score = value × confidence ÷ effort. 85 ideas: 49 done, 2 doing, 21 open, 1 blocked, 4 parked, 8 rejected.
+Score = value × confidence ÷ effort. 88 ideas: 53 done, 2 doing, 20 open, 1 blocked, 4 parked, 8 rejected.
 
 ## accessibility
 
@@ -77,6 +77,8 @@ Score = value × confidence ÷ effort. 85 ideas: 49 done, 2 doing, 21 open, 1 bl
 | I-021 | Deterministic claim checks: every number, name and quoted term in narration must appear in the cited segments | 5 | 2 | 0.9 | 2.25 | done | Cheap, exact, catches the most dangerous hallucinations — 2026-11-04 built 2026-11-03 (see DIARY) |
 | I-022 | Entailment judge per claim (local model or BYOK), drop/rewrite unsupported beats | 5 | 3 | 0.7 | 1.17 | done | Zero unsupported claims is a stop criterion — 2026-11-04 built 2026-11-03 (see DIARY) |
 | I-023 | Source map output: claim → segment → page/line, shown in the app next to the video | 5 | 2 | 0.8 | 2 | done | Trust: users can check every sentence — 2026-11-04 built 2026-11-03 (see DIARY) |
+| I-086 | Refill thin scripts with beats in the source's own words after the gate | 4 | 2 | 0.7 | 1.4 | done |  |
+| I-088 | Number claims always go to the judge | 5 | 1 | 0.7 | 3.5 | done |  |
 
 ## infra
 
@@ -128,7 +130,7 @@ Score = value × confidence ÷ effort. 85 ideas: 49 done, 2 doing, 21 open, 1 bl
 | I-003 | Job queue: one render at a time, resumable stages, cached artifacts per stage | 4 | 2 | 0.8 | 1.6 | done | Rule: one render at a time; re-rendering after a script edit skips analysis — 2026-11-04 built 2026-11-03 (see DIARY) |
 | I-004 | Content-addressed stage cache (hash of input + settings + model id) | 4 | 2 | 0.7 | 1.4 | open | Fast re-renders; deterministic tests |
 | I-077 | Cloud rendering farm | 1 | 5 | 0.5 | 0.1 | rejected | Contradicts local-first and free |
-| I-084 | Split render into parallel workers (chunks + concat) for 3–5 min videos | 3 | 3 | 0.7 | 0.7 | open |  |
+| I-084 | Split render into parallel workers (chunks + concat) for 3–5 min videos | 3 | 3 | 0.7 | 0.7 | done | 2026-11-04 src/node/render/parts.ts; 4 workers for >40 s |
 
 ## script
 
@@ -140,6 +142,7 @@ Score = value × confidence ÷ effort. 85 ideas: 49 done, 2 doing, 21 open, 1 bl
 | I-019 | Duration fit after TTS: measure real audio, then tighten text or nudge voice speed (0.9–1.15×) to land within ±10% | 5 | 2 | 0.8 | 2 | done | Word-count estimates drift; real audio is ground truth — 2026-11-04 built 2026-11-03 (see DIARY) |
 | I-020 | Analogy beat (“it’s like…”) only when the model marks it as an analogy, not a claim | 3 | 2 | 0.5 | 0.75 | open | Analogies help understanding but must not be presented as source claims |
 | I-078 | Two-pass script: draft → critique against EXPLAINER_CRAFT rules → rewrite | 4 | 3 | 0.7 | 0.93 | open |  |
+| I-087 | Honest short-source note instead of padding | 4 | 1 | 0.7 | 2.8 | done |  |
 
 ## visuals
 

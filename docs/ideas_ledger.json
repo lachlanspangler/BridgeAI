@@ -1185,11 +1185,13 @@
    "value": 3,
    "effort": 3,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "",
    "created": "2026-11-04",
    "updated": "2026-11-04",
-   "notes": []
+   "notes": [
+    "2026-11-04 src/node/render/parts.ts; 4 workers for >40 s"
+   ]
   },
   {
    "id": "I-085",
@@ -1199,6 +1201,45 @@
    "effort": 2,
    "confidence": 0.7,
    "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-086",
+   "title": "Refill thin scripts with beats in the source's own words after the gate",
+   "area": "faith",
+   "value": 4,
+   "effort": 2,
+   "confidence": 0.7,
+   "status": "done",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-087",
+   "title": "Honest short-source note instead of padding",
+   "area": "script",
+   "value": 4,
+   "effort": 1,
+   "confidence": 0.7,
+   "status": "done",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-088",
+   "title": "Number claims always go to the judge",
+   "area": "faith",
+   "value": 5,
+   "effort": 1,
+   "confidence": 0.7,
+   "status": "done",
    "why": "",
    "created": "2026-11-04",
    "updated": "2026-11-04",
