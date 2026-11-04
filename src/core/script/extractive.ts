@@ -20,7 +20,7 @@ const LEADINS =
   /^(in this (paper|work|article|post|project),?\s*|here,?\s*|overall,?\s*|in summary,?\s*|to summarize,?\s*|finally,?\s*|moreover,?\s*|furthermore,?\s*|additionally,?\s*|in addition,?\s*|specifically,?\s*|notably,?\s*)/i;
 
 export const VERB =
-  /\b(is|are|was|were|be|has|have|had|can|could|will|would|does|do|did|makes?|made|lets?|uses?|used|achiev\w*|establish\w*|shows?|showed|propos\w*|improv\w*|reduc\w*|outperform\w*|enabl\w*|allows?|requir\w*|provid\w*|generaliz\w*|connect\w*|introduc\w*|present\w*|finds?|found|runs?|takes?|learns?|trains?|predicts?|leads?|builds?|works?|relies|rel(y|ies) on|depends?|replac\w*|combin\w*|turns?|gives?|creates?|helps?|supports?|keeps?|scales?|beats?|cuts?|needs?|means?|dispens\w*|based)\b/i;
+  /\b(is|are|was|were|be|has|have|had|can|could|will|would|does|do|did|makes?|made|lets?|uses?|used|achiev\w*|establish\w*|shows?|showed|propos\w*|improv\w*|reduc\w*|outperform\w*|enabl\w*|allows?|requir\w*|provid\w*|generaliz\w*|connect\w*|introduc\w*|present\w*|finds?|found|runs?|takes?|learns?|trains?|predicts?|leads?|builds?|works?|relies|rel(y|ies) on|depends?|replac\w*|combin\w*|turns?|gives?|creates?|helps?|supports?|keeps?|scales?|beats?|cuts?|needs?|means?|dispens\w*|based|contains?|consists?|offers?|converts?|formats?|generates?|measures?|times|benchmarks?)\b/i;
 const PREP_LEAD = /^(on|in|for|with|at|by|using|after|from|across|under|over|during|to|via|when|while|as)\b/i;
 
 /** Make a source sentence speakable and shorter without changing what it claims. */

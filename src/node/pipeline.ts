@@ -346,7 +346,7 @@ export async function runPipeline(
         narration: text,
         visual: { type: 'statement', text: screenPhrase(text, 7), highlight: [] },
         claims: [{ text, support: [def.segmentId], kind: 'fact' }],
-        ideas: [],
+        ideas: ['core'],
         keywords: [],
       };
       if (VERB.test(text) && checkBeat(nb, src).ok) {
@@ -366,7 +366,7 @@ export async function runPipeline(
         if (scriptWords(script) > budget.words * 1.15) {
           const weakest = script.beats
             .map((b, i) => ({ b, i }))
-            .filter(({ b, i }) => i > pos && b.role !== 'takeaway')
+            .filter(({ b, i }) => i > pos && b.role !== 'takeaway' && !b.ideas.includes('core'))
             .pop();
           if (weakest)
             script = {
@@ -395,7 +395,7 @@ export async function runPipeline(
         narration: text,
         visual: { type: 'statement', text: screenPhrase(text, 7), highlight: top.terms.slice(0, 1) },
         claims: [{ text, support: [...topSegs], kind: 'fact' }],
-        ideas: [top.id],
+        ideas: ['core', top.id],
         keywords: top.terms.slice(0, 2),
       };
       const c = checkBeat(nb, src);
@@ -427,7 +427,7 @@ export async function runPipeline(
         if (scriptWords(script) > budget.words * 1.15) {
           const weakest = script.beats
             .map((b, i) => ({ b, i }))
-            .filter(({ b, i }) => i > pos && b.role !== 'takeaway')
+            .filter(({ b, i }) => i > pos && b.role !== 'takeaway' && !b.ideas.includes('core'))
             .pop();
           if (weakest)
             script = {
@@ -555,7 +555,7 @@ export async function runPipeline(
         // too long: first drop the least important idea beat (never hook/takeaway), then speed up a little
         const droppable = script.beats
           .map((b, i) => ({ b, i }))
-          .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway');
+          .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway' && !b.ideas.includes('core'));
         if (over > 1.12 && droppable.length > 1) {
           const victim = droppable[droppable.length - 1]!;
           faith.actions.push({
