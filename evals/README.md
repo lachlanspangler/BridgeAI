@@ -49,3 +49,15 @@ The `any` entries are lowercase substrings. The narration is expected to be lowe
 3. Read the source and write 4-8 key points, ranked by importance. Every point and answer must be directly supported by the source text. Make the `any` rules lenient but meaningful, with 1-3 groups, and check that each key point's own `text` satisfies its rule.
 4. Write 3-5 questions with short answers, each pointing at a key point via `key`.
 5. Keep files under 300 KB each and the whole `evals/` folder under 3 MB.
+
+## Answer-key changes after first authoring (disclosed)
+
+The cases were written by a fresh agent before any video was scored. Three `any` rules were later widened, each time only to accept wording with the same meaning that real videos used. No key point's text, ranking or question changed:
+
+| case | key | added alternatives | why |
+|---|---|---|---|
+| `humanize-repo` | k1 | `easy-to-read` | the source calls the output "human-readable"; "easy-to-read" is the same claim |
+| `global-temperature-chart` | k1 | `rising` | the rule had `rise`, which is not a substring of "rising" |
+| `plate-tectonics-diagrams` | k1 | `moving`, `collid`, `sink`, `slide`, `pull apart`, `separat` | these are the plate motions the source names; the rule had only `move`/`motion`/`tectonic`/`drift` |
+
+Scores before these changes are in git history (`docs/EVALS.md`).
