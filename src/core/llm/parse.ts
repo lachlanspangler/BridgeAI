@@ -250,7 +250,12 @@ export function toVisual(
               .filter((e) => idOf.has(s(e.from)) && idOf.has(s(e.to)) && s(e.from) !== s(e.to))
               .map((e) => ({ from: idOf.get(s(e.from))!, to: idOf.get(s(e.to))! }))
           : [];
-        if (!edges.length) edges = ns.slice(1).map((n, i) => ({ from: ns[i]!.id, to: n.id }));
+        const parallel = /\b(parallel|at once|simultaneous|independent|side by side|in parallel)\b/i.test(
+          `${s(v.title)} ${narration}`,
+        );
+        if (parallel)
+          edges = []; // arrows would say "sequence" when the narration says "parallel"
+        else if (!edges.length) edges = ns.slice(1).map((n, i) => ({ from: ns[i]!.id, to: n.id }));
         return Visual.parse({
           type: 'flow',
           title: s(v.title) || undefined,
@@ -259,6 +264,15 @@ export function toVisual(
         });
       }
       case 'compare':
+        // both sides must have a label and something to say, or it's an empty card
+        if (
+          !s(v.leftLabel) ||
+          !s(v.rightLabel) ||
+          (!sa(v.leftPoints).length && !sa(v.rightPoints).length) ||
+          !sa(v.leftPoints).length ||
+          !sa(v.rightPoints).length
+        )
+          return fallback;
         return Visual.parse({
           type: 'compare',
           left: {
@@ -278,7 +292,8 @@ export function toVisual(
       case 'quote': {
         const text = s(v.text);
         const found = src.segments.find((x) => quoteFound(text, x.text));
-        if (!found) return fallback;
+        // a quote card must be what the voice is saying (dual coding), not a stray line from the source
+        if (!found || coverageOf(text, narration) < 0.5) return fallback;
         return Visual.parse({ type: 'quote', text: clampW(text, 30), cite: src.title });
       }
       case 'code': {

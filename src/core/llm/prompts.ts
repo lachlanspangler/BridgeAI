@@ -120,9 +120,9 @@ const VISUAL_GUIDE = `Visual types (pick the one that SHOWS the idea; vary them;
 - bigNumber: one important number from the source, huge. value = the number exactly as in the source; label ≤ 7 words; compareValue/compareLabel = a second number from the source to compare with, else "".
 - bullets: 2–4 short items (≤ 5 words each) that build one by one.
 - bars: a bar chart of 2–6 numbers that ALL appear in the source (e.g. scores of models). highlight the main one.
-- flow: 2–5 boxes with arrows, for a process, pipeline or architecture. node labels ≤ 3 words.
+- flow: 2–5 boxes with arrows, ONLY for steps that happen in order (a process, pipeline, architecture). For things that happen in parallel or a list of kinds, use bullets. node labels ≤ 3 words.
 - compare: two sides (old vs new, before vs after) with ≤ 3 short points each; winner if the source says which is better.
-- quote: a short exact quote from the source.
+- quote: a short exact quote from the source that the narration is saying right now.
 - code: show a code segment (by its id) typing itself; focusLines = the 1–3 lines that matter.
 - figure: show a figure from the source (by its id) with a ≤ 7-word caption.
 - tree: show the project's file tree; focus = 1–3 files or folders that matter.
@@ -202,6 +202,7 @@ export function sectionPrompt(
   ideaIndex: number,
   nBeats: number,
   previous: string,
+  said: string[] = [],
 ): Prompt {
   const b = ctx.budget;
   const idea = ctx.analysis.ideas[ideaIndex]!;
@@ -226,9 +227,16 @@ EVIDENCE (the only facts you may use):
 ${evidence.map((s) => renderSegment(s, 200)).join('\n')}
 ${codeSegs.length ? `\nCODE SEGMENTS:\n${codeSegs.map((s) => renderSegment(s, 120)).join('\n')}` : ''}${figs.length ? `\nFIGURES:\n${figs.map((a) => `[${a.id}] ${a.caption ?? 'image'}`).join('\n')}` : ''}
 
-WRITE EXACTLY ${nBeats} BEATS that teach this idea: ${nBeats >= 3 ? 'state it plainly → show the evidence (a number, figure, diagram or code) → an example or what it means for the viewer' : 'state it → show the evidence'}.
+${
+  said.length
+    ? `ALREADY SAID earlier in the video (do not repeat these facts):\n${said
+        .slice(-14)
+        .map((x) => `- ${x}`)
+        .join('\n')}\n\n`
+    : ''
+}WRITE EXACTLY ${nBeats} BEATS that teach this idea: ${nBeats >= 3 ? 'state it plainly → show the evidence (a number, figure, diagram or code) → an example or what it means for the viewer' : 'state it → show the evidence'}.
 Each beat's narration: ${Math.round((b.wordsPerBeat.min + b.wordsPerBeat.max) / 2)}–${b.wordsPerBeat.max} words (count them; short beats make the video too short). ${isFirst ? '' : 'Start with a short transition from the previous beat. '}Use role "idea" for the first beat, then "evidence" or "example".
-RULES: one idea per beat; short sentences; talk to the viewer; ONLY facts in EVIDENCE; copy numbers exactly; every beat lists its claims with supporting [segment ids]; keywords = 1–3 words from the narration; vary the visuals and pick the one that SHOWS the fact. Do not write a hook or a takeaway.
+RULES: one idea per beat; NEVER repeat a fact an earlier part already said; define any technical term in ≤ 6 plain words the first time it is used (e.g. "BLEU, a translation-quality score"); short sentences; talk to the viewer; ONLY facts in EVIDENCE; copy numbers exactly; every beat lists its claims with supporting [segment ids]; keywords = 1–3 words from the narration; vary the visuals and pick the one that SHOWS the fact. Do not write a hook or a takeaway.
 
 ${VISUAL_GUIDE}`,
   };

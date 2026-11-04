@@ -194,6 +194,27 @@ export async function runPipeline(
       });
     }
   }
+  // 3a'. no repeats: a beat that mostly restates an earlier one is dropped (learner review: "it feels like a loop")
+  {
+    const bag = (t: string) => new Set(contentWords(t).map(stem));
+    const keep: Beat[] = [];
+    for (const b of script.beats) {
+      const mine = bag(b.narration);
+      const dup =
+        b.role !== 'hook' &&
+        b.role !== 'takeaway' &&
+        keep.some((k) => {
+          const o = bag(k.narration);
+          let n = 0;
+          for (const w of mine) if (o.has(w)) n++;
+          return n / Math.max(1, Math.min(mine.size, o.size)) > 0.6;
+        });
+      if (dup)
+        faith.actions.push({ beatId: `x-dup-${b.id}`, action: 'dropped', reason: 'repeats an earlier beat' });
+      else keep.push(b);
+    }
+    script = { ...script, beats: keep.map((b, i) => ({ ...b, id: `b${i + 1}` })) };
+  }
   // 3b. length fit by content: add a sourced detail to a beat (re-checked by the same gate rules)
   const seg = new Map(src.segments.map((x) => [x.id, x.text]));
   const expandBeat = async (i: number, target: number): Promise<boolean> => {

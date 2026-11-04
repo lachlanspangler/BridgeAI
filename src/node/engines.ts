@@ -186,7 +186,23 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
       }
       // long video: opening → one section per idea → takeaway; a failed part falls back on its own
       const nIdeas = Math.min(analysis.ideas.length, budget.ideas.max);
-      const ideas = analysis.ideas.slice(0, nIdeas);
+      // teach in an arc, not in rank order: problem → what it is → how it works → what it achieved
+      const ARC: Record<string, number> = {
+        problem: 0,
+        definition: 1,
+        claim: 2,
+        method: 3,
+        architecture: 4,
+        code: 5,
+        figure: 6,
+        result: 7,
+        number: 8,
+      };
+      const ideas = analysis.ideas
+        .slice(0, nIdeas)
+        .map((x, rank) => ({ x, rank }))
+        .sort((a, b) => (ARC[a.x.kind] ?? 2) - (ARC[b.x.kind] ?? 2) || a.rank - b.rank)
+        .map((o) => o.x);
       const opening = budget.seconds >= 150 ? 2 : 1;
       const ideaBeats = Math.max(nIdeas, Math.round((budget.beats.min + budget.beats.max) / 2) - opening - 1);
       const weights = ideas.map((i) => 0.5 + i.importance);
@@ -203,9 +219,10 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
       })) as { title?: string; beats?: unknown[] } | null;
       const beats: unknown[] = [...(raw0?.beats ?? []).slice(0, opening)];
       let previous = '';
+      const said: string[] = [];
       for (const [k, n] of alloc.entries()) {
         const raw = (await tryJson(`section ${k + 1}/${alloc.length} (${n} beats)`, {
-          ...sectionPrompt(src, ctx, k, n, previous),
+          ...sectionPrompt(src, { ...ctx, analysis: { ...analysis, ideas } }, k, n, previous, said),
           schema: scriptSchema(src, n),
           name: 'section',
           maxTokens: 400 + n * 300,
@@ -229,6 +246,7 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
           ];
         }
         beats.push(...bs);
+        for (const b of bs) said.push((b as { narration?: string }).narration ?? '');
         previous = (bs[bs.length - 1] as { narration?: string }).narration ?? previous;
       }
       const rawT = (await tryJson('takeaway', {
