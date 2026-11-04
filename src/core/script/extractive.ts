@@ -281,6 +281,19 @@ export function numberLabel(narration: string, value: string): string | null {
  * The source's own "what is it" sentence: the first sentence of the abstract / README lead / note that defines
  * or introduces the subject ("X is a…", "We introduce X…", "This package contains…"). Faithful by construction.
  */
+/** "This modest package contains …" → "humanize is a package that contains …": the video says the name. */
+export function namedSubject(t: string, subject: string): string {
+  if (!subject || /^\d+ (images|files)$/i.test(subject)) return t;
+  const m = t.match(
+    /^This (?:modest |small |tiny |simple )?(package|library|tool|project|module|crate|app)\s+(is|contains|provides|lets|helps|introduces|offers)\b\s*/i,
+  );
+  if (!m) return t;
+  const rest = t.slice(m[0].length);
+  return m[2]!.toLowerCase() === 'is'
+    ? `${subject} is ${rest}`
+    : `${subject} is a ${m[1]!.toLowerCase()} that ${m[2]!.toLowerCase()} ${rest}`;
+}
+
 export function whatIsIt(src: Source): { text: string; segmentId: string } | null {
   const lead = src.segments.filter((s) => s.kind === 'abstract' || s.kind === 'paragraph').slice(0, 4);
   const titleWords = new Set(contentWords(src.title).map((w) => w.toLowerCase()));
@@ -309,7 +322,8 @@ export function whatIsIt(src: Source): { text: string; segmentId: string } | nul
     for (const sen of sentences(seg.text)) {
       const t = cleanForSpeech(sen);
       if (wordCount(t) < 6 || wordCount(t) > 45 || garbled(t)) continue;
-      if (INTRO.test(t) || (DEF.test(t) && mentionsSubject(t))) return { text: t, segmentId: seg.id };
+      if (INTRO.test(t) || (DEF.test(t) && mentionsSubject(t)))
+        return { text: namedSubject(t, subject), segmentId: seg.id };
     }
   }
   // no definition sentence: the earliest lead sentence that names most of a descriptive title is the topic

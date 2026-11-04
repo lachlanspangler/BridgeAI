@@ -113,3 +113,16 @@ describe('thirdPerson', () => {
     expect(thirdPerson('We describe our method.')).toBe('The authors describe their method.');
   });
 });
+
+describe('namedSubject', () => {
+  it('puts the project name in place of "This package"', async () => {
+    const { namedSubject } = await import('../../src/core/script/extractive.ts');
+    expect(namedSubject('This modest package contains various utilities.', 'humanize')).toBe(
+      'humanize is a package that contains various utilities.',
+    );
+    expect(namedSubject('This tool is a fast benchmark.', 'hyperfine')).toBe(
+      'hyperfine is a fast benchmark.',
+    );
+    expect(namedSubject('We propose X.', 'Paper')).toBe('We propose X.');
+  });
+});
