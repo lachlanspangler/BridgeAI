@@ -541,6 +541,23 @@ export async function runPipeline(
       }
     }
   }
+  // the narrator is not the authors: any line still in the first person is put in the third person
+  script = {
+    ...script,
+    beats: script.beats.map((b) =>
+      b.visual.type !== 'quote' && /\b(we|our|us)\b/.test(b.narration)
+        ? {
+            ...b,
+            narration: thirdPerson(b.narration),
+            claims: b.claims.map((c) => ({ ...c, text: thirdPerson(c.text) })),
+            visual:
+              b.visual.type === 'takeaway' || b.visual.type === 'statement'
+                ? { ...b.visual, text: thirdPerson(b.visual.text) }
+                : b.visual,
+          }
+        : b,
+    ),
+  };
   write(jobDir, 'faith.json', faith);
 
   // 4. voice + fit to length (±10%)
@@ -585,6 +602,27 @@ export async function runPipeline(
         const droppable = script.beats
           .map((b, i) => ({ b, i }))
           .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway' && !b.ideas.includes('core'));
+        // short videos whose idea beats are all core: a title card, then the takeaway, give way first
+        if (over > 1.12 && droppable.length <= 1 && budget.seconds <= 30 && script.beats.length > 2) {
+          const spare =
+            script.beats.findIndex(
+              (b) => b.role === 'hook' && b.visual.type === 'title' && !b.ideas.includes('core'),
+            ) + 1 || script.beats.findIndex((b) => b.role === 'takeaway' && !b.ideas.includes('core')) + 1;
+          if (spare) {
+            const i = spare - 1;
+            faith.actions.push({
+              beatId: `x-fit-${script.beats[i]!.id}`,
+              action: 'dropped',
+              reason: 'length fit: a short video keeps its core beats',
+            });
+            script = {
+              ...script,
+              beats: script.beats.filter((_, j) => j !== i).map((b, j) => ({ ...b, id: `b${j + 1}` })),
+            };
+            clips.splice(i, 1);
+            continue;
+          }
+        }
         if (over > 1.12 && droppable.length > 1) {
           const victim = droppable[droppable.length - 1]!;
           faith.actions.push({
