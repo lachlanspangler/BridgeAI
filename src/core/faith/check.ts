@@ -18,7 +18,7 @@ export interface BeatCheck {
   beatId: string;
   verdicts: ClaimVerdict[];
   /** Claims that failed only the overlap test (paraphrase?) and should go to the judge. */
-  needsJudge: { claim: string; support: string }[];
+  needsJudge: { claim: string; support: string; context: string }[];
   ok: boolean;
 }
 
@@ -82,6 +82,12 @@ export function missingNames(claim: string, haystack: string): string[] {
     if (hay.includes(w.replace(/s$/, ''))) return false;
     return true;
   });
+}
+
+/** Acronyms and model-style names (BLEU, GPT-4, Qwen3) missing from the haystack. */
+export function missingAcronyms(text: string, haystack: string): string[] {
+  const hay = haystack.toLowerCase();
+  return properNouns(text).filter((n) => (/^[A-Z][A-Z0-9-]+$/.test(n) || /\d/.test(n)) && !hay.includes(n.toLowerCase()));
 }
 
 /** Strings shown on screen by a visual (to check them like narration). */
@@ -193,7 +199,7 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
     if (ov >= minOverlap)
       verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'supported', by: 'overlap' });
     else {
-      needsJudge.push({ claim: c.text, support: sup });
+      needsJudge.push({ claim: c.text, support: sup, context: beat.narration });
       verdicts.push({
         beatId: beat.id,
         claim: c.text,
@@ -213,7 +219,8 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
     ] as const) {
       if (!text) continue;
       const nums = missingNumbers(text, hay);
-      const names = missingNames(text, `${hay}\n${src.title}`);
+      // on-screen labels are often Title Case, so only acronyms / model names count as names there
+      const names = what === 'screen' ? missingAcronyms(text, `${hay}\n${src.title}`) : missingNames(text, `${hay}\n${src.title}`);
       if (nums.length || names.length) {
         verdicts.push({
           beatId: beat.id,
@@ -225,16 +232,16 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       }
     }
   } else {
-    for (const text of [beat.narration, ...visualStrings(beat.visual)]) {
+    for (const [what, text] of [['narration', beat.narration], ...visualStrings(beat.visual).map((x) => ['screen', x] as const)] as const) {
       const nums = missingNumbers(text, everything);
-      const names = missingNames(text, everything);
+      const names = what === 'screen' ? missingAcronyms(text, everything) : missingNames(text, everything);
       if (nums.length || names.length)
         verdicts.push({
           beatId: beat.id,
           claim: text,
           verdict: 'unsupported',
           by: nums.length ? 'numbers' : 'names',
-          reason: `hook has ${[...nums, ...names].join(', ')} not in the source`,
+          reason: `${what === 'screen' ? 'screen' : 'hook'} has ${[...nums, ...names].join(', ')} not in the source`,
         });
     }
   }

@@ -8,6 +8,7 @@ import { analysisSchema, judgeSchema, scriptSchema, tightenSchema } from '../cor
 import {
   analyzePrompt,
   bookendPrompt,
+  expandPrompt,
   judgePrompt,
   scriptPrompt,
   sectionPrompt,
@@ -232,9 +233,9 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
     }
   };
 
-  const judge = async (claim: string, support: string, signal?: AbortSignal): Promise<boolean> => {
+  const judge = async (claim: string, support: string, signal?: AbortSignal, context?: string): Promise<boolean> => {
     try {
-      const p = judgePrompt(claim, support);
+      const p = judgePrompt(claim, support, context);
       const r = await llm.json<{ verdict: string }>({
         ...p,
         schema: judgeSchema(),
@@ -276,7 +277,18 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
     );
   };
 
-  return { analyze, script, judge, tighten, tts };
+  const expand = async (beat: Beat, targetWords: number, support: string, signal?: AbortSignal): Promise<string | null> => {
+    try {
+      const p = expandPrompt(beat.narration, targetWords, support);
+      const r = await llm.json<{ narration: string }>({ ...p, schema: tightenSchema(), name: 'expand', maxTokens: 260, temperature: 0.3, signal });
+      const out = r.narration.trim();
+      return out && wordCount(out) > wordCount(beat.narration) ? out : null;
+    } catch {
+      return null;
+    }
+  };
+
+  return { analyze, script, judge, tighten, expand, tts };
 }
 
 /** Attach idea ids to beats by evidence overlap (for coverage evals and the source map). */

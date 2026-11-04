@@ -4,7 +4,7 @@
  */
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
-import { createReadStream, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { appendFileSync, createReadStream, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { budgetFor, describeBudget, PRESETS } from '../core/budget.ts';
@@ -82,7 +82,10 @@ export function createApp(opts: AppOptions) {
   const defaultRunner: ConstructorParameters<typeof JobQueue>[0] = async (job, onProgress, signal) => {
     const src = loadSource(job.sourceId);
     if (!src) throw new Error('source not found');
-    const { engines } = await pickEngines({ llm: job.settings.llm, tts: job.settings.tts, providers: providerFromKeys, voices: cloudTts });
+    const logFile = join(jobDir(job.id), 'log.txt');
+    const log = (e: { stage: string; message: string; ms?: number }) =>
+      appendFileSync(logFile, redact(`${new Date().toISOString()} ${e.stage}: ${e.message}${e.ms ? ` (${e.ms} ms)` : ''}\n`));
+    const { engines } = await pickEngines({ llm: job.settings.llm, tts: job.settings.tts, providers: providerFromKeys, voices: cloudTts, log });
     // reuse the reviewed idea list if the user looked at it (pins/drops apply on top)
     const cached = join(sourceDir(job.sourceId), `analysis-${job.settings.llm}.json`);
     if (existsSync(cached)) {

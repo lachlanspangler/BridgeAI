@@ -15,6 +15,7 @@ import {
 } from '../schema.ts';
 import { contentWords, normNumber, numbers, stem, wordCount } from '../text/text.ts';
 import { IDEA_KINDS } from './schemas.ts';
+import { trimSentence } from '../script/extractive.ts';
 
 const normQ = (s: string) =>
   s
@@ -178,7 +179,7 @@ export function toVisual(
       case 'statement': {
         const text = s(v.text);
         // a statement must say something on its own (≥ 3 words); else show the narration's key clause
-        const shown = wordCount(text) >= 3 ? text : clampW(narration.replace(/[.!?]$/, ''), 9);
+        const shown = wordCount(text) >= 3 ? text : trimSentence(narration, 9).replace(/[.!?]$/, '');
         return Visual.parse({
           type: 'statement',
           text: clampW(shown, 9),

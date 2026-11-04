@@ -5,7 +5,8 @@
  *   bridge models [pull|link <path>|list]
  *   bridge keys [list|set <provider>|remove <provider>]
  */
-import { mkdirSync, readFileSync, copyFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, copyFileSync, readdirSync, statSync } from 'node:fs';
+import { ingestInput, type InputFile } from '../node/ingest/index.ts';
 import { basename, join, resolve } from 'node:path';
 import { RenderSettings } from '../core/schema.ts';
 import { ingestText } from '../core/ingest/text.ts';
@@ -20,12 +21,31 @@ function flag(args: string[], k: string, d?: string): string | undefined {
   return i >= 0 ? args[i + 1] : d;
 }
 
+function readTree(root: string, rel = ''): InputFile[] {
+  const out: InputFile[] = [];
+  for (const e of readdirSync(join(root, rel), { withFileTypes: true })) {
+    if (/^(node_modules|\.git|dist|build|\.venv)$/.test(e.name)) continue;
+    const r = rel ? `${rel}/${e.name}` : e.name;
+    if (e.isDirectory()) out.push(...readTree(root, r));
+    else if (e.isFile() && statSync(join(root, r)).size < 200_000) out.push({ name: `${basename(root)}/${r}`, data: readFileSync(join(root, r)) });
+    if (out.length > 3000) break;
+  }
+  return out;
+}
+
 async function make(args: string[]): Promise<void> {
   const input = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
   if (!input) throw new Error('usage: bridge make <file> [--len 20]');
   const seconds = Number(flag(args, 'len', '20'));
-  const text = input === '-' ? readFileSync(0, 'utf8') : readFileSync(input, 'utf8');
-  const src = ingestText(text, input === '-' ? 'pasted text' : basename(input));
+  const id0 = `${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}-${seconds}s`;
+  const srcDir = join(paths.home(), 'sources', `cli-${id0}`);
+  let src;
+  if (input === '-') src = ingestText(readFileSync(0, 'utf8'), 'pasted text');
+  else if (/^https?:\/\//.test(input)) src = await ingestInput({ url: input }, srcDir);
+  else if (statSync(input).isDirectory()) src = await ingestInput({ files: readTree(input) }, srcDir);
+  else src = await ingestInput({ files: [{ name: basename(input), data: readFileSync(input) }] }, srcDir);
+  src = { ...src, assets: src.assets.map((a) => ({ ...a, path: resolve(srcDir, a.path) })) };
+  console.log(`source   ${src.kind} · "${src.title}" · ${src.stats.words} words · ${src.segments.length} segments · ${src.assets.length} figures${src.warnings.length ? ` · ${src.warnings.join('; ')}` : ''}`);
   const settings = RenderSettings.parse({
     seconds,
     voice: flag(args, 'voice', 'af_heart'),
@@ -38,7 +58,7 @@ async function make(args: string[]): Promise<void> {
       console.log(`         · ${e.stage}: ${e.message}${e.ms ? ` (${(e.ms / 1000).toFixed(1)}s)` : ''}`),
   });
   console.log(`engine   ${label} · voice ${engines.tts.id}`);
-  const id = `${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}-${seconds}s`;
+  const id = id0;
   const jobDir = join(paths.jobs(), id);
   let last = '';
   const res = await runPipeline(src, settings, engines, jobDir, (p: Progress) => {

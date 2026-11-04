@@ -174,10 +174,10 @@ EXAMPLE of one good beat (different source):
   };
 }
 
-export function judgePrompt(claim: string, support: string): Prompt {
+export function judgePrompt(claim: string, support: string, context?: string): Prompt {
   return {
     system: SYSTEM_JUDGE,
-    user: `SOURCE EXCERPT:\n"""\n${support.slice(0, 3000)}\n"""\n\nCLAIM: "${claim}"\n\nIs every fact in the claim supported by the excerpt? Paraphrase and simpler words are fine. Added numbers, names, comparisons or causes are not.`,
+    user: `SOURCE EXCERPT:\n"""\n${support.slice(0, 3500)}\n"""\n\n${context && context !== claim ? `The claim comes from this narration line: "${context}"\n` : ''}CLAIM: "${claim}"\n\nIs every fact in the claim supported by the excerpt? Paraphrase, simpler words and rounding are fine; so is everyday wording for the same idea ("loops" for recurrence). Added numbers, names, comparisons or causes that the excerpt does not state are not. Answer "supported" or "not_supported".`,
   };
 }
 
@@ -264,5 +264,12 @@ ${task}
 Use ONLY facts in EVIDENCE; list claims with supporting [segment ids] (use kind "framing" only for a sentence with no facts); keywords = 1–3 words from the narration.
 
 ${VISUAL_GUIDE}`,
+  };
+}
+
+export function expandPrompt(narration: string, targetWords: number, support: string): Prompt {
+  return {
+    system: SYSTEM_WRITER,
+    user: `This narration is too short for its slot. Rewrite it to about ${targetWords} words by adding ONE more concrete detail, number or consequence that the SOURCE states (or a plain-words explanation of a term). Keep it direct, spoken, one idea. Never add anything the source doesn't say.\n\nSOURCE:\n${support.slice(0, 1800)}\n\nNARRATION: "${narration}"`,
   };
 }

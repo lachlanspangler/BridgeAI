@@ -845,8 +845,10 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
   roundRect(ctx, x, y, w, h, 10 * s);
   ctx.clip();
   // Ken Burns: slow zoom toward the focus region (or centre)
-  const f = v.focus ?? [0.25, 0.25, 0.5, 0.5];
-  const z = lerp(1, v.focus ? 1.35 : 1.06, easeInOutCubic(prog(p.t, 0.4, Math.max(1.5, p.dur - 0.6))));
+  // no focus given: a slow tour (zoom in on the top half, then glide to the bottom half) so long beats keep moving
+  const k = easeInOutCubic(prog(p.t, 0.4, Math.max(1.5, p.dur - 0.6)));
+  const f = v.focus ?? [0.2, lerp(0.15, 0.55, k), 0.6, 0.3];
+  const z = v.focus ? lerp(1, 1.35, k) : lerp(1, 1.22, Math.min(1, k * 2.5));
   const fx = x + (f[0] + f[2] / 2) * w;
   const fy = y + (f[1] + f[3] / 2) * h;
   ctx.translate(fx, fy);

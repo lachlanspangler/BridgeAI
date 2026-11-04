@@ -5,6 +5,7 @@
  */
 import type { Beat, ClaimVerdict, FaithReport, Script } from '../schema.ts';
 import type { BeatCheck } from './check.ts';
+import { trimSentence } from '../script/extractive.ts';
 
 export interface GateResult {
   script: Script;
@@ -33,9 +34,16 @@ export function gate(
     });
     const bad = vs.filter((v) => v.verdict === 'unsupported');
     verdicts.push(...vs);
+    const screenOnly = bad.length > 0 && bad.every((v) => v.reason?.startsWith('screen'));
     if (!bad.length) {
       kept.push(beat);
       actions.push({ beatId: beat.id, action: 'kept', reason: 'all claims supported' });
+    } else if (screenOnly) {
+      // the words are fine but the picture said something unsupported: show the narration's own words instead
+      const words = trimSentence(beat.narration, beat.role === 'takeaway' ? 12 : 9).replace(/[.!?]$/, '');
+      const visual: Beat['visual'] = beat.role === 'takeaway' ? { type: 'takeaway', text: words, highlight: beat.keywords.slice(0, 1) } : { type: 'statement', text: words, highlight: beat.keywords.slice(0, 2) };
+      kept.push({ ...beat, visual });
+      actions.push({ beatId: beat.id, action: 'rewritten', reason: `visual replaced: ${bad[0]!.reason ?? ''}` });
     } else if (beat.role === 'hook') {
       kept.push({
         ...beat,
@@ -76,4 +84,9 @@ export function gate(
     script: { ...script, beats: renum.length ? renum : script.beats.slice(0, 1) },
     report: { verdicts, unsupported, actions },
   };
+}
+
+/** A short spoken form of the title (before a colon, ≤ 8 words). */
+function titleOf(s: Script): string {
+  return s.title.split(/[:—–]/)[0]!.split(/\s+/).slice(0, 8).join(' ').trim() || 'This';
 }
