@@ -9,7 +9,7 @@ licence: "Public domain (U.S. Government work, NASA). NASA Goddard Institute for
 key_points:
   - id: k1
     text: "Global average temperature has risen since 1880, reaching more than 1 °C above the 1951-1980 baseline in recent years."
-    any: [["temperature", "warm"], ["rise", "rose", "increase", "risen", "warmer", "hotter", "climb"]]
+    any: [["temperature", "warm"], ["rise", "rising", "rose", "increase", "risen", "warmer", "hotter", "climb"]]
   - id: k2
     text: "Most of the warming happened after about 1970-1980, with a steep, steady climb to the present."
     any: [["1970", "1980", "seventies", "eighties", "recent decades", "since the"]]

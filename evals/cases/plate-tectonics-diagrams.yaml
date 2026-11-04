@@ -11,7 +11,7 @@ licence: "Public domain (U.S. Government work, USGS). Map: USGS, SVG by Scott Na
 key_points:
   - id: k1
     text: "Earth's outer shell (lithosphere) is broken into separate tectonic plates that move relative to one another; the map shows 15 of the largest, each named."
-    any: [["plate"], ["move", "motion", "tectonic", "drift"]]
+    any: [["plate"], ["move", "moving", "motion", "tectonic", "drift", "collid", "sink", "slide", "pull apart", "separat"]]
   - id: k2
     text: "Where an oceanic plate meets a continental plate, the oceanic lithosphere sinks beneath the continent, creating a trench and a volcanic arc."
     any: [["ocean"], ["trench", "volcan", "sink", "subduct", "beneath", "under"]]

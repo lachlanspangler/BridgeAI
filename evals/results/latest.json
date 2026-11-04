@@ -1,18 +1,614 @@
 {
-  "stamp": "2026-11-04T11:49:27.155Z",
+  "stamp": "2026-11-04T13:00:30.684Z",
   "engine": "local:qwen3.5-4b-q4_k_m",
   "lengths": [
-    20
+    20,
+    60
   ],
   "rows": [
+    {
+      "case": "attention-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.9,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": false,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k2"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "attention-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 60.9,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
     {
       "case": "carbon-cycle-diagram",
       "kind": "images",
       "seconds": 20,
       "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20.1,
+      "actual": 19.2,
       "inTolerance": true,
       "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "carbon-cycle-diagram",
+      "kind": "images",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 45.9,
+      "inTolerance": false,
+      "beats": 6,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 0.67,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "climate-ml-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 20.7,
+      "inTolerance": true,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "climate-ml-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 51.7,
+      "inTolerance": false,
+      "beats": 6,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 0.67,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "covid-herd-immunity-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.9,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "covid-herd-immunity-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 62.5,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "1/3",
+      "understandingFrac": 0.3333333333333333
+    },
+    {
+      "case": "double-ml-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 20.5,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "double-ml-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 62,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "1/3",
+      "understandingFrac": 0.3333333333333333
+    },
+    {
+      "case": "global-temperature-chart",
+      "kind": "images",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.3,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": false,
+      "coverage": 0,
+      "coveredIds": [],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "global-temperature-chart",
+      "kind": "images",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 52.2,
+      "inTolerance": false,
+      "beats": 7,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/3",
+      "understandingFrac": 0.6666666666666666
+    },
+    {
+      "case": "humanize-repo",
+      "kind": "project",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 4,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "humanize-repo",
+      "kind": "project",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 57,
+      "inTolerance": true,
+      "beats": 7,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 5,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "hyperfine-repo",
+      "kind": "project",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 21,
+      "inTolerance": true,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "1/1",
+      "understandingFrac": 1
+    },
+    {
+      "case": "hyperfine-repo",
+      "kind": "project",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 63.5,
+      "inTolerance": true,
+      "beats": 12,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 0.67,
+      "coveredIds": [
+        "k1",
+        "k3"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "ligo-gw150914-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 18.4,
+      "inTolerance": true,
+      "beats": 2,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 3,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "ligo-gw150914-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 33.5,
+      "inTolerance": false,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 4,
+      "k1": true,
+      "coverage": 0.33,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "1/3",
+      "understandingFrac": 0.3333333333333333
+    },
+    {
+      "case": "mistral-7b-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 21.4,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "mistral-7b-pdf",
+      "kind": "pdf",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 61.7,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 5,
+      "k1": true,
+      "coverage": 0.67,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "mixtral-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 20.9,
+      "inTolerance": true,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "mixtral-pdf",
+      "kind": "pdf",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 56.9,
+      "inTolerance": true,
+      "beats": 8,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 3,
+      "k1": true,
+      "coverage": 0.67,
+      "coveredIds": [
+        "k1",
+        "k3"
+      ],
+      "understanding": "2/3",
+      "understandingFrac": 0.6666666666666666
+    },
+    {
+      "case": "nanoid-repo",
+      "kind": "project",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 20.7,
+      "inTolerance": true,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "nanoid-repo",
+      "kind": "project",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 63,
+      "inTolerance": true,
+      "beats": 10,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/3",
+      "understandingFrac": 0.6666666666666666
+    },
+    {
+      "case": "plate-tectonics-diagrams",
+      "kind": "images",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 18.6,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": false,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k2"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "plate-tectonics-diagrams",
+      "kind": "images",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 39.8,
+      "inTolerance": false,
+      "beats": 5,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 0.67,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "2/3",
+      "understandingFrac": 0.6666666666666666
+    },
+    {
+      "case": "tensorflow-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 22.2,
+      "inTolerance": false,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "tensorflow-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 60.2,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "1/3",
+      "understandingFrac": 0.3333333333333333
+    },
+    {
+      "case": "tree-of-thoughts-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.2,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/1",
+      "understandingFrac": 0
+    },
+    {
+      "case": "tree-of-thoughts-pdf",
+      "kind": "pdf",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 58.8,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 0.33,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "vllm-pagedattention-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 34.9,
+      "inTolerance": false,
+      "beats": 5,
       "unsupported": 0,
       "recheckUnsupported": 0,
       "dropped": 1,
@@ -26,76 +622,105 @@
       "understandingFrac": 1
     },
     {
-      "case": "humanize-repo",
-      "kind": "project",
-      "seconds": 20,
+      "case": "vllm-pagedattention-pdf",
+      "kind": "pdf",
+      "seconds": 60,
       "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20,
+      "actual": 61.5,
       "inTolerance": true,
-      "beats": 3,
+      "beats": 8,
       "unsupported": 0,
       "recheckUnsupported": 0,
-      "dropped": 5,
-      "k1": false,
-      "coverage": 0,
-      "coveredIds": [],
+      "dropped": 2,
+      "k1": true,
+      "coverage": 0.67,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
       "understanding": "1/2",
       "understandingFrac": 0.5
     },
     {
-      "case": "hyperfine-repo",
-      "kind": "project",
+      "case": "wiki-crispr",
+      "kind": "text",
       "seconds": 20,
       "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 21.5,
+      "actual": 18.7,
       "inTolerance": true,
-      "beats": 4,
+      "beats": 3,
       "unsupported": 0,
       "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": false,
-      "coverage": 0.5,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 1,
       "coveredIds": [
+        "k1",
         "k2"
       ],
-      "understanding": "1/1",
+      "understanding": "3/3",
       "understandingFrac": 1
     },
     {
-      "case": "mixtral-pdf",
-      "kind": "pdf",
+      "case": "wiki-crispr",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 59,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "0/3",
+      "understandingFrac": 0
+    },
+    {
+      "case": "wiki-water-cycle",
+      "kind": "text",
       "seconds": 20,
       "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 22.3,
+      "actual": 25.7,
       "inTolerance": false,
       "beats": 4,
       "unsupported": 0,
       "recheckUnsupported": 0,
-      "dropped": 3,
+      "dropped": 1,
       "k1": true,
       "coverage": 0.5,
       "coveredIds": [
         "k1"
       ],
-      "understanding": "0/2",
-      "understandingFrac": 0
+      "understanding": "1/1",
+      "understandingFrac": 1
     },
     {
-      "case": "plate-tectonics-diagrams",
-      "kind": "images",
-      "seconds": 20,
+      "case": "wiki-water-cycle",
+      "kind": "text",
+      "seconds": 60,
       "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20,
+      "actual": 60,
       "inTolerance": true,
-      "beats": 3,
+      "beats": 9,
       "unsupported": 0,
       "recheckUnsupported": 0,
       "dropped": 1,
-      "k1": false,
-      "coverage": 0,
-      "coveredIds": [],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
     }
   ]
 }

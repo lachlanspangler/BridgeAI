@@ -32,7 +32,7 @@ import {
   thirdPerson,
   whatIsIt,
 } from '../core/script/extractive.ts';
-import { contentWords, coverage, stem, wordCount } from '../core/text/text.ts';
+import { contentWords, coverage, properNouns, stem, wordCount } from '../core/text/text.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
 import { renderStill, renderVideo } from './render/render.ts';
 import type { Clip, TtsEngine } from './tts/types.ts';
@@ -338,7 +338,10 @@ export async function runPipeline(
   {
     const def = whatIsIt(src);
     const said = script.beats.map((b) => b.narration).join(' ');
-    if (def && coverage(def.text, said) < 0.5) {
+    // the subject's name must be said too ("the Transformer", not just "it")
+    const names = def ? properNouns(def.text).filter((n) => !/^(We|The|This|Our|A|An)$/.test(n)) : [];
+    const nameMissing = names.length > 0 && !names.some((n) => said.toLowerCase().includes(n.toLowerCase()));
+    if (def && (coverage(def.text, said) < 0.5 || nameMissing)) {
       const text = thirdPerson(trimSentence(def.text, Math.max(28, budget.wordsPerBeat.max + 6)));
       const nb: Beat = {
         id: 'bd',
