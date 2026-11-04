@@ -3,6 +3,7 @@
  * Output is constrained by a GBNF grammar compiled from the JSON schema, so it always parses. Thinking is off
  * (budgets.thoughtTokens = 0) for speed. One model instance is shared and calls are serialised.
  */
+import { msFromEnv, TimeoutError, withTimeout } from '../timeout.ts';
 import type { Llama, LlamaContext, LlamaContextSequence, LlamaModel } from 'node-llama-cpp';
 import { LlmError, type JsonRequest, type LlmProvider } from './types.ts';
 
@@ -12,6 +13,8 @@ export interface LocalOptions {
   modelId: string;
   contextSize?: number;
   gpuLayers?: 'auto' | number;
+  /** One model call may take at most this long (default 4 min, env BRIDGE_LLM_TIMEOUT_MS). */
+  callTimeoutMs?: number;
 }
 
 export class LocalLlm implements LlmProvider {
@@ -49,7 +52,7 @@ export class LocalLlm implements LlmProvider {
   }
 
   async json<T>(req: JsonRequest): Promise<T> {
-    const run = async (): Promise<T> => {
+    const run = async (signal: AbortSignal): Promise<T> => {
       const { llama, seq } = await this.load();
       const { LlamaChatSession, QwenChatWrapper } = await import('node-llama-cpp');
       await seq.clearHistory();
@@ -75,7 +78,7 @@ export class LocalLlm implements LlmProvider {
           grammar,
           maxTokens: req.maxTokens ?? 2048,
           temperature: req.temperature ?? 0.3,
-          signal: req.signal,
+          signal,
           ...(isQwen ? {} : { budgets: { thoughtTokens: 0 } }),
         });
         try {
@@ -87,9 +90,28 @@ export class LocalLlm implements LlmProvider {
         session?.dispose({ disposeSequence: false });
       }
     };
-    const p = this.queue.then(run, run);
+    const ms = this.opts.callTimeoutMs ?? msFromEnv('BRIDGE_LLM_TIMEOUT_MS', 240_000);
+    const timed = () =>
+      withTimeout(run, ms, 'local model call', req.signal).catch((e: unknown) => {
+        // a decode that never finished leaves the sequence unusable: drop this context, the next call loads fresh
+        if (e instanceof TimeoutError) this.reset();
+        throw e;
+      });
+    const p = this.queue.then(timed, timed);
     this.queue = p.catch(() => undefined);
     return p;
+  }
+
+  /** Forget the loaded context without waiting for it (it may be stuck); the next call reloads. */
+  private reset(): void {
+    const old = this.state;
+    this.state = null;
+    void old
+      ?.then(async (st) => {
+        await st.ctx.dispose();
+        await st.model.dispose();
+      })
+      .catch(() => undefined);
   }
 
   async dispose(): Promise<void> {

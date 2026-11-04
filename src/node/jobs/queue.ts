@@ -2,6 +2,7 @@
  * Jobs: one render at a time (hard rule), persisted status in <job>/job.json, progress fan-out for SSE,
  * cancellation, and a library listing. Job ids are `j_<time>_<rand>` and validated before any path use.
  */
+import { msFromEnv, withTimeout } from '../timeout.ts';
 import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -49,7 +50,11 @@ export class JobQueue {
   private queue: string[] = [];
   private running: { id: string; ac: AbortController } | null = null;
 
-  constructor(private readonly runner: Runner) {
+  /** A job may run at most this long (default 30 min, env BRIDGE_JOB_TIMEOUT_MS); then it fails, never hangs. */
+  constructor(
+    private readonly runner: Runner,
+    private readonly jobTimeoutMs = msFromEnv('BRIDGE_JOB_TIMEOUT_MS', 30 * 60_000),
+  ) {
     ensureDir(paths.jobs());
     for (const id of readdirSync(paths.jobs())) {
       if (!ID_RE.test(id)) continue;
@@ -142,16 +147,22 @@ export class JobQueue {
     this.update(job, { state: 'running' });
     let lastSave = 0;
     try {
-      const r = await this.runner(
-        job,
-        (p) => {
-          job.progress = p;
-          const now = Date.now();
-          if (now - lastSave > 400 || p.stage === 'done') {
-            lastSave = now;
-            this.update(job, {});
-          } else for (const f of this.listeners.get(job.id) ?? []) f(job);
-        },
+      const r = await withTimeout(
+        (signal) =>
+          this.runner(
+            job,
+            (p) => {
+              job.progress = p;
+              const now = Date.now();
+              if (now - lastSave > 400 || p.stage === 'done') {
+                lastSave = now;
+                this.update(job, {});
+              } else for (const f of this.listeners.get(job.id) ?? []) f(job);
+            },
+            signal,
+          ),
+        this.jobTimeoutMs,
+        'job',
         ac.signal,
       );
       this.update(job, {

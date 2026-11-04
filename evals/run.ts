@@ -8,6 +8,7 @@
  * Writes evals/results/latest.json and docs/EVALS.md.
  *   npx tsx evals/run.ts [--engine auto|extractive|local|anthropic|…] [--lengths 20,60] [--cases a,b] [--render]
  */
+import { msFromEnv, withTimeout } from '../src/node/timeout.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
@@ -232,14 +233,19 @@ async function main(): Promise<void> {
         const r =
           rescore && existsSync(join(dir, 'script.json'))
             ? savedRun(dir, s)
-            : await runPipeline(
-                src,
-                RenderSettings.parse({ seconds: s, width: 1280, height: 720 }),
-                engines,
-                dir,
-                () => {},
-                undefined,
-                { render },
+            : await withTimeout(
+                (signal) =>
+                  runPipeline(
+                    src,
+                    RenderSettings.parse({ seconds: s, width: 1280, height: 720 }),
+                    engines,
+                    dir,
+                    () => {},
+                    signal,
+                    { render },
+                  ),
+                msFromEnv('BRIDGE_EVAL_RUN_TIMEOUT_MS', 12 * 60_000),
+                `${c.id} ${s}s`,
               );
         const narration = r.script.beats.map((b) => b.narration).join(' ');
         const said = `${narration} ${screenText(r.script)}`;
