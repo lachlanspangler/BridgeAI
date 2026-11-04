@@ -29,7 +29,8 @@ export function authHeaders(p: ProviderId, key: string): Record<string, string> 
 
 export function assertHost(p: ProviderId, url: string): void {
   const u = new URL(url);
-  if (u.protocol !== 'https:' || !HOSTS[p].includes(u.hostname)) throw new LlmError(`refusing to send a ${p} key to ${u.protocol}//${u.hostname}`, p);
+  if (u.protocol !== 'https:' || !HOSTS[p].includes(u.hostname))
+    throw new LlmError(`refusing to send a ${p} key to ${u.protocol}//${u.hostname}`, p);
 }
 
 /** Test seam: replace the network. */
@@ -38,7 +39,12 @@ export const setFetch = (f: typeof fetch): void => {
   fetchImpl = f;
 };
 
-export async function providerFetch(p: ProviderId, key: string, url: string, init: RequestInit & { timeoutMs?: number; retries?: number } = {}): Promise<Response> {
+export async function providerFetch(
+  p: ProviderId,
+  key: string,
+  url: string,
+  init: RequestInit & { timeoutMs?: number; retries?: number } = {},
+): Promise<Response> {
   assertHost(p, url);
   const retries = init.retries ?? 2;
   let last: unknown;
@@ -48,7 +54,12 @@ export async function providerFetch(p: ProviderId, key: string, url: string, ini
     const onAbort = () => ac.abort();
     init.signal?.addEventListener('abort', onAbort);
     try {
-      const res = await fetchImpl(url, { ...init, signal: ac.signal, redirect: 'error', headers: { ...(init.headers as Record<string, string>), ...(key ? authHeaders(p, key) : {}) } });
+      const res = await fetchImpl(url, {
+        ...init,
+        signal: ac.signal,
+        redirect: 'error',
+        headers: { ...(init.headers as Record<string, string>), ...(key ? authHeaders(p, key) : {}) },
+      });
       if ((res.status === 429 || res.status >= 500) && attempt < retries) {
         await new Promise((r) => setTimeout(r, 800 * 2 ** attempt));
         continue;
@@ -60,12 +71,17 @@ export async function providerFetch(p: ProviderId, key: string, url: string, ini
       return res;
     } catch (e) {
       last = e;
-      if (init.signal?.aborted || e instanceof LlmError) throw e instanceof Error ? new LlmError(redact(e.message), p) : e;
+      if (init.signal?.aborted || e instanceof LlmError)
+        throw e instanceof Error ? new LlmError(redact(e.message), p) : e;
       if (attempt >= retries) break;
     } finally {
       clearTimeout(timer);
       init.signal?.removeEventListener('abort', onAbort);
     }
   }
-  throw new LlmError(redact(`${p} request failed: ${last instanceof Error ? last.message : String(last)}`), p, true);
+  throw new LlmError(
+    redact(`${p} request failed: ${last instanceof Error ? last.message : String(last)}`),
+    p,
+    true,
+  );
 }

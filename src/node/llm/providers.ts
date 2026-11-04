@@ -16,7 +16,10 @@ export const DEFAULT_MODELS: Record<'anthropic' | 'openai' | 'gemini' | 'openrou
 };
 
 function parseJson(text: string, p: string): unknown {
-  const t = text.trim().replace(/^```(?:json)?\s*/, '').replace(/```$/, '');
+  const t = text
+    .trim()
+    .replace(/^```(?:json)?\s*/, '')
+    .replace(/```$/, '');
   try {
     return JSON.parse(t);
   } catch {
@@ -44,7 +47,13 @@ export class AnthropicLlm implements LlmProvider {
         temperature: req.temperature ?? 0.3,
         system: req.system,
         messages: [{ role: 'user', content: req.user }],
-        tools: [{ name: req.name, description: `Return the ${req.name} as structured data.`, input_schema: req.schema }],
+        tools: [
+          {
+            name: req.name,
+            description: `Return the ${req.name} as structured data.`,
+            input_schema: req.schema,
+          },
+        ],
         tool_choice: { type: 'tool', name: req.name },
       }),
     });
@@ -66,7 +75,10 @@ export class OpenAiCompatibleLlm implements LlmProvider {
     readonly model: string,
   ) {}
   async json<T>(req: JsonRequest): Promise<T> {
-    const url = this.id === 'openai' ? 'https://api.openai.com/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions';
+    const url =
+      this.id === 'openai'
+        ? 'https://api.openai.com/v1/chat/completions'
+        : 'https://openrouter.ai/api/v1/chat/completions';
     const headers: Record<string, string> = { 'content-type': 'application/json' };
     if (this.id === 'openrouter') {
       headers['http-referer'] = 'https://github.com/lachlanspangler/bridge';
@@ -80,10 +92,20 @@ export class OpenAiCompatibleLlm implements LlmProvider {
       ],
       temperature: req.temperature ?? 0.3,
       max_completion_tokens: req.maxTokens ?? 4096,
-      response_format: { type: 'json_schema', json_schema: { name: req.name, strict: true, schema: toOpenAiSchema(req.schema) } },
+      response_format: {
+        type: 'json_schema',
+        json_schema: { name: req.name, strict: true, schema: toOpenAiSchema(req.schema) },
+      },
     };
-    const res = await providerFetch(this.id, this.key, url, { method: 'POST', headers, body: JSON.stringify(body), signal: req.signal });
-    const j = (await res.json()) as { choices?: { message?: { content?: string | null; refusal?: string | null } }[] };
+    const res = await providerFetch(this.id, this.key, url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: req.signal,
+    });
+    const j = (await res.json()) as {
+      choices?: { message?: { content?: string | null; refusal?: string | null } }[];
+    };
     const msg = j.choices?.[0]?.message;
     if (msg?.refusal) throw new LlmError(`${this.id} refused: ${msg.refusal}`, this.id);
     if (!msg?.content) throw new LlmError(`${this.id} returned an empty message`, this.id, true);
@@ -128,7 +150,12 @@ export class GeminiLlm implements LlmProvider {
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: req.system }] },
         contents: [{ role: 'user', parts: [{ text: req.user }] }],
-        generationConfig: { temperature: req.temperature ?? 0.3, maxOutputTokens: req.maxTokens ?? 4096, responseMimeType: 'application/json', responseSchema: toGeminiSchema(req.schema) },
+        generationConfig: {
+          temperature: req.temperature ?? 0.3,
+          maxOutputTokens: req.maxTokens ?? 4096,
+          responseMimeType: 'application/json',
+          responseSchema: toGeminiSchema(req.schema),
+        },
       }),
     });
     const j = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };

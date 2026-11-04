@@ -124,7 +124,8 @@ export async function runPipeline(
     const judged = new Map<string, boolean>();
     if (engines.judge) {
       for (const c of checks)
-        for (const j of c.needsJudge) judged.set(j.claim, await engines.judge(j.claim, j.support, signal, j.context));
+        for (const j of c.needsJudge)
+          judged.set(j.claim, await engines.judge(j.claim, j.support, signal, j.context));
     }
     const top = analysis.ideas[0];
     const fallback: Beat | undefined = top
@@ -155,26 +156,46 @@ export async function runPipeline(
   // 3b. pre-voice length fit: a script far under budget gets sourced details added (each re-checked)
   if (engines.expand && scriptWords(script) < budget.words * 0.85) {
     const seg = new Map(src.segments.map((x) => [x.id, x.text]));
-    const order = script.beats.map((b, i) => ({ b, i })).filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway').sort((a, b) => wordCount(a.b.narration) - wordCount(b.b.narration));
+    const order = script.beats
+      .map((b, i) => ({ b, i }))
+      .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway')
+      .sort((a, b) => wordCount(a.b.narration) - wordCount(b.b.narration));
     for (const { b, i } of order) {
       const deficit = budget.words - scriptWords(script);
       if (deficit < budget.words * 0.08) break;
       const support = [...new Set(b.claims.flatMap((c) => c.support))];
       if (!support.length) continue;
-      const target = Math.min(budget.wordsPerBeat.max + 4, wordCount(b.narration) + Math.ceil(deficit / Math.max(1, order.length)) + 4);
+      const target = Math.min(
+        budget.wordsPerBeat.max + 4,
+        wordCount(b.narration) + Math.ceil(deficit / Math.max(1, order.length)) + 4,
+      );
       const text = await engines.expand(b, target, support.map((id) => seg.get(id) ?? '').join('\n'), signal);
       if (!text) continue;
       const cand: Beat = { ...b, narration: text, claims: [{ text, support, kind: 'fact' }] };
       const c = checkBeat(cand, src);
       let ok = c.ok;
-      if (!ok && engines.judge && c.verdicts.every((v) => v.verdict !== 'unsupported' || v.by === 'overlap')) ok = await engines.judge(text, support.map((id) => seg.get(id) ?? '').join('\n'), signal);
+      if (!ok && engines.judge && c.verdicts.every((v) => v.verdict !== 'unsupported' || v.by === 'overlap'))
+        ok = await engines.judge(text, support.map((id) => seg.get(id) ?? '').join('\n'), signal);
       if (ok) {
         script.beats[i] = cand;
-        faith.actions.push({ beatId: b.id, action: 'rewritten', reason: 'expanded with a sourced detail (re-checked)' });
-        faith.verdicts.push({ beatId: b.id, claim: text, verdict: 'supported', by: c.ok ? 'overlap' : 'judge' });
+        faith.actions.push({
+          beatId: b.id,
+          action: 'rewritten',
+          reason: 'expanded with a sourced detail (re-checked)',
+        });
+        faith.verdicts.push({
+          beatId: b.id,
+          claim: text,
+          verdict: 'supported',
+          by: c.ok ? 'overlap' : 'judge',
+        });
       }
     }
-    onProgress({ stage: 'faith', progress: 1, message: `Script is ${scriptWords(script)} words (target ${budget.words})` });
+    onProgress({
+      stage: 'faith',
+      progress: 1,
+      message: `Script is ${scriptWords(script)} words (target ${budget.words})`,
+    });
   }
   write(jobDir, 'faith.json', faith);
 

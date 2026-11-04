@@ -37,7 +37,10 @@ export async function ingestInput(input: Input, dir: string, signal?: AbortSigna
   mkdirSync(dir, { recursive: true });
   const files = (input.files ?? []).map((f) => ({ ...f, name: safeName(f.name) })).filter((f) => f.name);
   const total = files.reduce((n, f) => n + f.data.length, 0);
-  if (total > MAX_UPLOAD_BYTES) throw new Error(`that upload is ${(total / 1e6).toFixed(0)} MB; the limit is ${MAX_UPLOAD_BYTES / 1e6} MB`);
+  if (total > MAX_UPLOAD_BYTES)
+    throw new Error(
+      `that upload is ${(total / 1e6).toFixed(0)} MB; the limit is ${MAX_UPLOAD_BYTES / 1e6} MB`,
+    );
 
   if (input.url?.trim()) {
     const { ingestUrl } = await import('./url.ts');

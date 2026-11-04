@@ -25,7 +25,12 @@ export function forgetSecret(s: string): void {
 export function redact(text: string): string {
   let out = text;
   for (const s of known) out = out.split(s).join('[redacted]');
-  for (const re of PATTERNS) out = out.replace(re, (m, h?: string) => (h && /^(authorization|x-api-key|xi-api-key|x-goog-api-key)$/i.test(h) ? `${h}: [redacted]` : '[redacted]'));
+  for (const re of PATTERNS)
+    out = out.replace(re, (m, h?: string) =>
+      h && /^(authorization|x-api-key|xi-api-key|x-goog-api-key)$/i.test(h)
+        ? `${h}: [redacted]`
+        : '[redacted]',
+    );
   return out;
 }
 

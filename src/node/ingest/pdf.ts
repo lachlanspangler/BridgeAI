@@ -49,7 +49,17 @@ interface CanvasLike {
 interface Ctx2d {
   fillStyle: string;
   fillRect(x: number, y: number, w: number, h: number): void;
-  drawImage(img: CanvasLike, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
+  drawImage(
+    img: CanvasLike,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+  ): void;
   getImageData(x: number, y: number, w: number, h: number): { data: Uint8ClampedArray };
 }
 interface CanvasFactory {
@@ -67,7 +77,9 @@ async function loadPdfJs(): Promise<PdfJs> {
   // Node: the "fake worker" loads this module in-process; without it getDocument never settles
   if (!pdfjs.GlobalWorkerOptions.workerSrc) {
     const require = createRequire(import.meta.url);
-    pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')).href;
+    pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(
+      require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs'),
+    ).href;
   }
   return pdfjs;
 }
@@ -76,7 +88,10 @@ function toLines(runs: Run[]): Line[] {
   const sorted = [...runs].filter((r) => r.str.trim()).sort((a, b) => a.y - b.y || a.x - b.x);
   const lines: { runs: Run[]; y: number; size: number }[] = [];
   for (const r of sorted) {
-    const l = lines.find((x) => Math.abs(x.y - r.y) < Math.max(2, r.h * 0.45) && r.x >= Math.min(...x.runs.map((q) => q.x)) - 400);
+    const l = lines.find(
+      (x) =>
+        Math.abs(x.y - r.y) < Math.max(2, r.h * 0.45) && r.x >= Math.min(...x.runs.map((q) => q.x)) - 400,
+    );
     if (l) l.runs.push(r);
     else lines.push({ runs: [r], y: r.y, size: r.h });
   }
@@ -125,7 +140,14 @@ function toBlocks(lines: Line[], page: number, col: number, bodySize: number): B
     const sizeJump = cur ? Math.abs(l.size - cur.size) > 1.2 : true;
     const startsCaption = /^(fig(ure)?\.?|table)\s*\d+[.:]/i.test(l.text);
     const looksHeading = isHeadingLine(l, bodySize);
-    if (!cur || gap > l.size * 1.1 || sizeJump || startsCaption || looksHeading || (cur && isHeadingLine(cur.lines[cur.lines.length - 1]!, bodySize))) {
+    if (
+      !cur ||
+      gap > l.size * 1.1 ||
+      sizeJump ||
+      startsCaption ||
+      looksHeading ||
+      (cur && isHeadingLine(cur.lines[cur.lines.length - 1]!, bodySize))
+    ) {
       cur = { lines: [l], x: l.x, y: l.y, x1: l.x1, y1: l.y + l.size, size: l.size, page, col };
       blocks.push(cur);
     } else {
@@ -142,7 +164,13 @@ function isHeadingLine(l: Line, body: number): boolean {
   const t = l.text;
   if (wordCount(t) > 12 || t.length < 3) return false;
   if (/^(\d+(\.\d+)*\.?|[IVX]+\.|[A-Z]\.)\s+[A-Z]/.test(t) && !/[.:]$/.test(t)) return true;
-  if (/^(abstract|introduction|conclusions?|references|related work|background|method(s|ology)?|results|discussion|experiments?|acknowledg(e)?ments?|appendix)\b/i.test(t) && wordCount(t) <= 4) return true;
+  if (
+    /^(abstract|introduction|conclusions?|references|related work|background|method(s|ology)?|results|discussion|experiments?|acknowledg(e)?ments?|appendix)\b/i.test(
+      t,
+    ) &&
+    wordCount(t) <= 4
+  )
+    return true;
   return l.size > body * 1.18 || (l.bold && wordCount(t) <= 8 && !/[.,;]$/.test(t));
 }
 
@@ -157,10 +185,17 @@ function joinLines(lines: Line[]): string {
 
 export async function ingestPdf(data: Uint8Array, name: string, dir: string): Promise<Source> {
   const pdfjs = await loadPdfJs();
-  const doc = await pdfjs.getDocument({ data: new Uint8Array(data), isEvalSupported: false, disableFontFace: true, useSystemFonts: false, verbosity: 0 }).promise;
+  const doc = await pdfjs.getDocument({
+    data: new Uint8Array(data),
+    isEvalSupported: false,
+    disableFontFace: true,
+    useSystemFonts: false,
+    verbosity: 0,
+  }).promise;
   const pages = Math.min(doc.numPages, MAX_PAGES);
   const warnings: string[] = [];
-  if (doc.numPages > MAX_PAGES) warnings.push(`only the first ${MAX_PAGES} of ${doc.numPages} pages were read`);
+  if (doc.numPages > MAX_PAGES)
+    warnings.push(`only the first ${MAX_PAGES} of ${doc.numPages} pages were read`);
   const allBlocks: Block[] = [];
   const pageSizes: { w: number; h: number }[] = [];
   const allSizes: number[] = [];
@@ -171,16 +206,31 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
     pageSizes.push({ w: vp.width, h: vp.height });
     const tc = await page.getTextContent();
     const runs: Run[] = [];
-    for (const it of tc.items as { str: string; transform: number[]; width: number; height: number; fontName: string }[]) {
+    for (const it of tc.items as {
+      str: string;
+      transform: number[];
+      width: number;
+      height: number;
+      fontName: string;
+    }[]) {
       if (!it.str) continue;
       const [a, b, , , e, f] = it.transform as [number, number, number, number, number, number];
       if (Math.abs(b) > Math.abs(a) * 0.05) continue; // rotated text (arXiv side stamp, axis labels)
       const size = Math.hypot(a, b) || it.height;
-      runs.push({ str: it.str, x: e, y: vp.height - f - size, w: it.width, h: size, font: (tc.styles as Record<string, { fontFamily?: string }>)[it.fontName]?.fontFamily + ' ' + it.fontName });
+      runs.push({
+        str: it.str,
+        x: e,
+        y: vp.height - f - size,
+        w: it.width,
+        h: size,
+        font:
+          (tc.styles as Record<string, { fontFamily?: string }>)[it.fontName]?.fontFamily + ' ' + it.fontName,
+      });
     }
     if (!runs.length) warnings.push(`page ${p} has no text layer (scanned?)`);
     const lines = toLines(runs);
-    for (const l of lines) for (let k = 0; k < Math.min(40, wordCount(l.text)); k++) allSizes.push(Math.round(l.size * 2) / 2);
+    for (const l of lines)
+      for (let k = 0; k < Math.min(40, wordCount(l.text)); k++) allSizes.push(Math.round(l.size * 2) / 2);
     perPage.push({ lines, w: vp.width, h: vp.height });
   }
   // body font size = the mode
@@ -188,20 +238,27 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
   for (const s of allSizes) counts.set(s, (counts.get(s) ?? 0) + 1);
   const body = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 10;
   const margins: { x0: number; x1: number; twoCol: boolean }[] = [];
-  perPage.forEach((pg, i) => {
+  perPage.forEach((pg) => {
     const prose = pg.lines.filter((l) => wordCount(l.text) > 8);
-    margins.push({ x0: Math.min(pg.w * 0.12, ...prose.map((l) => l.x)), x1: Math.max(pg.w * 0.88, ...prose.map((l) => l.x1)), twoCol: columns(pg.lines, pg.w).length > 1 });
+    margins.push({
+      x0: Math.min(pg.w * 0.12, ...prose.map((l) => l.x)),
+      x1: Math.max(pg.w * 0.88, ...prose.map((l) => l.x1)),
+      twoCol: columns(pg.lines, pg.w).length > 1,
+    });
   });
   perPage.forEach((pg, i) => {
     // drop running headers/footers and page numbers
-    const lines = pg.lines.filter((l) => !(/^\d{1,3}$/.test(l.text) || (l.y < pg.h * 0.05 && l.size <= body) || l.y > pg.h * 0.95));
+    const lines = pg.lines.filter(
+      (l) => !(/^\d{1,3}$/.test(l.text) || (l.y < pg.h * 0.05 && l.size <= body) || l.y > pg.h * 0.95),
+    );
     columns(lines, pg.w).forEach((colLines, c) => allBlocks.push(...toBlocks(colLines, i + 1, c, body)));
   });
 
   // title: largest text on page 1, in the top 40%
   const p1 = allBlocks.filter((b) => b.page === 1 && b.y < pageSizes[0]!.h * 0.4);
   const titleBlock = [...p1].sort((a, b) => b.size - a.size)[0];
-  let title = titleBlock && titleBlock.size > body * 1.3 ? joinLines(titleBlock.lines) : name.replace(/\.pdf$/i, '');
+  let title =
+    titleBlock && titleBlock.size > body * 1.3 ? joinLines(titleBlock.lines) : name.replace(/\.pdf$/i, '');
   if (wordCount(title) > 25) title = title.split(/\s+/).slice(0, 25).join(' ');
 
   const segs: Segment[] = [];
@@ -212,10 +269,21 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
   for (const b of allBlocks) {
     const text = joinLines(b.lines);
     if (!text || (b === titleBlock && text === title)) {
-      if (b === titleBlock) segs.push({ id: `s${segs.length + 1}`, kind: 'title', text: title, loc: { page: b.page, bbox: [b.x, b.y, b.x1 - b.x, b.y1 - b.y] } });
+      if (b === titleBlock)
+        segs.push({
+          id: `s${segs.length + 1}`,
+          kind: 'title',
+          text: title,
+          loc: { page: b.page, bbox: [b.x, b.y, b.x1 - b.x, b.y1 - b.y] },
+        });
       continue;
     }
-    const bbox: [number, number, number, number] = [round(b.x), round(b.y), round(b.x1 - b.x), round(b.y1 - b.y)];
+    const bbox: [number, number, number, number] = [
+      round(b.x),
+      round(b.y),
+      round(b.x1 - b.x),
+      round(b.y1 - b.y),
+    ];
     const id = `s${segs.length + 1}`;
     if (b.lines.length <= 2 && isHeadingLine(b.lines[0]!, body)) {
       if (/^abstract$/i.test(text.trim())) {
@@ -229,7 +297,12 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
     }
     if (inRefs) continue; // references are not explained (they are cited, not claims)
     if (/^(fig(ure)?\.?|table)\s*\d+[.:]/i.test(text)) {
-      const seg: Segment = { id, kind: 'caption', text, loc: { page: b.page, bbox, section: section.length ? [...section] : undefined } };
+      const seg: Segment = {
+        id,
+        kind: 'caption',
+        text,
+        loc: { page: b.page, bbox, section: section.length ? [...section] : undefined },
+      };
       segs.push(seg);
       if (/^fig/i.test(text)) captions.push({ seg, block: b });
       continue;
@@ -240,7 +313,11 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
       id,
       kind: isAbstract ? 'abstract' : 'paragraph',
       text: isAbstract ? text.replace(/^abstract[\s.:—-]*/i, '') : text,
-      loc: { page: b.page, bbox, section: section.length ? [...section] : isAbstract ? ['Abstract'] : undefined },
+      loc: {
+        page: b.page,
+        bbox,
+        section: section.length ? [...section] : isAbstract ? ['Abstract'] : undefined,
+      },
     });
     abstractNext = false;
   }
@@ -255,7 +332,9 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
       const m = margins[block.page - 1]!;
       const wide = !m.twoCol || block.x1 - block.x > pg.w * 0.55;
       const left = wide ? Math.max(0, m.x0 - 14) : Math.max(0, block.col === 2 ? pg.w / 2 - 6 : m.x0 - 14);
-      const right = wide ? Math.min(pg.w, m.x1 + 14) : Math.min(pg.w, block.col === 2 ? m.x1 + 14 : pg.w / 2 + 6);
+      const right = wide
+        ? Math.min(pg.w, m.x1 + 14)
+        : Math.min(pg.w, block.col === 2 ? m.x1 + 14 : pg.w / 2 + 6);
       const above = colBlocks.filter((x) => x.x1 > left && x.x < right && wordCount(joinLines(x.lines)) > 12);
       const top = Math.max(pg.h * 0.05, ...above.map((x) => x.y1 + 4));
       const bottom = block.y - 2;
@@ -292,8 +371,22 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
       const rel = join('assets', `${aid}.png`);
       writeFileSync(join(dir, rel), png);
       const caption = seg.text.replace(/\s+/g, ' ').slice(0, 300);
-      assets.push({ id: aid, kind: 'figure', path: rel, width: t.w, height: t.h, caption, loc: { page: block.page, bbox: [round(left), round(top), round(right - left), round(bottom - top)] } });
-      const fseg: Segment = { id: `s${segs.length + 1}`, kind: 'figure', text: caption, assetId: aid, loc: { page: block.page } };
+      assets.push({
+        id: aid,
+        kind: 'figure',
+        path: rel,
+        width: t.w,
+        height: t.h,
+        caption,
+        loc: { page: block.page, bbox: [round(left), round(top), round(right - left), round(bottom - top)] },
+      });
+      const fseg: Segment = {
+        id: `s${segs.length + 1}`,
+        kind: 'figure',
+        text: caption,
+        assetId: aid,
+        loc: { page: block.page },
+      };
       segs.push(fseg);
       seg.assetId = aid;
     } catch (e) {
@@ -304,8 +397,13 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
   const merged: Segment[] = [];
   for (const sg of segs) {
     const prev = merged[merged.length - 1];
-    const joinable = prev && (prev.kind === 'paragraph' || prev.kind === 'abstract') && sg.kind === 'paragraph';
-    if (joinable && (!/[.!?:"”)]$/.test(prev.text) || /^[a-z(]/.test(sg.text)) && wordCount(prev.text) < 400) {
+    const joinable =
+      prev && (prev.kind === 'paragraph' || prev.kind === 'abstract') && sg.kind === 'paragraph';
+    if (
+      joinable &&
+      (!/[.!?:"”)]$/.test(prev.text) || /^[a-z(]/.test(sg.text)) &&
+      wordCount(prev.text) < 400
+    ) {
       prev.text = prev.text.endsWith('-') ? prev.text.slice(0, -1) + sg.text : `${prev.text} ${sg.text}`;
       continue;
     }
@@ -318,8 +416,18 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
   }
   await doc.destroy();
   const words = segs.reduce((n, s) => n + wordCount(s.text), 0);
-  if (words < 30) warnings.push('very little text was found: is this a scanned PDF? (OCR for scans is not supported yet)');
-  return { schema: 'bridge.source/1', kind: 'pdf', title, origin: name, segments: segs, assets, warnings, stats: { words, pages: doc.numPages } };
+  if (words < 30)
+    warnings.push('very little text was found: is this a scanned PDF? (OCR for scans is not supported yet)');
+  return {
+    schema: 'bridge.source/1',
+    kind: 'pdf',
+    title,
+    origin: name,
+    segments: segs,
+    assets,
+    warnings,
+    stats: { words, pages: doc.numPages },
+  };
 }
 
 const round = (x: number) => Math.round(x * 10) / 10;
@@ -330,7 +438,12 @@ function isBlank(d: Uint8ClampedArray): boolean {
   return dark / (d.length / 16) < 0.01;
 }
 
-function trimBox(d: Uint8ClampedArray, w: number, h: number, pad = 14): { x: number; y: number; w: number; h: number } {
+function trimBox(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  pad = 14,
+): { x: number; y: number; w: number; h: number } {
   let x0 = w;
   let y0 = h;
   let x1 = 0;

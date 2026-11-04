@@ -41,14 +41,23 @@ export function gate(
     } else if (screenOnly) {
       // the words are fine but the picture said something unsupported: show the narration's own words instead
       const words = trimSentence(beat.narration, beat.role === 'takeaway' ? 12 : 9).replace(/[.!?]$/, '');
-      const visual: Beat['visual'] = beat.role === 'takeaway' ? { type: 'takeaway', text: words, highlight: beat.keywords.slice(0, 1) } : { type: 'statement', text: words, highlight: beat.keywords.slice(0, 2) };
+      const visual: Beat['visual'] =
+        beat.role === 'takeaway'
+          ? { type: 'takeaway', text: words, highlight: beat.keywords.slice(0, 1) }
+          : { type: 'statement', text: words, highlight: beat.keywords.slice(0, 2) };
       kept.push({ ...beat, visual });
-      actions.push({ beatId: beat.id, action: 'rewritten', reason: `visual replaced: ${bad[0]!.reason ?? ''}` });
+      actions.push({
+        beatId: beat.id,
+        action: 'rewritten',
+        reason: `visual replaced: ${bad[0]!.reason ?? ''}`,
+      });
     } else if (beat.role === 'hook') {
+      const line = `${titleOf(script)}: here's the big idea.`;
       kept.push({
         ...beat,
-        narration: 'Here is the big idea.',
-        claims: [{ text: 'Here is the big idea.', support: [], kind: 'framing' }],
+        narration: line,
+        visual: { type: 'title', title: titleOf(script), kicker: 'EXPLAINED' },
+        claims: [{ text: line, support: [], kind: 'framing' }],
         keywords: [],
       });
       actions.push({

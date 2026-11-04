@@ -12,7 +12,10 @@ const base = process.env.BRIDGE_URL ?? 'http://127.0.0.1:7411';
 const out = join('artifacts/ux', label);
 mkdirSync(out, { recursive: true });
 const b = await chromium.launch();
-for (const [name, w, h] of [['desktop', 1366, 900], ['mobile', 390, 844]] as const) {
+for (const [name, w, h] of [
+  ['desktop', 1366, 900],
+  ['mobile', 390, 844],
+] as const) {
   const p = await b.newPage({ viewport: { width: w, height: h } });
   await p.goto(`${base}/#/`);
   await p.waitForSelector('textarea');

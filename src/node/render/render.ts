@@ -5,7 +5,7 @@
  */
 import { createCanvas, loadImage, type Image } from '@napi-rs/canvas';
 import { spawn } from 'node:child_process';
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import type { Asset, Timeline } from '../../core/schema.ts';
 import { drawFrame, type FrameOptions } from '../../core/scenes/frame.ts';
 import type { Ctx, Img } from '../../core/scenes/kit.ts';

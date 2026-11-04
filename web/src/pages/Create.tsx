@@ -33,7 +33,12 @@ export function Create({ status }: { status: Status | null }) {
   const [err, setErr] = useState<string | null>(null);
   const [source, setSource] = useState<{ id: string; source: SourceSummary } | null>(null);
 
-  const canGo = tab === 'text' ? text.trim().length > 20 : tab === 'link' ? /^https?:\/\//.test(url.trim()) : files.length > 0;
+  const canGo =
+    tab === 'text'
+      ? text.trim().length > 20
+      : tab === 'link'
+        ? /^https?:\/\//.test(url.trim())
+        : files.length > 0;
 
   async function analyze() {
     setErr(null);
@@ -63,12 +68,21 @@ export function Create({ status }: { status: Status | null }) {
         <h1>
           Paste anything. Get a <span className="hl">short, colourful video</span> that explains it.
         </h1>
-        <p className="lede">Papers, projects, images or notes become a narrated explainer with music, sound and captions. You pick the length. Every claim is traced back to your source.</p>
+        <p className="lede">
+          Papers, projects, images or notes become a narrated explainer with music, sound and captions. You
+          pick the length. Every claim is traced back to your source.
+        </p>
       </div>
       <div className="card input-card">
         <div className="tabs" role="tablist">
           {TABS.map((t) => (
-            <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'tab on' : 'tab'} onClick={() => (setTab(t.id), setFiles([]))}>
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              className={tab === t.id ? 'tab on' : 'tab'}
+              onClick={() => (setTab(t.id), setFiles([]))}
+            >
               {t.label}
             </button>
           ))}
@@ -76,17 +90,42 @@ export function Create({ status }: { status: Status | null }) {
         <p className="hint">{TABS.find((t) => t.id === tab)!.hint}</p>
         {tab === 'text' && (
           <>
-            <textarea aria-label="Text to explain" value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste an abstract, notes, an article, a README…" rows={10} />
+            <textarea
+              aria-label="Text to explain"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Paste an abstract, notes, an article, a README…"
+              rows={10}
+            />
             <button className="link-btn" onClick={() => setText(SAMPLE)}>
               Try a sample (the Transformer abstract)
             </button>
           </>
         )}
-        {tab === 'link' && <input aria-label="Link" className="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://arxiv.org/abs/1706.03762  ·  https://github.com/owner/repo" />}
-        {(tab === 'pdf' || tab === 'images' || tab === 'project') && <Drop tab={tab} files={files} setFiles={setFiles} />}
-        {tab === 'images' && <textarea aria-label="Notes about the images" value={text} onChange={(e) => setText(e.target.value)} placeholder="Optional: a sentence or two about the images (what they show). The video only states what's in the images or your note." rows={3} />}
+        {tab === 'link' && (
+          <input
+            aria-label="Link"
+            className="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://arxiv.org/abs/1706.03762  ·  https://github.com/owner/repo"
+          />
+        )}
+        {(tab === 'pdf' || tab === 'images' || tab === 'project') && (
+          <Drop tab={tab} files={files} setFiles={setFiles} />
+        )}
+        {tab === 'images' && (
+          <textarea
+            aria-label="Notes about the images"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Optional: a sentence or two about the images (what they show). The video only states what's in the images or your note."
+            rows={3}
+          />
+        )}
         <div className="notice" role="note">
-          <strong>Heads up:</strong> don't paste confidential work content into this version. Use public material and your own notes.
+          <strong>Heads up:</strong> don't paste confidential work content into this version. Use public
+          material and your own notes.
         </div>
         <div className="row end">
           {err && <span className="error">{err}</span>}
@@ -99,7 +138,11 @@ export function Create({ status }: { status: Status | null }) {
         {[
           ['1', 'Read', 'Text, figures, numbers and code are pulled out, each with where it came from.'],
           ['2', 'Rank', 'The ideas that matter most come first. A 20 s video keeps only the top one.'],
-          ['3', 'Script', 'Plain words, one idea per beat, timed to your length. Fact-checked against the source.'],
+          [
+            '3',
+            'Script',
+            'Plain words, one idea per beat, timed to your length. Fact-checked against the source.',
+          ],
           ['4', 'Render', 'Animated diagrams, charts that build, a voice, music, sound and captions.'],
         ].map(([n, h, p]) => (
           <div key={n} className="step">
@@ -113,7 +156,15 @@ export function Create({ status }: { status: Status | null }) {
   );
 }
 
-function Drop({ tab, files, setFiles }: { tab: 'pdf' | 'images' | 'project'; files: File[]; setFiles: (f: File[]) => void }) {
+function Drop({
+  tab,
+  files,
+  setFiles,
+}: {
+  tab: 'pdf' | 'images' | 'project';
+  files: File[];
+  setFiles: (f: File[]) => void;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const folder = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
@@ -127,12 +178,35 @@ function Drop({ tab, files, setFiles }: { tab: 'pdf' | 'images' | 'project'; fil
     folder.current?.setAttribute('webkitdirectory', '');
   }, []);
   return (
-    <div className={over ? 'drop over' : 'drop'} onDragOver={(e) => (e.preventDefault(), setOver(true))} onDragLeave={() => setOver(false)} onDrop={onDrop}>
-      <input ref={input} type="file" hidden multiple={tab !== 'pdf'} accept={accept} onChange={(e) => setFiles([...(e.target.files ?? [])])} data-testid="file-input" />
-      {tab === 'project' && <input ref={folder} type="file" hidden multiple onChange={(e) => setFiles([...(e.target.files ?? [])])} data-testid="folder-input" />}
+    <div
+      className={over ? 'drop over' : 'drop'}
+      onDragOver={(e) => (e.preventDefault(), setOver(true))}
+      onDragLeave={() => setOver(false)}
+      onDrop={onDrop}
+    >
+      <input
+        ref={input}
+        type="file"
+        hidden
+        multiple={tab !== 'pdf'}
+        accept={accept}
+        onChange={(e) => setFiles([...(e.target.files ?? [])])}
+        data-testid="file-input"
+      />
+      {tab === 'project' && (
+        <input
+          ref={folder}
+          type="file"
+          hidden
+          multiple
+          onChange={(e) => setFiles([...(e.target.files ?? [])])}
+          data-testid="folder-input"
+        />
+      )}
       {files.length ? (
         <p>
-          <strong>{files.length === 1 ? files[0]!.name : `${files.length} files`}</strong> ({(files.reduce((n, f) => n + f.size, 0) / 1e6).toFixed(1)} MB) ·{' '}
+          <strong>{files.length === 1 ? files[0]!.name : `${files.length} files`}</strong> (
+          {(files.reduce((n, f) => n + f.size, 0) / 1e6).toFixed(1)} MB) ·{' '}
           <button className="link-btn" onClick={() => setFiles([])}>
             clear
           </button>
@@ -141,14 +215,24 @@ function Drop({ tab, files, setFiles }: { tab: 'pdf' | 'images' | 'project'; fil
         <p>Drop {tab === 'pdf' ? 'a PDF' : tab === 'images' ? 'images' : 'a .zip or a folder'} here</p>
       )}
       <div className="row center">
-        <button onClick={() => input.current?.click()}>{tab === 'project' ? 'Choose a .zip' : 'Choose files'}</button>
+        <button onClick={() => input.current?.click()}>
+          {tab === 'project' ? 'Choose a .zip' : 'Choose files'}
+        </button>
         {tab === 'project' && <button onClick={() => folder.current?.click()}>Choose a folder</button>}
       </div>
     </div>
   );
 }
 
-function Review({ status, src, onBack }: { status: Status | null; src: { id: string; source: SourceSummary }; onBack: () => void }) {
+function Review({
+  status,
+  src,
+  onBack,
+}: {
+  status: Status | null;
+  src: { id: string; source: SourceSummary };
+  onBack: () => void;
+}) {
   const [seconds, setSeconds] = useState(20);
   const [custom, setCustom] = useState(false);
   const [llm, setLlm] = useState('auto');
@@ -165,7 +249,13 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
   const engines = useMemo(() => {
     const keys = new Set((status?.keys ?? []).filter((k) => k.present).map((k) => k.provider));
     return [
-      { id: 'auto', label: status?.local.llm ? `Free · local model (${status.local.llm})` : 'Free · no model (extractive)', ok: true },
+      {
+        id: 'auto',
+        label: status?.local.llm
+          ? `Free · local model (${status.local.llm})`
+          : 'Free · no model (extractive)',
+        ok: true,
+      },
       { id: 'extractive', label: 'Free · fastest (source sentences only)', ok: true },
       { id: 'anthropic', label: 'Claude (your Anthropic key)', ok: keys.has('anthropic') },
       { id: 'openai', label: 'GPT (your OpenAI key)', ok: keys.has('openai') },
@@ -175,11 +265,18 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
   }, [status]);
   const voices = useMemo(() => {
     const keys = new Set((status?.keys ?? []).filter((k) => k.present).map((k) => k.provider));
-    return [...(status?.voices ?? []).map((v) => ({ id: v.id, label: `${v.label} · free, local` })), ...(keys.has('elevenlabs') ? [{ id: 'elevenlabs', label: 'ElevenLabs (your key)' }] : []), ...(keys.has('openai') ? [{ id: 'openai-tts', label: 'OpenAI voice (your key)' }] : [])];
+    return [
+      ...(status?.voices ?? []).map((v) => ({ id: v.id, label: `${v.label} · free, local` })),
+      ...(keys.has('elevenlabs') ? [{ id: 'elevenlabs', label: 'ElevenLabs (your key)' }] : []),
+      ...(keys.has('openai') ? [{ id: 'openai-tts', label: 'OpenAI voice (your key)' }] : []),
+    ];
   }, [status]);
 
   useEffect(() => {
-    void api.budget(seconds).then(setBudget).catch(() => setBudget(null));
+    void api
+      .budget(seconds)
+      .then(setBudget)
+      .catch(() => setBudget(null));
   }, [seconds]);
 
   async function loadIdeas() {
@@ -199,7 +296,15 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
     setErr(null);
     try {
       const tts = voice === 'elevenlabs' || voice === 'openai-tts' ? voice : 'auto';
-      const job = await api.createJob(src.id, { seconds, llm, voice: tts === 'auto' ? voice : '', tts, level, pin: [...pinned], drop: [...dropped] });
+      const job = await api.createJob(src.id, {
+        seconds,
+        llm,
+        voice: tts === 'auto' ? voice : '',
+        tts,
+        level,
+        pin: [...pinned],
+        drop: [...dropped],
+      });
       go(`/job/${job.id}`);
     } catch (e) {
       setErr((e as Error).message);
@@ -216,7 +321,15 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
         ← different source
       </button>
       <div className="card source-card">
-        <span className={`kind kind-${s.kind}`}>{s.kind === 'pdf' ? 'Paper' : s.kind === 'project' ? 'Project' : s.kind === 'images' ? 'Images' : 'Text'}</span>
+        <span className={`kind kind-${s.kind}`}>
+          {s.kind === 'pdf'
+            ? 'Paper'
+            : s.kind === 'project'
+              ? 'Project'
+              : s.kind === 'images'
+                ? 'Images'
+                : 'Text'}
+        </span>
         <h2>{s.title}</h2>
         <p className="muted">
           {s.words.toLocaleString()} words{s.pages ? ` · ${s.pages} pages` : ''}
@@ -234,19 +347,38 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
         <h3>How long?</h3>
         <div className="lengths" role="radiogroup" aria-label="Video length">
           {LENGTHS.map((l) => (
-            <button key={l.s} role="radio" aria-checked={!custom && seconds === l.s} className={!custom && seconds === l.s ? 'len on' : 'len'} onClick={() => (setCustom(false), setSeconds(l.s))}>
+            <button
+              key={l.s}
+              role="radio"
+              aria-checked={!custom && seconds === l.s}
+              className={!custom && seconds === l.s ? 'len on' : 'len'}
+              onClick={() => (setCustom(false), setSeconds(l.s))}
+            >
               <strong>{l.label}</strong>
               <span>{l.sub}</span>
             </button>
           ))}
-          <button role="radio" aria-checked={custom} className={custom ? 'len on' : 'len'} onClick={() => setCustom(true)}>
+          <button
+            role="radio"
+            aria-checked={custom}
+            className={custom ? 'len on' : 'len'}
+            onClick={() => setCustom(true)}
+          >
             <strong>Custom</strong>
             <span>{custom ? `${seconds} s` : 'you choose'}</span>
           </button>
         </div>
         {custom && (
           <label className="slider">
-            <input type="range" min={15} max={600} step={5} value={seconds} onChange={(e) => setSeconds(Number(e.target.value))} aria-label="Custom length in seconds" />
+            <input
+              type="range"
+              min={15}
+              max={600}
+              step={5}
+              value={seconds}
+              onChange={(e) => setSeconds(Number(e.target.value))}
+              aria-label="Custom length in seconds"
+            />
             <span>
               {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}
             </span>
@@ -259,10 +391,17 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
         <div className="row between">
           <h3>Key ideas</h3>
           <button onClick={loadIdeas} disabled={loadingIdeas}>
-            {loadingIdeas ? 'Ranking… (a local model takes ~30–90 s)' : analysis ? 'Re-rank' : 'Show me the key ideas'}
+            {loadingIdeas
+              ? 'Ranking… (a local model takes ~30–90 s)'
+              : analysis
+                ? 'Re-rank'
+                : 'Show me the key ideas'}
           </button>
         </div>
-        <p className="muted">Optional. See what Bridge thinks matters most, pin or drop ideas, then make the video. {seconds} s fits the top {fits}.</p>
+        <p className="muted">
+          Optional. See what Bridge thinks matters most, pin or drop ideas, then make the video. {seconds} s
+          fits the top {fits}.
+        </p>
         {ideasErr && <p className="error">{ideasErr}</p>}
         {analysis && (
           <ol className="ideas">
@@ -282,10 +421,18 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
                       </span>
                     ))}
                     <span className="grow" />
-                    <button className="tiny" aria-pressed={pinned.has(i.id)} onClick={() => setPinned(toggle(pinned, i.id))}>
+                    <button
+                      className="tiny"
+                      aria-pressed={pinned.has(i.id)}
+                      onClick={() => setPinned(toggle(pinned, i.id))}
+                    >
                       {pinned.has(i.id) ? 'pinned' : 'pin'}
                     </button>
-                    <button className="tiny" aria-pressed={dropped.has(i.id)} onClick={() => setDropped(toggle(dropped, i.id))}>
+                    <button
+                      className="tiny"
+                      aria-pressed={dropped.has(i.id)}
+                      onClick={() => setDropped(toggle(dropped, i.id))}
+                    >
                       {dropped.has(i.id) ? 'undo' : 'drop'}
                     </button>
                   </div>
@@ -301,7 +448,11 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
         <div className="grid3">
           <label>
             Script written by
-            <select value={llm} onChange={(e) => (setLlm(e.target.value), setAnalysis(null))} aria-label="Script engine">
+            <select
+              value={llm}
+              onChange={(e) => (setLlm(e.target.value), setAnalysis(null))}
+              aria-label="Script engine"
+            >
               {engines.map((e) => (
                 <option key={e.id} value={e.id} disabled={!e.ok}>
                   {e.label}
@@ -333,7 +484,9 @@ function Review({ status, src, onBack }: { status: Status | null; src: { id: str
       <div className="row end">
         {err && <span className="error">{err}</span>}
         <button className="primary big" onClick={make} disabled={starting}>
-          {starting ? 'Starting…' : `Make my ${seconds < 60 ? `${seconds}-second` : `${Math.round(seconds / 60)}-minute`} video →`}
+          {starting
+            ? 'Starting…'
+            : `Make my ${seconds < 60 ? `${seconds}-second` : `${Math.round(seconds / 60)}-minute`} video →`}
         </button>
       </div>
     </section>

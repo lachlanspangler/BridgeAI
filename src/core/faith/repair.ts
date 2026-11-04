@@ -20,7 +20,11 @@ export function findSupport(claim: string, src: Source, k = 2): { id: string; sc
     .slice(0, k);
 }
 
-export function repairCitations(script: Script, src: Source, threshold = 0.5): { script: Script; repaired: number } {
+export function repairCitations(
+  script: Script,
+  src: Source,
+  threshold = 0.5,
+): { script: Script; repaired: number } {
   const text = new Map(src.segments.map((s) => [s.id, s.text]));
   let repaired = 0;
   const beats = script.beats.map((b) => ({

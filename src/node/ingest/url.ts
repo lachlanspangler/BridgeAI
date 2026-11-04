@@ -12,10 +12,28 @@ const MAX = 60 * 1024 * 1024;
 export function isPrivateAddress(ip: string): boolean {
   if (ip.includes(':')) {
     const l = ip.toLowerCase();
-    return l === '::1' || l.startsWith('fc') || l.startsWith('fd') || l.startsWith('fe80') || l === '::' || l.startsWith('::ffff:127.') || l.startsWith('::ffff:10.') || l.startsWith('::ffff:192.168.');
+    return (
+      l === '::1' ||
+      l.startsWith('fc') ||
+      l.startsWith('fd') ||
+      l.startsWith('fe80') ||
+      l === '::' ||
+      l.startsWith('::ffff:127.') ||
+      l.startsWith('::ffff:10.') ||
+      l.startsWith('::ffff:192.168.')
+    );
   }
   const [a, b] = ip.split('.').map(Number) as [number, number];
-  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
+  return (
+    a === 10 ||
+    a === 127 ||
+    a === 0 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    a >= 224
+  );
 }
 
 export async function assertPublicUrl(raw: string): Promise<URL> {
@@ -29,7 +47,8 @@ export async function assertPublicUrl(raw: string): Promise<URL> {
   if (u.username || u.password) throw new Error('links with credentials are not allowed');
   const host = u.hostname.replace(/^\[|\]$/g, '');
   const addrs = isIP(host) ? [host] : (await lookup(host, { all: true })).map((a) => a.address);
-  if (!addrs.length || addrs.some(isPrivateAddress)) throw new Error('that link points to a private or local address');
+  if (!addrs.length || addrs.some(isPrivateAddress))
+    throw new Error('that link points to a private or local address');
   return u;
 }
 
@@ -44,7 +63,11 @@ export function resolveSpecial(u: URL): { kind: 'pdf' | 'github' | 'page'; url: 
     if (owner && repo) {
       const r = repo.replace(/\.git$/, '');
       const ref = tree === 'tree' && rest.length ? rest.join('/') : 'HEAD';
-      return { kind: 'github', url: `https://codeload.github.com/${owner}/${r}/zip/${ref === 'HEAD' ? 'HEAD' : `refs/heads/${ref}`}`, name: `${owner}/${r}` };
+      return {
+        kind: 'github',
+        url: `https://codeload.github.com/${owner}/${r}/zip/${ref === 'HEAD' ? 'HEAD' : `refs/heads/${ref}`}`,
+        name: `${owner}/${r}`,
+      };
     }
   }
   if (/\.pdf$/i.test(u.pathname)) return { kind: 'pdf', url: u.href, name: u.pathname.split('/').pop()! };
@@ -53,7 +76,11 @@ export function resolveSpecial(u: URL): { kind: 'pdf' | 'github' | 'page'; url: 
 
 async function fetchCapped(url: string, signal?: AbortSignal): Promise<{ data: Uint8Array; type: string }> {
   await assertPublicUrl(url);
-  const res = await fetch(url, { signal, redirect: 'follow', headers: { 'user-agent': 'Bridge/0.1 (local explainer-video app)' } });
+  const res = await fetch(url, {
+    signal,
+    redirect: 'follow',
+    headers: { 'user-agent': 'Bridge/0.1 (local explainer-video app)' },
+  });
   if (!res.ok || !res.body) throw new Error(`could not fetch the link (HTTP ${res.status})`);
   await assertPublicUrl(res.url); // the redirect target must be public too
   const chunks: Uint8Array[] = [];
@@ -74,7 +101,10 @@ async function fetchCapped(url: string, signal?: AbortSignal): Promise<{ data: U
 
 export function htmlToMarkdown(html: string): { title: string; text: string } {
   const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').replace(/\s+/g, ' ').trim();
-  const main = html.match(/<(article|main)[^>]*>([\s\S]*?)<\/\1>/i)?.[2] ?? html.match(/<body[^>]*>([\s\S]*)<\/body>/i)?.[1] ?? html;
+  const main =
+    html.match(/<(article|main)[^>]*>([\s\S]*?)<\/\1>/i)?.[2] ??
+    html.match(/<body[^>]*>([\s\S]*)<\/body>/i)?.[1] ??
+    html;
   const text = main
     .replace(/<(script|style|noscript|nav|header|footer|aside|form|svg)[\s\S]*?<\/\1>/gi, '')
     .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '\n\n# $1\n\n')

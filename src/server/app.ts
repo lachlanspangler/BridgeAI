@@ -84,8 +84,17 @@ export function createApp(opts: AppOptions) {
     if (!src) throw new Error('source not found');
     const logFile = join(jobDir(job.id), 'log.txt');
     const log = (e: { stage: string; message: string; ms?: number }) =>
-      appendFileSync(logFile, redact(`${new Date().toISOString()} ${e.stage}: ${e.message}${e.ms ? ` (${e.ms} ms)` : ''}\n`));
-    const { engines } = await pickEngines({ llm: job.settings.llm, tts: job.settings.tts, providers: providerFromKeys, voices: cloudTts, log });
+      appendFileSync(
+        logFile,
+        redact(`${new Date().toISOString()} ${e.stage}: ${e.message}${e.ms ? ` (${e.ms} ms)` : ''}\n`),
+      );
+    const { engines } = await pickEngines({
+      llm: job.settings.llm,
+      tts: job.settings.tts,
+      providers: providerFromKeys,
+      voices: cloudTts,
+      log,
+    });
     // reuse the reviewed idea list if the user looked at it (pins/drops apply on top)
     const cached = join(sourceDir(job.sourceId), `analysis-${job.settings.llm}.json`);
     if (existsSync(cached)) {
@@ -94,7 +103,10 @@ export function createApp(opts: AppOptions) {
     }
     // assets live with the source; the renderer reads them relative to the job dir via symlink-free copy paths
     const dir = jobDir(job.id);
-    const withAssets = { ...src, assets: src.assets.map((a) => ({ ...a, path: resolve(sourceDir(job.sourceId), a.path) })) };
+    const withAssets = {
+      ...src,
+      assets: src.assets.map((a) => ({ ...a, path: resolve(sourceDir(job.sourceId), a.path) })),
+    };
     return runPipeline(withAssets, job.settings, engines, dir, onProgress, signal);
   };
   const queue = new JobQueue(opts.runner ?? defaultRunner);
@@ -111,7 +123,11 @@ export function createApp(opts: AppOptions) {
       keystore: backend,
       local: { llm: llm?.id ?? null },
       voices: new KokoroTts().voices(),
-      presets: Object.entries(PRESETS).map(([k, s]) => ({ id: k, ...budgetFor(s), describe: describeBudget(budgetFor(s)) })),
+      presets: Object.entries(PRESETS).map(([k, s]) => ({
+        id: k,
+        ...budgetFor(s),
+        describe: describeBudget(budgetFor(s)),
+      })),
     });
   });
 
@@ -125,7 +141,8 @@ export function createApp(opts: AppOptions) {
   // ───── sources ─────
   app.post('/api/sources', async (c) => {
     const len = Number(c.req.header('content-length') ?? 0);
-    if (len > MAX_UPLOAD_BYTES + 1_000_000) return c.json({ error: `upload too large (limit ${MAX_UPLOAD_BYTES / 1e6} MB)` }, 413);
+    if (len > MAX_UPLOAD_BYTES + 1_000_000)
+      return c.json({ error: `upload too large (limit ${MAX_UPLOAD_BYTES / 1e6} MB)` }, 413);
     const id = newId('s');
     const dir = sourceDir(id);
     try {
@@ -136,13 +153,21 @@ export function createApp(opts: AppOptions) {
         const files: InputFile[] = [];
         for (const v of form.getAll('files')) {
           if (typeof v === 'string') continue;
-          files.push({ name: (v as File & { webkitRelativePath?: string }).name, data: new Uint8Array(await v.arrayBuffer()) });
+          files.push({
+            name: (v as File & { webkitRelativePath?: string }).name,
+            data: new Uint8Array(await v.arrayBuffer()),
+          });
         }
         const paths = form.getAll('paths').map(String);
         paths.forEach((p, i) => {
           if (files[i] && p) files[i]!.name = p;
         });
-        input = { text: String(form.get('text') ?? ''), url: String(form.get('url') ?? ''), title: String(form.get('title') ?? '') || undefined, files };
+        input = {
+          text: String(form.get('text') ?? ''),
+          url: String(form.get('url') ?? ''),
+          title: String(form.get('title') ?? '') || undefined,
+          files,
+        };
       } else {
         const j = (await c.req.json()) as { text?: string; url?: string; title?: string };
         input = { text: j.text, url: j.url, title: j.title };
@@ -159,7 +184,9 @@ export function createApp(opts: AppOptions) {
     const id = c.req.param('id');
     if (!ID_RE.test(id)) return c.json({ error: 'bad id' }, 400);
     const src = loadSource(id);
-    return src ? c.json({ id, source: summary(src), segments: src.segments }) : c.json({ error: 'not found' }, 404);
+    return src
+      ? c.json({ id, source: summary(src), segments: src.segments })
+      : c.json({ error: 'not found' }, 404);
   });
 
   /** The ideas-review step: rank the key ideas (cached per engine) so the user can pin/drop before rendering. */
@@ -191,7 +218,9 @@ export function createApp(opts: AppOptions) {
     if (!a) return c.json({ error: 'not found' }, 404);
     const file = resolve(sourceDir(id), a.path);
     if (!file.startsWith(sourceDir(id))) return c.json({ error: 'bad path' }, 400);
-    return new Response(readFileSync(file), { headers: { 'content-type': a.path.endsWith('.jpg') ? 'image/jpeg' : 'image/png' } });
+    return new Response(readFileSync(file), {
+      headers: { 'content-type': a.path.endsWith('.jpg') ? 'image/jpeg' : 'image/png' },
+    });
   });
 
   // ───── jobs ─────
@@ -201,8 +230,19 @@ export function createApp(opts: AppOptions) {
     const src = loadSource(body.sourceId);
     if (!src) return c.json({ error: 'source not found' }, 404);
     const parsed = RenderSettings.safeParse(body.settings ?? {});
-    if (!parsed.success) return c.json({ error: `bad settings: ${parsed.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}` }, 400);
-    const job = queue.enqueue({ sourceId: body.sourceId, title: src.title, kind: src.kind, settings: parsed.data });
+    if (!parsed.success)
+      return c.json(
+        {
+          error: `bad settings: ${parsed.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}`,
+        },
+        400,
+      );
+    const job = queue.enqueue({
+      sourceId: body.sourceId,
+      title: src.title,
+      kind: src.kind,
+      settings: parsed.data,
+    });
     return c.json(job, 201);
   });
 
@@ -249,7 +289,9 @@ export function createApp(opts: AppOptions) {
 
   app.delete('/api/jobs/:id', (c) => {
     const id = c.req.param('id');
-    return ID_RE.test(id) && queue.remove(id) ? c.json({ ok: true }) : c.json({ error: 'cannot delete' }, 400);
+    return ID_RE.test(id) && queue.remove(id)
+      ? c.json({ ok: true })
+      : c.json({ error: 'cannot delete' }, 400);
   });
 
   app.get('/api/jobs/:id/files/:name', (c) => {
@@ -260,18 +302,26 @@ export function createApp(opts: AppOptions) {
     if (!existsSync(file)) return c.json({ error: 'not found' }, 404);
     const size = statSync(file).size;
     const headers: Record<string, string> = { 'content-type': FILES[name]!, 'accept-ranges': 'bytes' };
-    if (c.req.query('download')) headers['content-disposition'] = `attachment; filename="bridge-${id}-${name}"`;
+    if (c.req.query('download'))
+      headers['content-disposition'] = `attachment; filename="bridge-${id}-${name}"`;
     const range = c.req.header('range')?.match(/^bytes=(\d*)-(\d*)$/);
     if (range && name === 'video.mp4') {
       const start = range[1] ? Number(range[1]) : 0;
       const end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
-      if (start >= size || start > end) return new Response(null, { status: 416, headers: { 'content-range': `bytes */${size}` } });
+      if (start >= size || start > end)
+        return new Response(null, { status: 416, headers: { 'content-range': `bytes */${size}` } });
       return new Response(Readable.toWeb(createReadStream(file, { start, end })) as ReadableStream, {
         status: 206,
-        headers: { ...headers, 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': String(end - start + 1) },
+        headers: {
+          ...headers,
+          'content-range': `bytes ${start}-${end}/${size}`,
+          'content-length': String(end - start + 1),
+        },
       });
     }
-    return new Response(Readable.toWeb(createReadStream(file)) as ReadableStream, { headers: { ...headers, 'content-length': String(size) } });
+    return new Response(Readable.toWeb(createReadStream(file)) as ReadableStream, {
+      headers: { ...headers, 'content-length': String(size) },
+    });
   });
 
   // ───── keys (masked only, never returned) ─────
@@ -303,7 +353,18 @@ export function createApp(opts: AppOptions) {
     try {
       const llm = await providerFromKeys(p);
       if (!llm) return c.json({ ok: false, error: 'no key' });
-      const r = await llm.json<{ ok: string }>({ system: 'Answer in JSON.', user: 'Reply with ok = "yes".', schema: { type: 'object', properties: { ok: { type: 'string' } }, required: ['ok'], additionalProperties: false }, name: 'ping', maxTokens: 50 });
+      const r = await llm.json<{ ok: string }>({
+        system: 'Answer in JSON.',
+        user: 'Reply with ok = "yes".',
+        schema: {
+          type: 'object',
+          properties: { ok: { type: 'string' } },
+          required: ['ok'],
+          additionalProperties: false,
+        },
+        name: 'ping',
+        maxTokens: 50,
+      });
       return c.json({ ok: r.ok === 'yes' || !!r.ok, model: llm.model });
     } catch (e) {
       return c.json({ ok: false, error: redact(e instanceof Error ? e.message : String(e)) });
@@ -324,19 +385,31 @@ export function createApp(opts: AppOptions) {
       ok = false;
       msg = redact(e instanceof Error ? e.message : String(e));
     }
-    const esc = msg.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
-    return c.html(`<!doctype html><meta charset="utf-8"><title>Bridge</title><body style="font-family:system-ui;background:#0B0D21;color:#F7F5FF;display:grid;place-items:center;height:100vh"><div><h1>${ok ? '✓' : '✗'} OpenRouter</h1><p>${esc}</p><p><a style="color:#FFC93C" href="/#/settings">Back to Bridge</a></p></div>`);
+    const esc = msg.replace(
+      /[&<>"]/g,
+      (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!,
+    );
+    return c.html(
+      `<!doctype html><meta charset="utf-8"><title>Bridge</title><body style="font-family:system-ui;background:#0B0D21;color:#F7F5FF;display:grid;place-items:center;height:100vh"><div><h1>${ok ? '✓' : '✗'} OpenRouter</h1><p>${esc}</p><p><a style="color:#FFC93C" href="/#/settings">Back to Bridge</a></p></div>`,
+    );
   });
 
   // ───── the web app ─────
   const dist = opts.webDist;
   app.get('*', (c) => {
-    if (!dist || !existsSync(dist)) return c.text('Web app not built: run `make web` (or use `make dev`).', 404);
+    if (!dist || !existsSync(dist))
+      return c.text('Web app not built: run `make web` (or use `make dev`).', 404);
     const rel = decodeURIComponent(new URL(c.req.url).pathname).replace(/^\/+/, '');
     let file = resolve(dist, rel || 'index.html');
-    if (!file.startsWith(resolve(dist)) || !existsSync(file) || statSync(file).isDirectory()) file = join(dist, 'index.html');
+    if (!file.startsWith(resolve(dist)) || !existsSync(file) || statSync(file).isDirectory())
+      file = join(dist, 'index.html');
     const type = MIME[extname(file)] ?? 'application/octet-stream';
-    return new Response(readFileSync(file), { headers: { 'content-type': type, 'cache-control': file.endsWith('index.html') ? 'no-cache' : 'public, max-age=3600' } });
+    return new Response(readFileSync(file), {
+      headers: {
+        'content-type': type,
+        'cache-control': file.endsWith('index.html') ? 'no-cache' : 'public, max-age=3600',
+      },
+    });
   });
 
   return { app, queue };

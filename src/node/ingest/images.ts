@@ -24,7 +24,10 @@ export async function ocr(png: Buffer): Promise<string> {
     const worker = await createWorker('eng', 1, { cachePath: dir, logger: () => {} });
     try {
       const r = await worker.recognize(png);
-      return r.data.text.replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
+      return r.data.text
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\n{2,}/g, '\n')
+        .trim();
     } finally {
       await worker.terminate();
     }
@@ -46,8 +49,12 @@ export async function ingestImages(files: InputFile[], dir: string, notes?: stri
   const segs: Segment[] = [];
   const assets: Asset[] = [];
   const warnings: string[] = [];
-  const noteLines = (notes ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
-  if (files.length > MAX_IMAGES) warnings.push(`only the first ${MAX_IMAGES} of ${files.length} images were used`);
+  const noteLines = (notes ?? '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (files.length > MAX_IMAGES)
+    warnings.push(`only the first ${MAX_IMAGES} of ${files.length} images were used`);
   if (noteLines.length) segs.push({ id: 's1', kind: 'abstract', text: noteLines.join(' '), loc: {} });
   for (const [i, f] of files.slice(0, MAX_IMAGES).entries()) {
     let img;
@@ -71,12 +78,51 @@ export async function ingestImages(files: InputFile[], dir: string, notes?: stri
     writeFileSync(join(dir, rel), png);
     const text = await ocr(png);
     const caption = prettyName(f.name);
-    assets.push({ id: aid, kind: 'image', path: rel, width: w, height: h, caption, ocr: text || undefined, loc: { file: f.name } });
-    segs.push({ id: `s${segs.length + 1}`, kind: 'figure', text: `Image ${i + 1}: ${caption}`, assetId: aid, loc: { file: f.name } });
-    if (wordCount(text) >= 3) segs.push({ id: `s${segs.length + 1}`, kind: 'caption', text: `Text in image ${i + 1} (${caption}): ${text.replace(/\n/g, ' ')}`, assetId: aid, loc: { file: f.name } });
+    assets.push({
+      id: aid,
+      kind: 'image',
+      path: rel,
+      width: w,
+      height: h,
+      caption,
+      ocr: text || undefined,
+      loc: { file: f.name },
+    });
+    segs.push({
+      id: `s${segs.length + 1}`,
+      kind: 'figure',
+      text: `Image ${i + 1}: ${caption}`,
+      assetId: aid,
+      loc: { file: f.name },
+    });
+    if (wordCount(text) >= 3)
+      segs.push({
+        id: `s${segs.length + 1}`,
+        kind: 'caption',
+        text: `Text in image ${i + 1} (${caption}): ${text.replace(/\n/g, ' ')}`,
+        assetId: aid,
+        loc: { file: f.name },
+      });
   }
   if (!assets.length) throw new Error('none of the files could be read as images');
-  if (!segs.some((s) => s.kind === 'caption') && !noteLines.length) warnings.push('no text was found in the images: add a short note about them so the script has facts to work with');
-  const title = noteLines[0] && wordCount(noteLines[0]) <= 12 ? noteLines[0] : assets.length === 1 ? assets[0]!.caption! : `${assets.length} images`;
-  return { schema: 'bridge.source/1', kind: 'images', title, origin: files.length === 1 ? files[0]!.name : `${files.length} images`, segments: segs, assets, warnings, stats: { words: segs.reduce((n, s) => n + wordCount(s.text), 0), files: assets.length } };
+  if (!segs.some((s) => s.kind === 'caption') && !noteLines.length)
+    warnings.push(
+      'no text was found in the images: add a short note about them so the script has facts to work with',
+    );
+  const title =
+    noteLines[0] && wordCount(noteLines[0]) <= 12
+      ? noteLines[0]
+      : assets.length === 1
+        ? assets[0]!.caption!
+        : `${assets.length} images`;
+  return {
+    schema: 'bridge.source/1',
+    kind: 'images',
+    title,
+    origin: files.length === 1 ? files[0]!.name : `${files.length} images`,
+    segments: segs,
+    assets,
+    warnings,
+    stats: { words: segs.reduce((n, s) => n + wordCount(s.text), 0), files: assets.length },
+  };
 }

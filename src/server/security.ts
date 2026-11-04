@@ -20,7 +20,8 @@ export function guard(port: number): MiddlewareHandler {
     const method = c.req.method;
     if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
       const origin = c.req.header('origin');
-      if (origin ? !origins.has(origin) : site !== undefined && site !== 'same-origin' && site !== 'none') return c.text('Forbidden origin', 403);
+      if (origin ? !origins.has(origin) : site !== undefined && site !== 'same-origin' && site !== 'none')
+        return c.text('Forbidden origin', 403);
     }
     if (method === 'OPTIONS') return c.body(null, 204);
     await next();

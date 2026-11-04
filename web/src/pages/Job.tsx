@@ -36,7 +36,11 @@ export function JobPage({ id }: { id: string }) {
       <h2>{job.title}</h2>
       <p className="muted">
         {job.settings.seconds} s video ·{' '}
-        {job.state === 'queued' ? 'waiting for the current render to finish (one at a time)' : job.state === 'running' ? (job.progress?.message ?? 'starting…') : job.state}
+        {job.state === 'queued'
+          ? 'waiting for the current render to finish (one at a time)'
+          : job.state === 'running'
+            ? (job.progress?.message ?? 'starting…')
+            : job.state}
       </p>
       <ol className="stages">
         {STAGES.map(([s, label], i) => (
@@ -68,7 +72,10 @@ function Watch({ job }: { job: Job }) {
   const [now, setNow] = useState(0);
   const video = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    void api.sourcemap(job.id).then(setMap).catch(() => setMap(null));
+    void api
+      .sourcemap(job.id)
+      .then(setMap)
+      .catch(() => setMap(null));
   }, [job.id]);
   const r = job.result;
   const current = map?.entries.find((e) => now >= e.start && now < e.end)?.beatId;
@@ -76,7 +83,14 @@ function Watch({ job }: { job: Job }) {
   return (
     <section className="watch">
       <div className="player card">
-        <video ref={video} controls preload="metadata" src={api.file(job.id, 'video.mp4')} onTimeUpdate={(e) => setNow(e.currentTarget.currentTime)} data-testid="video">
+        <video
+          ref={video}
+          controls
+          preload="metadata"
+          src={api.file(job.id, 'video.mp4')}
+          onTimeUpdate={(e) => setNow(e.currentTarget.currentTime)}
+          data-testid="video"
+        >
           <track kind="captions" src={api.file(job.id, 'captions.vtt')} srcLang="en" label="English" />
         </video>
       </div>
@@ -87,7 +101,11 @@ function Watch({ job }: { job: Job }) {
             <span className={r.durations.withinTolerance ? 'chip ok' : 'chip warn'}>
               {r.durations.actual.toFixed(1)} s (asked {r.durations.target} s)
             </span>
-            <span className={r.unsupported === 0 ? 'chip ok' : 'chip warn'}>{r.unsupported === 0 ? '✓ every claim traced to the source' : `${r.unsupported} unsupported claims`}</span>
+            <span className={r.unsupported === 0 ? 'chip ok' : 'chip warn'}>
+              {r.unsupported === 0
+                ? '✓ every claim traced to the source'
+                : `${r.unsupported} unsupported claims`}
+            </span>
             <span className="chip">script: {r.engines.script}</span>
             <span className="chip">voice: {r.engines.tts}</span>
           </div>
@@ -136,11 +154,27 @@ function Watch({ job }: { job: Job }) {
           {shown?.claims.map((c, i) => (
             <div key={i} className="claim">
               <p>
-                <span className={`verdict v-${c.verdict}`}>{c.verdict === 'framing' ? 'framing' : c.verdict === 'supported' ? '✓ supported' : c.verdict}</span> {c.text}
+                <span className={`verdict v-${c.verdict}`}>
+                  {c.verdict === 'framing'
+                    ? 'framing'
+                    : c.verdict === 'supported'
+                      ? '✓ supported'
+                      : c.verdict}
+                </span>{' '}
+                {c.text}
               </p>
               {c.sources.map((s) => (
                 <blockquote key={s.segmentId}>
-                  <span className="where">{s.page ? `page ${s.page}` : s.file ? `${s.file}${s.lines ? `:${s.lines[0]}` : ''}` : s.lines ? `line ${s.lines[0]}` : s.segmentId}{s.section ? ` · ${s.section}` : ''}</span>
+                  <span className="where">
+                    {s.page
+                      ? `page ${s.page}`
+                      : s.file
+                        ? `${s.file}${s.lines ? `:${s.lines[0]}` : ''}`
+                        : s.lines
+                          ? `line ${s.lines[0]}`
+                          : s.segmentId}
+                    {s.section ? ` · ${s.section}` : ''}
+                  </span>
                   {s.excerpt}
                 </blockquote>
               ))}

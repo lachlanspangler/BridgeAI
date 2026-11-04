@@ -28,7 +28,8 @@ export interface JobRecord {
 
 export const ID_RE = /^[a-z]_[0-9a-z]{6,40}$/;
 
-export const newId = (prefix: 'j' | 's'): string => `${prefix}_${Date.now().toString(36)}${randomBytes(5).toString('hex')}`;
+export const newId = (prefix: 'j' | 's'): string =>
+  `${prefix}_${Date.now().toString(36)}${randomBytes(5).toString('hex')}`;
 
 export function jobDir(id: string): string {
   if (!ID_RE.test(id)) throw new Error('bad id');
@@ -57,7 +58,10 @@ export class JobQueue {
       try {
         const j = JSON.parse(readFileSync(f, 'utf8')) as JobRecord;
         // a job that was running when the server stopped did not finish
-        if (j.state === 'running' || j.state === 'queued') j.state = 'failed', (j.error = 'interrupted (the server stopped)');
+        if (j.state === 'running' || j.state === 'queued') {
+          j.state = 'failed';
+          j.error = 'interrupted (the server stopped)';
+        }
         this.jobs.set(id, j);
       } catch {
         /* ignore corrupt */
@@ -136,23 +140,37 @@ export class JobQueue {
     this.update(job, { state: 'running' });
     let lastSave = 0;
     try {
-      const r = await this.runner(job, (p) => {
-        job.progress = p;
-        const now = Date.now();
-        if (now - lastSave > 400 || p.stage === 'done') {
-          lastSave = now;
-          this.update(job, {});
-        } else for (const f of this.listeners.get(job.id) ?? []) f(job);
-      }, ac.signal);
+      const r = await this.runner(
+        job,
+        (p) => {
+          job.progress = p;
+          const now = Date.now();
+          if (now - lastSave > 400 || p.stage === 'done') {
+            lastSave = now;
+            this.update(job, {});
+          } else for (const f of this.listeners.get(job.id) ?? []) f(job);
+        },
+        ac.signal,
+      );
       this.update(job, {
         state: 'done',
         finished: new Date().toISOString(),
-        result: { durations: r.durations, timings: r.timings, engines: r.engines, unsupported: r.faith.unsupported, beats: r.script.beats.length },
+        result: {
+          durations: r.durations,
+          timings: r.timings,
+          engines: r.engines,
+          unsupported: r.faith.unsupported,
+          beats: r.script.beats.length,
+        },
       });
     } catch (e) {
       const msg = redact(e instanceof Error ? e.message : String(e));
       rmSync(join(jobDir(id), 'tmp'), { recursive: true, force: true });
-      this.update(job, { state: ac.signal.aborted ? 'cancelled' : 'failed', error: msg, finished: new Date().toISOString() });
+      this.update(job, {
+        state: ac.signal.aborted ? 'cancelled' : 'failed',
+        error: msg,
+        finished: new Date().toISOString(),
+      });
     } finally {
       this.running = null;
       void this.pump();

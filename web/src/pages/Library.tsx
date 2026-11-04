@@ -3,7 +3,11 @@ import { api, type Job } from '../api.ts';
 
 export function Library() {
   const [jobs, setJobs] = useState<Job[] | null>(null);
-  const load = () => api.jobs().then(setJobs).catch(() => setJobs([]));
+  const load = () =>
+    api
+      .jobs()
+      .then(setJobs)
+      .catch(() => setJobs([]));
   useEffect(() => {
     void load();
   }, []);
@@ -31,7 +35,11 @@ export function Library() {
               </span>
             </a>
             {j.state !== 'running' && (
-              <button className="tiny ghost" onClick={() => void api.remove(j.id).then(load)} aria-label={`Delete ${j.title}`}>
+              <button
+                className="tiny ghost"
+                onClick={() => void api.remove(j.id).then(load)}
+                aria-label={`Delete ${j.title}`}
+              >
                 delete
               </button>
             )}

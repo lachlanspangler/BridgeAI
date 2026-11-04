@@ -27,7 +27,8 @@ function readTree(root: string, rel = ''): InputFile[] {
     if (/^(node_modules|\.git|dist|build|\.venv)$/.test(e.name)) continue;
     const r = rel ? `${rel}/${e.name}` : e.name;
     if (e.isDirectory()) out.push(...readTree(root, r));
-    else if (e.isFile() && statSync(join(root, r)).size < 200_000) out.push({ name: `${basename(root)}/${r}`, data: readFileSync(join(root, r)) });
+    else if (e.isFile() && statSync(join(root, r)).size < 200_000)
+      out.push({ name: `${basename(root)}/${r}`, data: readFileSync(join(root, r)) });
     if (out.length > 3000) break;
   }
   return out;
@@ -45,7 +46,9 @@ async function make(args: string[]): Promise<void> {
   else if (statSync(input).isDirectory()) src = await ingestInput({ files: readTree(input) }, srcDir);
   else src = await ingestInput({ files: [{ name: basename(input), data: readFileSync(input) }] }, srcDir);
   src = { ...src, assets: src.assets.map((a) => ({ ...a, path: resolve(srcDir, a.path) })) };
-  console.log(`source   ${src.kind} · "${src.title}" · ${src.stats.words} words · ${src.segments.length} segments · ${src.assets.length} figures${src.warnings.length ? ` · ${src.warnings.join('; ')}` : ''}`);
+  console.log(
+    `source   ${src.kind} · "${src.title}" · ${src.stats.words} words · ${src.segments.length} segments · ${src.assets.length} figures${src.warnings.length ? ` · ${src.warnings.join('; ')}` : ''}`,
+  );
   const settings = RenderSettings.parse({
     seconds,
     voice: flag(args, 'voice', 'af_heart'),

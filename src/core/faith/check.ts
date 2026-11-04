@@ -87,7 +87,9 @@ export function missingNames(claim: string, haystack: string): string[] {
 /** Acronyms and model-style names (BLEU, GPT-4, Qwen3) missing from the haystack. */
 export function missingAcronyms(text: string, haystack: string): string[] {
   const hay = haystack.toLowerCase();
-  return properNouns(text).filter((n) => (/^[A-Z][A-Z0-9-]+$/.test(n) || /\d/.test(n)) && !hay.includes(n.toLowerCase()));
+  return properNouns(text).filter(
+    (n) => (/^[A-Z][A-Z0-9-]+$/.test(n) || /\d/.test(n)) && !hay.includes(n.toLowerCase()),
+  );
 }
 
 /** Strings shown on screen by a visual (to check them like narration). */
@@ -220,7 +222,10 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       if (!text) continue;
       const nums = missingNumbers(text, hay);
       // on-screen labels are often Title Case, so only acronyms / model names count as names there
-      const names = what === 'screen' ? missingAcronyms(text, `${hay}\n${src.title}`) : missingNames(text, `${hay}\n${src.title}`);
+      const names =
+        what === 'screen'
+          ? missingAcronyms(text, `${hay}\n${src.title}`)
+          : missingNames(text, `${hay}\n${src.title}`);
       if (nums.length || names.length) {
         verdicts.push({
           beatId: beat.id,
@@ -232,7 +237,10 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       }
     }
   } else {
-    for (const [what, text] of [['narration', beat.narration], ...visualStrings(beat.visual).map((x) => ['screen', x] as const)] as const) {
+    for (const [what, text] of [
+      ['narration', beat.narration],
+      ...visualStrings(beat.visual).map((x) => ['screen', x] as const),
+    ] as const) {
       const nums = missingNumbers(text, everything);
       const names = what === 'screen' ? missingAcronyms(text, everything) : missingNames(text, everything);
       if (nums.length || names.length)

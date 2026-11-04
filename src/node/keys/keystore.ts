@@ -66,7 +66,12 @@ class FileBackend implements Backend {
 
 class KeychainBackend implements Backend {
   readonly name = 'keychain' as const;
-  constructor(private readonly Entry: new (service: string, account: string) => { getPassword(): string | null; setPassword(v: string): void; deletePassword(): boolean }) {}
+  constructor(
+    private readonly Entry: new (
+      service: string,
+      account: string,
+    ) => { getPassword(): string | null; setPassword(v: string): void; deletePassword(): boolean },
+  ) {}
   async get(p: ProviderId) {
     try {
       return new this.Entry(SERVICE, p).getPassword() ?? null;
@@ -92,7 +97,9 @@ async function getBackend(): Promise<Backend> {
   if (backend) return backend;
   if (process.env.BRIDGE_KEYSTORE !== 'file') {
     try {
-      const k = (await import('@napi-rs/keyring')) as unknown as { Entry: ConstructorParameters<typeof KeychainBackend>[0] };
+      const k = (await import('@napi-rs/keyring')) as unknown as {
+        Entry: ConstructorParameters<typeof KeychainBackend>[0];
+      };
       const kb = new KeychainBackend(k.Entry);
       // probe: some Linux setups have no Secret Service; fall back rather than fail
       await kb.get('anthropic');
@@ -171,7 +178,11 @@ export async function keyStatus(): Promise<KeyStatus[]> {
     const env = process.env[ENV[p]]?.trim();
     const v = env || (await b.get(p));
     if (v) registerSecret(v);
-    out.push(v ? { provider: p, present: true, masked: mask(v), source: env ? 'env' : b.name } : { provider: p, present: false });
+    out.push(
+      v
+        ? { provider: p, present: true, masked: mask(v), source: env ? 'env' : b.name }
+        : { provider: p, present: false },
+    );
   }
   return out;
 }

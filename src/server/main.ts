@@ -9,8 +9,14 @@ import { createApp } from './app.ts';
 export const HOST = '127.0.0.1';
 
 export function start(port = Number(process.env.BRIDGE_PORT ?? 7411)) {
-  if (process.env.BRIDGE_HOST && process.env.BRIDGE_HOST !== HOST && process.env.BRIDGE_HOST !== 'localhost') {
-    throw new Error('Bridge only binds to 127.0.0.1 in this version (see docs/adr/0006-localhost-security.md)');
+  if (
+    process.env.BRIDGE_HOST &&
+    process.env.BRIDGE_HOST !== HOST &&
+    process.env.BRIDGE_HOST !== 'localhost'
+  ) {
+    throw new Error(
+      'Bridge only binds to 127.0.0.1 in this version (see docs/adr/0006-localhost-security.md)',
+    );
   }
   const { app, queue } = createApp({ port, webDist: join(import.meta.dirname, '..', '..', 'web', 'dist') });
   const server = serve({ fetch: app.fetch, port, hostname: HOST }, (info) => {

@@ -33,6 +33,7 @@
     "node-llama-cpp": "^3.22.2",
     "pdfjs-dist": "^4.10.38",
     "tesseract.js": "^6.0.1",
+    "yaml": "^2.9.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -46,6 +47,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9.39.5",
+    "pdf-lib": "^1.17.1",
     "prettier": "^3.9.10",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
