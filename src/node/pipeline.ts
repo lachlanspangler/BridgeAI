@@ -10,6 +10,7 @@ import { analyzeExtractive } from '../core/analyze/extractive.ts';
 import { toSrt, toVtt } from '../core/captions/captions.ts';
 import { checkBeat, checkScript } from '../core/faith/check.ts';
 import { gate, judgeKey, markVerified } from '../core/faith/gate.ts';
+import { ensureFigure } from '../core/llm/parse.ts';
 import { repairCitations } from '../core/faith/repair.ts';
 import { encodeWav, mix, speechBounds } from '../core/audio/mix.ts';
 import type {
@@ -21,7 +22,7 @@ import type {
   Source,
   Timeline,
 } from '../core/schema.ts';
-import { composeExtractive, scriptWords, sourceBeat, trimSentence } from '../core/script/extractive.ts';
+import { composeExtractive, scriptWords, sourceBeat, trimSentence, VERB } from '../core/script/extractive.ts';
 import { contentWords, stem, wordCount } from '../core/text/text.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
 import { renderStill, renderVideo } from './render/render.ts';
@@ -147,7 +148,8 @@ export async function runPipeline(
         ideas: [top.id],
         keywords: [],
       };
-      if (checkBeat(cand, src).ok) fallback = markVerified(cand);
+      // must be a real sentence (a verb), not a list fragment like "Fossil fuels, cement, and land-use change 9"
+      if (VERB.test(said) && checkBeat(cand, src).ok) fallback = markVerified(cand);
     }
     const g = gate(script, checks, judged, fallback);
     script = g.script;
@@ -214,6 +216,12 @@ export async function runPipeline(
       else keep.push(b);
     }
     script = { ...script, beats: keep.map((b, i) => ({ ...b, id: `b${i + 1}` })) };
+  }
+  // real pictures survive the gate: the final script still shows a source figure/image when it has one
+  {
+    const beats = [...script.beats];
+    ensureFigure(beats, src);
+    script = { ...script, beats };
   }
   // 3b. length fit by content: add a sourced detail to a beat (re-checked by the same gate rules)
   const seg = new Map(src.segments.map((x) => [x.id, x.text]));

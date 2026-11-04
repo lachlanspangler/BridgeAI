@@ -480,7 +480,15 @@ export function ensureFigure(beats: Beat[], src: Source): void {
   const candidates = beats
     .map((b, i) => ({ b, i }))
     .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway' && b.visual.type !== 'bigNumber');
-  if (!candidates.length) return;
+  if (!candidates.length) {
+    // an image set must show its image: put it on the hook (or the first non-takeaway beat)
+    if (src.kind !== 'images') return;
+    const i = beats.findIndex((b) => b.role !== 'takeaway');
+    if (i < 0) return;
+    const a = figs[0]!;
+    beats[i] = { ...beats[i]!, visual: { type: 'figure', assetId: a.id, caption: a.caption } };
+    return;
+  }
   let best = { i: -1, a: figs[0]!, score: -1 };
   for (const { b, i } of candidates) {
     for (const a of figs) {
