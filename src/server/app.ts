@@ -108,7 +108,7 @@ export function createApp(opts: AppOptions) {
       keystore: backend,
       local: { llm: llm?.id ?? null },
       voices: new KokoroTts().voices(),
-      presets: Object.entries(PRESETS).map(([k, s]) => ({ id: k, seconds: s, ...budgetFor(s), describe: describeBudget(budgetFor(s)) })),
+      presets: Object.entries(PRESETS).map(([k, s]) => ({ id: k, ...budgetFor(s), describe: describeBudget(budgetFor(s)) })),
     });
   });
 
