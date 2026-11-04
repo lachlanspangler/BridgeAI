@@ -126,3 +126,23 @@ describe('namedSubject', () => {
     expect(namedSubject('We propose X.', 'Paper')).toBe('We propose X.');
   });
 });
+
+describe('trim and person edge cases', () => {
+  it('keeps a slightly long sentence whole instead of cutting a noun phrase', async () => {
+    const { trimSentence, thirdPerson } = await import('../../src/core/script/extractive.ts');
+    expect(
+      trimSentence(
+        'This is the first direct detection of gravitational waves and the first observation of a binary black hole merger.',
+        14,
+      ),
+    ).toMatch(/binary black hole merger\.$/);
+    expect(thirdPerson('ripples across our universe')).toBe('ripples across our universe');
+  });
+  it('subject-less clauses and math symbols are garbled', async () => {
+    const { garbled } = await import('../../src/core/analyze/extractive.ts');
+    expect(
+      garbled('After an outbreak has taken place in a region, is actually substantially smaller than hC.'),
+    ).toBe(true);
+    expect(garbled('When it rains, it pours.')).toBe(false);
+  });
+});

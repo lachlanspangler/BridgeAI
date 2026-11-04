@@ -57,6 +57,8 @@ export function trimSentence(s: string, maxWords: number, terms: string[] = []):
   }
   if (best && VERB.test(best))
     return ensurePeriod(tidyEnd(sentenceCase(best.replace(/^(and|but|so|which|while)\s+/i, ''))));
+  // no clause fits: a slightly long whole sentence beats one cut mid-phrase ("…observation of a binary.")
+  if (wordCount(t) <= Math.ceil(maxWords * 1.35)) return ensurePeriod(tidyEnd(t));
   return ensurePeriod(tidyEnd(clampWords(t, maxWords).replace(/…$/, '')));
 }
 
@@ -151,9 +153,9 @@ export function thirdPerson(t: string): string {
       named = true;
       return first ? (w === 'We' ? 'The authors' : 'the authors') : w === 'We' ? 'They' : 'they';
     })
-    .replace(/^Our\b/, 'Their')
-    .replace(/\bour\b/g, 'their')
-    .replace(/\bus\b/g, 'them');
+    .replace(/^Our\b/, (m) => (named ? 'Their' : m))
+    .replace(/\bour\b/g, (m) => (named ? 'their' : m)) // "our universe" stays when no author "we" is in the line
+    .replace(/\bus\b/g, (m) => (named ? 'them' : m));
 }
 
 /** One faithful beat for an idea, in the source's own words (its verbatim evidence quote, trimmed). */

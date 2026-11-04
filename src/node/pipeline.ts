@@ -32,7 +32,15 @@ import {
   thirdPerson,
   whatIsIt,
 } from '../core/script/extractive.ts';
-import { contentWords, coverage, properNouns, stem, wordCount } from '../core/text/text.ts';
+import {
+  contentWords,
+  coverage,
+  numberTokens,
+  numberWords,
+  properNouns,
+  stem,
+  wordCount,
+} from '../core/text/text.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
 import { renderStill, renderVideo } from './render/render.ts';
 import type { Clip, TtsEngine } from './tts/types.ts';
@@ -540,6 +548,45 @@ export async function runPipeline(
         }
       }
     }
+  }
+  // final polish (runs after every rewrite pass):
+  //  - a big number on screen must be a number the narration says ("Two black holes merged" over a big "1" is wrong)
+  //  - a line said twice (an inserted core beat repeating an existing one) keeps the core copy only
+  {
+    const said = (b: Beat, v: string) => {
+      const n = Number(v.replace(/[,%×x]/g, ''));
+      return (
+        numberTokens(b.narration).some((t) => t.n === v || Number(t.n) === n) ||
+        numberWords(b.narration).includes(String(n))
+      );
+    };
+    let beats = script.beats.map((b) =>
+      b.visual.type === 'bigNumber' && !said(b, b.visual.value)
+        ? { ...b, visual: { type: 'statement' as const, text: screenPhrase(b.narration, 7), highlight: [] } }
+        : b,
+    );
+    const bag = (t: string) => new Set(contentWords(t).map(stem));
+    const sim = (x: string, y: string) => {
+      const A = bag(x);
+      const B = bag(y);
+      let n = 0;
+      for (const w of A) if (B.has(w)) n++;
+      return n / Math.max(1, Math.min(A.size, B.size));
+    };
+    for (let i = beats.length - 1; i > 0 && beats.length > 2; i--) {
+      const j = beats.findIndex(
+        (o, k) => k < i && o.visual.type !== 'title' && sim(o.narration, beats[i]!.narration) > 0.75,
+      );
+      if (j < 0 || beats[i]!.visual.type === 'title') continue;
+      const drop = beats[i]!.ideas.includes('core') && !beats[j]!.ideas.includes('core') ? j : i;
+      faith.actions.push({
+        beatId: `x-dup-${beats[drop]!.id}`,
+        action: 'dropped',
+        reason: 'says the same as another beat',
+      });
+      beats = beats.filter((_, k) => k !== drop);
+    }
+    script = { ...script, beats: beats.map((b, i) => ({ ...b, id: `b${i + 1}` })) };
   }
   // the narrator is not the authors: any line still in the first person is put in the third person
   script = {

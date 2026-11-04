@@ -228,6 +228,12 @@ export function garbled(t: string): boolean {
     )
   )
     return true;
+  // a clause with no subject ("After an outbreak …, is actually smaller than hC.") or a bare math symbol (hC, xT)
+  if (
+    /^(After|When|If|Although|While|Because|Since|Before|Once)\b[^,]*,\s*(is|are|was|were)\b/.test(t.trim())
+  )
+    return true;
+  if (/(^|\s)[a-z][A-Z](?=[\s.,;]|$)/.test(t)) return true;
   const letters = (t.match(/[A-Za-z]/g) ?? []).length;
   if (letters / t.length < 0.6) return true; // mostly symbols/math
   const short = ws.filter((w) => w.replace(/[^A-Za-z]/g, '').length <= 1).length;
