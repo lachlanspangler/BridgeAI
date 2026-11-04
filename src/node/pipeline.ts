@@ -22,7 +22,7 @@ import type {
   Timeline,
 } from '../core/schema.ts';
 import { composeExtractive, scriptWords, trimSentence } from '../core/script/extractive.ts';
-import { wordCount } from '../core/text/text.ts';
+import { contentWords, stem, wordCount } from '../core/text/text.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
 import { renderStill, renderVideo } from './render/render.ts';
 import type { Clip, TtsEngine } from './tts/types.ts';
@@ -172,6 +172,10 @@ export async function runPipeline(
       );
       const text = await engines.expand(b, target, support.map((id) => seg.get(id) ?? '').join('\n'), signal);
       if (!text) continue;
+      // the expansion must add something new, not restate the beat ("by over 2 BLEU … by more than 2 points")
+      const said = new Set(script.beats.flatMap((x) => contentWords(x.narration).map(stem)));
+      const fresh = new Set(contentWords(text).map(stem).filter((w) => !said.has(w)));
+      if (fresh.size < 2) continue;
       const cand: Beat = { ...b, narration: text, claims: [{ text, support, kind: 'fact' }] };
       const c = checkBeat(cand, src);
       let ok = c.ok;
