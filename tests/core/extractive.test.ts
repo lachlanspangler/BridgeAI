@@ -58,3 +58,12 @@ describe('extractive script', () => {
     expect(t.split(' ').length).toBeLessThanOrEqual(16);
   });
 });
+
+describe('garbled text filter', () => {
+  it('drops glued words, math fragments and keeps prose', async () => {
+    const { garbled } = await import('../../src/core/analyze/extractive.ts');
+    expect(garbled('TheLawwillneverbe perfect but its application')).toBe(true);
+    expect(garbled('of continuous representations z = (z , ..., z ). Given z')).toBe(true);
+    expect(garbled('The Transformer is based solely on attention mechanisms.')).toBe(false);
+  });
+});

@@ -416,6 +416,21 @@ export function parseScript(raw: unknown, src: Source, targetSeconds: number, en
       },
     };
   ensureFigure(beats, src);
+  // a figure is shown once; later repeats become a line of their own narration
+  const seen = new Set<string>();
+  beats.forEach((b, i) => {
+    if (b.visual.type !== 'figure') return;
+    if (seen.has(b.visual.assetId))
+      beats[i] = {
+        ...b,
+        visual: {
+          type: 'statement',
+          text: trimSentence(b.narration, 8).replace(/[.!?]$/, ''),
+          highlight: b.keywords.slice(0, 2),
+        },
+      };
+    seen.add(b.visual.assetId);
+  });
   return Script.parse({ schema: 'bridge.script/1', title: src.title, targetSeconds, beats, engine });
 }
 

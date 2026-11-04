@@ -34,7 +34,7 @@ const CUE_CORE =
 const CUE_WEAK =
   /\b(significant(ly)?|improv(e|es|ed|ement)|reduc(e|es|ed|tion)|faster|better|novel|simple|enables?|allows?|so that|because)\b/i;
 const CUE_BAD =
-  /\b(acknowledg|copyright|licen[cs]e|arxiv|preprint|correspond(ing|ence)|e-?mail|https?:|doi|table \d|figure \d|appendix|et al\b|ibid|section \d|see \w+ \d)/i;
+  /\b(acknowledg|copyright|licen[cs]e|arxiv|preprint|correspond(ing|ence)|e-?mail|https?:|doi|table \d|figure \d|appendix|et al\b|ibid|section \d|see \w+ \d|in this section|in the following|we (describe|compare|discuss|present) (the|our|various)|as (shown|described) (in|above|below))/i;
 const SECTION_GOOD =
   /abstract|introduction|conclusion|summary|overview|discussion|results?|readme|about|features/i;
 const SECTION_BAD =
@@ -50,6 +50,7 @@ export function candidates(src: Source): Candidate[] {
       const text = cleanForSpeech(raw);
       const n = wordCount(text);
       if (seg.kind !== 'title' && (n < 6 || n > 60)) continue;
+      if (garbled(text)) continue;
       out.push({ segmentId: seg.id, text, order: order++, kind: seg.kind, section, score: 0 });
     }
   }
@@ -204,4 +205,15 @@ export function rawNumbers(text: string): string[] {
       /(?<![A-Za-z\d.])\d[\d,]*(?:\.\d+)?\s?(?:%|×|x(?=\s)|percent|BLEU|ms|s\b|GB|MB|B\b|M\b|K\b|k\b|times)?/g,
     ) ?? [];
   return [...new Set(m.map((s) => s.trim()))].filter((s) => !/^(19|20)\d\d$/.test(s) || /\D/.test(s));
+}
+
+/** Text that came out of a figure or a mangled layer ("TheLawwillneverbe", "z , ..., z"): not speakable. */
+export function garbled(t: string): boolean {
+  const ws = t.split(/\s+/).filter(Boolean);
+  if (!ws.length) return true;
+  if (ws.some((w) => /^[A-Za-z]{19,}$/.test(w) && !/^[a-z]+$/.test(w))) return true; // glued words
+  const letters = (t.match(/[A-Za-z]/g) ?? []).length;
+  if (letters / t.length < 0.6) return true; // mostly symbols/math
+  const short = ws.filter((w) => w.replace(/[^A-Za-z]/g, '').length <= 1).length;
+  return short / ws.length > 0.35; // "z , ..., z" fragments
 }

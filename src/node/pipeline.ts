@@ -160,7 +160,22 @@ export async function runPipeline(
       if (scriptWords(script) >= budget.words * 0.85 || script.beats.length >= budget.beats.max) break;
       if (idea.evidence.every((e) => covered.has(e.segmentId)) && script.beats.length >= budget.beats.min)
         continue;
-      const nb = sourceBeat(idea, src, budget, `b${script.beats.length + 1}`);
+      let nb = sourceBeat(idea, src, budget, `b${script.beats.length + 1}`);
+      // each figure appears once per video
+      const nbv = nb?.visual;
+      if (
+        nb &&
+        nbv?.type === 'figure' &&
+        script.beats.some((b) => b.visual.type === 'figure' && b.visual.assetId === nbv.assetId)
+      )
+        nb = {
+          ...nb,
+          visual: {
+            type: 'statement',
+            text: trimSentence(nb.narration, 8).replace(/[.!?]$/, ''),
+            highlight: nb.keywords.slice(0, 2),
+          },
+        };
       if (!nb || script.beats.some((b) => b.narration === nb.narration) || !checkBeat(nb, src).ok) continue;
       const t = script.beats.findIndex((b) => b.role === 'takeaway');
       const pos = t < 0 ? script.beats.length : Math.max(1, t);
