@@ -27,11 +27,16 @@ export function Library() {
       <ul className="library">
         {jobs.map((j) => (
           <li key={j.id} className="card lib-item">
-            <a href={`#/job/${j.id}`}>
-              <strong>{j.title}</strong>
-              <span className="muted">
-                {j.settings.seconds} s · {new Date(j.created).toLocaleString()} · {j.state}
-                {j.result ? ` · ${j.result.engines.script}` : ''}
+            <a href={`#/job/${j.id}`} className="lib-link">
+              {j.state === 'done' && (
+                <img className="thumb" src={api.file(j.id, 'thumb.png')} alt="" loading="lazy" />
+              )}
+              <span className="lib-text">
+                <strong>{j.title}</strong>
+                <span className="muted">
+                  {j.settings.seconds} s · {new Date(j.created).toLocaleString()} · {j.state}
+                  {j.result ? ` · ${j.result.engines.script}` : ''}
+                </span>
               </span>
             </a>
             {j.state !== 'running' && (

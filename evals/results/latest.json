@@ -1,0 +1,29 @@
+{
+  "stamp": "2026-11-04T03:35:52.268Z",
+  "engine": "local:qwen3.5-4b-q4_k_m",
+  "lengths": [
+    20
+  ],
+  "rows": [
+    {
+      "case": "attention-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.5,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "2/4",
+      "understandingFrac": 0.5
+    }
+  ]
+}

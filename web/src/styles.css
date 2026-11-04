@@ -635,3 +635,20 @@ code {
     align-items: flex-start;
   }
 }
+
+.lib-link {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 16px;
+}
+.lib-text {
+  display: flex;
+  flex-direction: column;
+}
+.thumb {
+  width: 160px;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--panel-edge);
+}
