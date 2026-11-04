@@ -632,7 +632,11 @@ function flow(p: SceneProps, v: Extract<Visual, { type: 'flow' }>): void {
 function compare(p: SceneProps, v: Extract<Visual, { type: 'compare' }>): void {
   const { ctx, W, H } = p;
   const s = S(p);
-  const b = contentBox(W, H);
+  const full = contentBox(W, H);
+  // cards sized to their content and centred (no big empty panels)
+  const rows = Math.max(1, v.left.points.length, v.right.points.length);
+  const ch = Math.max(full.h * 0.55, Math.min(full.h, (230 + rows * 120) * s));
+  const b = { ...full, y: full.y + (full.h - ch) / 2, h: ch };
   const cw = b.w * 0.46;
   const sides = [
     { side: v.left, x: b.x, tone: 'secondary' as const, at: 0 },
@@ -875,8 +879,9 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
   // Ken Burns: slow zoom toward the focus region (or centre)
   // no focus given: a slow tour (zoom in on the top half, then glide to the bottom half) so long beats keep moving
   const k = easeInOutCubic(prog(p.t, 0.4, Math.max(1.5, p.dur - 0.6)));
-  const f = v.focus ?? [0.2, lerp(0.15, 0.55, k), 0.6, 0.3];
-  const z = v.focus ? lerp(1, 1.35, k) : lerp(1, 1.22, Math.min(1, k * 2.5));
+  const wide = img.width / img.height > 1.6;
+  const f = v.focus ?? (wide ? [lerp(0.05, 0.6, k), 0.1, 0.35, 0.8] : [0.2, lerp(0.15, 0.55, k), 0.6, 0.3]);
+  const z = v.focus ? lerp(1, 1.35, k) : lerp(1, wide ? 1.28 : 1.22, Math.min(1, k * 2.5));
   const fx = x + (f[0] + f[2] / 2) * w;
   const fy = y + (f[1] + f[3] / 2) * h;
   ctx.translate(fx, fy);
