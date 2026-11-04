@@ -419,7 +419,11 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
 function bullets(p: SceneProps, v: Extract<Visual, { type: 'bullets' }>): void {
   const { ctx, W, H } = p;
   const s = S(p);
-  const b = contentBox(W, H);
+  const full = contentBox(W, H);
+  // a big icon on the right gives the list a picture; the list keeps the left 64%
+  const r = Math.min(full.h * 0.26, 190 * s);
+  iconDisc(p, iconFor(`${v.heading ?? ''} ${v.items.join(' ')}`), full.x + full.w - r * 1.3, full.y + full.h / 2, r, p.theme.tone.secondary, 0.1);
+  const b = { ...full, w: full.w - r * 2.9 };
   let y = b.y + 20 * s;
   if (v.heading) {
     ctx.save();
@@ -893,7 +897,10 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
 function tree(p: SceneProps, v: Extract<Visual, { type: 'tree' }>): void {
   const { ctx, W, H } = p;
   const s = S(p);
-  const b = contentBox(W, H);
+  const full = contentBox(W, H);
+  const r = Math.min(full.h * 0.26, 190 * s);
+  iconDisc(p, 'code', full.x + full.w - r * 1.3, full.y + full.h / 2, r, p.theme.tone.primary, 0.1);
+  const b = { ...full, w: full.w - r * 2.9 };
   let top = b.y;
   if (v.title) {
     const tf = fitFont(ctx, v.title, b.w, 1, TYPE.title * s, TYPE.body * s, 700, 'display');

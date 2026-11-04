@@ -60,7 +60,9 @@ export function drawFrame(
   const H = tl.height;
   const s = H / 1080;
   ctx.save();
-  background(ctx, W, H, t, tl.seed, theme);
+  // the glow palette rotates per beat; the switch happens under the transition wipe
+  const current = tl.beats.findIndex((b) => t < b.end);
+  background(ctx, W, H, t, tl.seed, theme, current < 0 ? tl.beats.length : current);
   const last = tl.beats[tl.beats.length - 1]!;
   // beats on screen: the current one, plus the previous one while it exits
   for (let i = 0; i < tl.beats.length; i++) {
