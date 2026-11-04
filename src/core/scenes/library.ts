@@ -897,7 +897,7 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
   // the whole figure, never cropped, never blown up past 2× its pixels (blur)
   const maxW = b.w * 0.9;
   const maxH = b.h - 20 * s;
-  const scale = Math.min(maxW / img.width, maxH / img.height, (2 * H) / 1080);
+  const scale = Math.min(maxW / img.width, maxH / img.height, (2.5 * H) / 1080);
   const w = img.width * scale;
   const h = img.height * scale;
   const x = W / 2 - w / 2;
