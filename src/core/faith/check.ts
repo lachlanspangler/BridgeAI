@@ -7,7 +7,16 @@
  * The LLM judge (src/node/llm/judge.ts) decides paraphrases that fail only the overlap check.
  */
 import type { Beat, ClaimVerdict, Script, Source, Visual } from '../schema.ts';
-import { coverage, normNumber, numbers, numberWords, properNouns } from '../text/text.ts';
+import {
+  contentWords,
+  coverage,
+  initialCandidates,
+  numbers,
+  numberTokens,
+  numberWords,
+  properNouns,
+  stem,
+} from '../text/text.ts';
 
 export interface CheckOptions {
   /** Minimum content-word overlap for a claim to pass without the judge. */
@@ -21,8 +30,6 @@ export interface BeatCheck {
   needsJudge: { claim: string; support: string; context: string }[];
   ok: boolean;
 }
-
-const lower = (s: string) => s.toLowerCase();
 
 function sourceText(src: Source, ids: string[]): string {
   const set = new Set(ids);
@@ -59,29 +66,58 @@ function numberSet(text: string): Set<string> {
   return set;
 }
 
+const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const hasWord = (hay: string, w: string) =>
+  new RegExp(`(?<![A-Za-z0-9])${esc(w)}(?![A-Za-z0-9])`, 'i').test(hay);
+
+/** Number words that carry quantity claims ("ten times"), excluding everyday "one". */
+const QUANTITY_WORDS =
+  /\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|thousand|million|billion|twice|double|triple|half)\b/gi;
+
 export function missingNumbers(claim: string, support: string): string[] {
   const have = numberSet(support);
+  const supTokens = numberTokens(support);
   const out: string[] = [];
-  for (const raw of numbers(claim)) {
-    const n = normNumber(raw);
-    const f = Number(n);
-    if (have.has(n) || have.has(String(f))) continue;
-    // years and single digits used as list counts ("two ideas") are allowed if present anywhere in support words
-    if (/^\d$/.test(n) && support.includes(n)) continue;
-    out.push(raw);
+  for (const t of numberTokens(claim)) {
+    const f = Number(t.n);
+    const valueOk = have.has(t.n) || have.has(String(f));
+    // a magnitude in the claim (7B, 10×, 41%) must match a magnitude on the same number in the source
+    const magOk =
+      !t.mag ||
+      supTokens.some(
+        (x) => (x.n === t.n || Number(x.n) === f) && (x.mag === t.mag || (t.mag === '%' && x.mag === '')),
+      );
+    if (valueOk && magOk) continue;
+    // single digits used as counts must appear as a standalone number, not inside "1990"
+    if (/^\d$/.test(t.n) && hasWord(support, t.n) && magOk) continue;
+    out.push(t.raw);
   }
-  return out;
+  // spelled-out quantities ("ten times better") must be in the source as words or digits
+  for (const m of claim.match(QUANTITY_WORDS) ?? []) {
+    const d = numberWords(m)[0];
+    if (hasWord(support, m) || (d && (have.has(d) || hasWord(support, d)))) continue;
+    out.push(m);
+  }
+  return [...new Set(out)];
 }
 
 export function missingNames(claim: string, haystack: string): string[] {
-  const hay = lower(haystack);
-  return properNouns(claim).filter((n) => {
-    const w = lower(n);
-    if (hay.includes(w)) return false;
-    // tolerate plural/possessive forms
-    if (hay.includes(w.replace(/s$/, ''))) return false;
-    return true;
-  });
+  const missing = (n: string) =>
+    !hasWord(haystack, n) && !hasWord(haystack, n.replace(/(['’]s|s)$/, '')) && !hasWord(haystack, `${n}s`);
+  return [
+    ...new Set([
+      ...properNouns(claim).filter(missing),
+      ...initialCandidates(claim, haystack).filter(missing),
+    ]),
+  ];
+}
+
+/** Names that occur mid-sentence (hard evidence of a name) vs only sentence-initially (judge decides). */
+export function missingMidNames(claim: string, haystack: string): string[] {
+  return properNouns(claim).filter(
+    (n) =>
+      !hasWord(haystack, n) && !hasWord(haystack, n.replace(/(['’]s|s)$/, '')) && !hasWord(haystack, `${n}s`),
+  );
 }
 
 /** Hype and absolutes that small models add ("than ever before", "every time"). Allowed only if the source says them. */
@@ -89,17 +125,15 @@ const ABSOLUTES =
   /\b(than ever( before)?|every time|always|never|revolutioni[sz]\w*|game[- ]chang\w*|perfect(ly)?|guarantee[sd]?|completely|totally|unbeatable|the best ever|forever|instantly|flawless(ly)?|magic(al)?|smash(ing|es)? (old )?records?|blow(s)? away|crush(es|ing)?)\b/gi;
 
 export function missingAbsolutes(claim: string, support: string): string[] {
-  const hay = support.toLowerCase();
   return [...new Set((claim.match(ABSOLUTES) ?? []).map((m) => m.toLowerCase()))].filter(
-    (m) => !hay.includes(m),
+    (m) => !hasWord(support, m),
   );
 }
 
 /** Acronyms and model-style names (BLEU, GPT-4, Qwen3) missing from the haystack. */
 export function missingAcronyms(text: string, haystack: string): string[] {
-  const hay = haystack.toLowerCase();
   return properNouns(text).filter(
-    (n) => (/^[A-Z][A-Z0-9-]+$/.test(n) || /\d/.test(n)) && !hay.includes(n.toLowerCase()),
+    (n) => (/^[A-Z][A-Z0-9-]+$/.test(n) || /\d/.test(n)) && !hasWord(haystack, n),
   );
 }
 
@@ -137,6 +171,13 @@ export function visualStrings(v: Visual): string[] {
   }
 }
 
+/** The hook may say how long the video is; that's not a claim about the source. */
+const stripLength = (t: string) =>
+  t.replace(
+    /\b(in|under)\s+(twenty|thirty|ten|fifteen|sixty|ninety|one|two|three|four|five|six|seven|eight|nine|\d+)\s+(seconds?|minutes?)\b/gi,
+    '',
+  );
+
 export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): BeatCheck {
   const minOverlap = opts.minOverlap ?? 0.5;
   const everything = allText(src);
@@ -150,9 +191,10 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
 
   for (const c of beat.claims) {
     if (c.kind === 'framing') {
-      // framing must carry no numbers and no names that aren't in the source
-      const nums = missingNumbers(c.text, everything);
-      const names = missingNames(c.text, everything);
+      // framing must carry no numbers and no names that aren't in the source ("in twenty seconds" is about the video)
+      const t = stripLength(c.text);
+      const nums = missingNumbers(t, everything);
+      const names = missingNames(t, everything);
       if (nums.length || names.length) {
         verdicts.push({
           beatId: beat.id,
@@ -198,7 +240,7 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       });
       continue;
     }
-    const names = missingNames(c.text, `${sup}\n${src.title}`);
+    const names = missingMidNames(c.text, `${sup}\n${src.title}`);
     if (names.length) {
       verdicts.push({
         beatId: beat.id,
@@ -206,6 +248,19 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
         verdict: 'unsupported',
         by: 'names',
         reason: `names not in cited source: ${names.join(', ')}`,
+      });
+      continue;
+    }
+    // a capitalised first word unknown to the source may be a name ("Microsoft ran…"): the judge decides
+    const maybe = initialCandidates(c.text, `${sup}\n${src.title}`);
+    if (maybe.length) {
+      needsJudge.push({ claim: c.text, support: sup, context: beat.narration });
+      verdicts.push({
+        beatId: beat.id,
+        claim: c.text,
+        verdict: 'unsupported',
+        by: 'overlap',
+        reason: `possible name not in the source: ${maybe.join(', ')} (needs judge)`,
       });
       continue;
     }
@@ -258,7 +313,30 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       const names =
         what === 'screen'
           ? missingAcronyms(text, `${hay}\n${src.title}`)
-          : missingNames(text, `${hay}\n${src.title}`);
+          : missingMidNames(text, `${hay}\n${src.title}`);
+      if (what === 'narration' && !nums.length && !names.length) {
+        // what is SAID must be covered, not only what the model listed as claims
+        const claimed = new Set(beat.claims.flatMap((c) => contentWords(c.text).map(stem)));
+        const extra = contentWords(text)
+          .map(stem)
+          .filter((w) => !claimed.has(w));
+        const supWords = new Set(contentWords(hay).map(stem));
+        const uncovered = extra.filter((w) => !supWords.has(w));
+        const maybe = initialCandidates(text, `${hay}\n${src.title}`);
+        if ((extra.length >= 2 && uncovered.length / extra.length > 0.5) || maybe.length) {
+          needsJudge.push({ claim: text, support: hay, context: text });
+          verdicts.push({
+            beatId: beat.id,
+            claim: text,
+            verdict: 'unsupported',
+            by: 'overlap',
+            reason: maybe.length
+              ? `possible name ${maybe.join(', ')} (needs judge)`
+              : 'narration says more than its claims (needs judge)',
+          });
+          continue;
+        }
+      }
       if (nums.length || names.length) {
         verdicts.push({
           beatId: beat.id,
@@ -270,12 +348,24 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       }
     }
   } else {
-    for (const [what, text] of [
+    for (const [what, text0] of [
       ['narration', beat.narration],
       ...visualStrings(beat.visual).map((x) => ['screen', x] as const),
     ] as const) {
+      const text = stripLength(text0);
       const nums = missingNumbers(text, everything);
       const names = what === 'screen' ? missingAcronyms(text, everything) : missingNames(text, everything);
+      const hype = missingAbsolutes(text, everything);
+      if (hype.length) {
+        verdicts.push({
+          beatId: beat.id,
+          claim: text,
+          verdict: 'unsupported',
+          by: 'names',
+          reason: `hook overstates: "${hype.join('", "')}"`,
+        });
+        continue;
+      }
       if (nums.length || names.length)
         verdicts.push({
           beatId: beat.id,

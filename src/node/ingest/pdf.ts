@@ -206,6 +206,13 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
     pageSizes.push({ w: vp.width, h: vp.height });
     const tc = await page.getTextContent();
     const runs: Run[] = [];
+    // a page whose text is mostly rotated (landscape tables, /Rotate) keeps it rather than losing everything
+    const allItems = tc.items as { transform: number[]; str?: string }[];
+    const rotatedCount = allItems.filter(
+      (it) => it.str && Math.abs(it.transform[1]!) > Math.abs(it.transform[0]!) * 0.05,
+    ).length;
+    const rotatedPage = rotatedCount > allItems.filter((it) => it.str).length / 2;
+    if (rotatedPage) warnings.push(`page ${p} is rotated; its reading order may be rough`);
     for (const it of tc.items as {
       str: string;
       transform: number[];
@@ -215,7 +222,7 @@ export async function ingestPdf(data: Uint8Array, name: string, dir: string): Pr
     }[]) {
       if (!it.str) continue;
       const [a, b, , , e, f] = it.transform as [number, number, number, number, number, number];
-      if (Math.abs(b) > Math.abs(a) * 0.05) continue; // rotated text (arXiv side stamp, axis labels)
+      if (Math.abs(b) > Math.abs(a) * 0.05 && !rotatedPage) continue; // rotated text (arXiv side stamp, axis labels)
       const size = Math.hypot(a, b) || it.height;
       runs.push({
         str: it.str,

@@ -43,8 +43,9 @@ export function buildSourceMap(
           text: c.text,
           kind: c.kind,
           verdict:
+            faith.verdicts.find((v) => v.beatId === b.id && v.claim === c.text)?.verdict ??
             faith.verdicts.find((v) => v.claim === c.text)?.verdict ??
-            (c.kind === 'framing' ? 'framing' : 'supported'),
+            (c.kind === 'framing' ? 'framing' : 'unchecked'),
           sources: c.support.map((id) => {
             const s = byId.get(id);
             return {

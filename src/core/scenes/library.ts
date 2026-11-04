@@ -26,6 +26,7 @@ import {
   type Img,
 } from './kit.ts';
 import { drawIcon, iconFor, ICONS } from './icons.ts';
+import { normNumber } from '../text/text.ts';
 
 export interface SceneProps {
   ctx: Ctx;
@@ -390,8 +391,8 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
   ctx.restore();
   if (v.compare) {
     // two bars: the number vs the comparison
-    const a = Number(v.value.replace(/[^\d.]/g, ''));
-    const c = Number(v.compare.value.replace(/[^\d.]/g, ''));
+    const a = Math.abs(Number(normNumber(v.value)) || 0);
+    const c = Math.abs(Number(normNumber(v.compare.value)) || 0);
     const max = Math.max(a, c) || 1;
     const bx = b.x + b.w * 0.7;
     const bw = 110 * s;
@@ -422,7 +423,15 @@ function bullets(p: SceneProps, v: Extract<Visual, { type: 'bullets' }>): void {
   const full = contentBox(W, H);
   // a big icon on the right gives the list a picture; the list keeps the left 64%
   const r = Math.min(full.h * 0.26, 190 * s);
-  iconDisc(p, iconFor(`${v.heading ?? ''} ${v.items.join(' ')}`), full.x + full.w - r * 1.3, full.y + full.h / 2, r, p.theme.tone.secondary, 0.1);
+  iconDisc(
+    p,
+    iconFor(`${v.heading ?? ''} ${v.items.join(' ')}`),
+    full.x + full.w - r * 1.3,
+    full.y + full.h / 2,
+    r,
+    p.theme.tone.secondary,
+    0.1,
+  );
   const b = { ...full, w: full.w - r * 2.9 };
   let y = b.y + 20 * s;
   if (v.heading) {
@@ -493,7 +502,8 @@ function bars(p: SceneProps, v: Extract<Visual, { type: 'bars' }>): void {
   const n = v.bars.length;
   const gapW = b.w / n;
   const bw = Math.min(200 * s, gapW * 0.62);
-  const max = Math.max(...v.bars.map((x) => x.value)) || 1;
+  // scale by magnitude; negative values draw as (positive-height) bars labelled with their sign
+  const max = Math.max(...v.bars.map((x) => Math.abs(x.value)).filter(Number.isFinite)) || 1;
   // axis
   ctx.strokeStyle = p.theme.faint;
   ctx.lineWidth = 3 * s;
@@ -503,7 +513,7 @@ function bars(p: SceneProps, v: Extract<Visual, { type: 'bars' }>): void {
   ctx.stroke();
   v.bars.forEach((bar, i) => {
     const g = easeOutCubic(prog(p.t, 0.25 + i * 0.16, 0.9));
-    const h = ((base - top - 60 * s) * bar.value) / max;
+    const h = Math.max(0, ((base - top - 60 * s) * Math.abs(bar.value)) / max) || 0;
     const x = b.x + gapW * i + (gapW - bw) / 2;
     const color = bar.highlight ? p.theme.tone.accent : p.theme.tone.primary;
     ctx.save();

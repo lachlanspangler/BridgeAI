@@ -19,7 +19,8 @@ import {
 } from '../core/llm/prompts.ts';
 import { mergeAnalyses, parseAnalysis, parseScript } from '../core/llm/parse.ts';
 import type { Analysis, Beat, RenderSettings, Script, Source } from '../core/schema.ts';
-import { composeExtractive } from '../core/script/extractive.ts';
+import { composeExtractive, trimSentence } from '../core/script/extractive.ts';
+import { missingNames } from '../core/faith/check.ts';
 import { numbers, wordCount } from '../core/text/text.ts';
 import type { Engines } from './pipeline.ts';
 import type { LlmProvider } from './llm/types.ts';
@@ -296,17 +297,18 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
       const out = r.narration.trim();
       // accept only if shorter and it adds no number the original didn't have
       const orig = new Set(numbers(beat.narration));
-      if (out && wordCount(out) <= maxWords + 2 && numbers(out).every((n) => orig.has(n))) return out;
+      if (
+        out &&
+        wordCount(out) <= maxWords + 2 &&
+        numbers(out).every((n) => orig.has(n)) &&
+        missingNames(out, beat.narration).length === 0
+      )
+        return out;
     } catch {
       /* fall through */
     }
-    return (
-      beat.narration
-        .split(/\s+/)
-        .slice(0, maxWords)
-        .join(' ')
-        .replace(/[,;:]$/, '') + '.'
-    );
+    // clause-aware: never cut a qualifier mid-phrase (the pipeline re-checks the result anyway)
+    return trimSentence(beat.narration, maxWords, beat.keywords);
   };
 
   const expand = async (

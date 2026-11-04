@@ -50,7 +50,11 @@ function savedRun(dir: string, seconds: number) {
   return {
     script,
     faith,
-    durations: { target: seconds, actual: tl.duration, withinTolerance: Math.abs(tl.duration - seconds) <= seconds * 0.1 },
+    durations: {
+      target: seconds,
+      actual: tl.duration,
+      withinTolerance: Math.abs(tl.duration - seconds) <= seconds * 0.1,
+    },
     engines: { analyze: script.engine, script: script.engine, tts: 'saved' },
   };
 }
@@ -67,11 +71,16 @@ export function loadCases(): Case[] {
 /** A key point is covered if, for every inner group, at least one alternative appears in the text. */
 export function covered(kp: Case['key_points'][number], text: string): boolean {
   const t = ` ${text.toLowerCase().replace(/[^a-z0-9.%+-]+/g, ' ')} `;
-  return kp.any.every((group) => group.some((alt) => t.includes(` ${alt.toLowerCase()}`) || t.includes(alt.toLowerCase())));
+  return kp.any.every((group) =>
+    group.some((alt) => t.includes(` ${alt.toLowerCase()}`) || t.includes(alt.toLowerCase())),
+  );
 }
 
 export function screenText(script: Script): string {
-  return script.beats.flatMap((b) => visualStrings(b.visual)).filter(Boolean).join(' · ');
+  return script.beats
+    .flatMap((b) => visualStrings(b.visual))
+    .filter(Boolean)
+    .join(' · ');
 }
 
 async function inputFor(c: Case): Promise<Input> {
@@ -80,7 +89,11 @@ async function inputFor(c: Case): Promise<Input> {
     const p = join(ROOT, c.source.file);
     return { files: [{ name: c.source.file.split('/').pop()!, data: readFileSync(p) }] };
   }
-  if (c.source.files) return { files: c.source.files.map((f) => ({ name: f.split('/').pop()!, data: readFileSync(join(ROOT, f)) })), text: c.source.note };
+  if (c.source.files)
+    return {
+      files: c.source.files.map((f) => ({ name: f.split('/').pop()!, data: readFileSync(join(ROOT, f)) })),
+      text: c.source.note,
+    };
   throw new Error(`case ${c.id} has no source`);
 }
 
@@ -92,15 +105,33 @@ export function questionsFor(c: Case, seconds: number): Case['questions'] {
   return qs.length ? qs : c.questions.slice(0, 1);
 }
 
-async function understanding(llm: LlmProvider | null, c0: Case, script: Script, seconds: number): Promise<{ correct: number; total: number; answers: string[] }> {
+async function understanding(
+  llm: LlmProvider | null,
+  c0: Case,
+  script: Script,
+  seconds: number,
+): Promise<{ correct: number; total: number; answers: string[] }> {
   if (!llm) return { correct: 0, total: 0, answers: [] };
   const c = { ...c0, questions: questionsFor(c0, seconds) };
   const narration = script.beats.map((b) => b.narration).join(' ');
   const screen = screenText(script);
   const r = await llm.json<{ answers: string[] }>({
-    system: 'You just watched a short explainer video. Answer ONLY from what the video said or showed. If the video did not cover it, answer "not covered". Short answers. JSON only.',
+    system:
+      'You just watched a short explainer video. Answer ONLY from what the video said or showed. If the video did not cover it, answer "not covered". Short answers. JSON only.',
     user: `VIDEO NARRATION:\n${narration}\n\nON-SCREEN TEXT:\n${screen}\n\nQUESTIONS:\n${c.questions.map((q, i) => `${i + 1}. ${q.q}`).join('\n')}`,
-    schema: { type: 'object', properties: { answers: { type: 'array', items: { type: 'string' }, minItems: c.questions.length, maxItems: c.questions.length } }, required: ['answers'], additionalProperties: false },
+    schema: {
+      type: 'object',
+      properties: {
+        answers: {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: c.questions.length,
+          maxItems: c.questions.length,
+        },
+      },
+      required: ['answers'],
+      additionalProperties: false,
+    },
     name: 'answers',
     maxTokens: 600,
     temperature: 0,
@@ -119,7 +150,12 @@ async function understanding(llm: LlmProvider | null, c0: Case, script: Script, 
       const g = await llm.json<{ same: boolean }>({
         system: 'You grade quiz answers. JSON only.',
         user: `QUESTION: ${q.q}\nEXPECTED: ${q.a}\nGIVEN: ${a}\nIs the given answer essentially correct? The core fact must match; paraphrase, abbreviations (GtC = gigatons of carbon), missing units and small omissions are fine. A wrong number or a different fact is not.`,
-        schema: { type: 'object', properties: { same: { type: 'boolean' } }, required: ['same'], additionalProperties: false },
+        schema: {
+          type: 'object',
+          properties: { same: { type: 'boolean' } },
+          required: ['same'],
+          additionalProperties: false,
+        },
         name: 'grade',
         maxTokens: 30,
         temperature: 0,
@@ -152,9 +188,14 @@ interface Row {
 async function main(): Promise<void> {
   const cases = loadCases().filter((c) => !only || only.includes(c.id));
   if (!cases.length) throw new Error('no eval cases in evals/cases');
-  const judge = engine === 'auto' || engine === 'local' || engine === 'extractive' ? localLlm() : await providerFromKeys(engine);
+  const judge =
+    engine === 'auto' || engine === 'local' || engine === 'extractive'
+      ? localLlm()
+      : await providerFromKeys(engine);
   const { engines, label } = await pickEngines({ llm: engine, tts: 'auto', providers: providerFromKeys });
-  console.log(`evals: ${cases.length} cases × ${lengths.join('/')} s · engine ${label} · understanding judge ${judge ? `${judge.id}:${judge.model}` : 'none'}`);
+  console.log(
+    `evals: ${cases.length} cases × ${lengths.join('/')} s · engine ${label} · understanding judge ${judge ? `${judge.id}:${judge.model}` : 'none'}`,
+  );
   const rows: Row[] = [];
   for (const c of cases) {
     let src: Source;
@@ -163,24 +204,56 @@ async function main(): Promise<void> {
       src = await ingestInput(await inputFor(c), srcDir);
       src = { ...src, assets: src.assets.map((a) => ({ ...a, path: join(srcDir, a.path) })) };
     } catch (e) {
-      for (const s of lengths) rows.push({ case: c.id, kind: c.kind, seconds: s, engine: label, actual: 0, inTolerance: false, beats: 0, unsupported: 0, recheckUnsupported: 0, dropped: 0, k1: false, coverage: 0, coveredIds: [], understanding: '-', understandingFrac: 0, error: `ingest: ${(e as Error).message}` });
+      for (const s of lengths)
+        rows.push({
+          case: c.id,
+          kind: c.kind,
+          seconds: s,
+          engine: label,
+          actual: 0,
+          inTolerance: false,
+          beats: 0,
+          unsupported: 0,
+          recheckUnsupported: 0,
+          dropped: 0,
+          k1: false,
+          coverage: 0,
+          coveredIds: [],
+          understanding: '-',
+          understandingFrac: 0,
+          error: `ingest: ${(e as Error).message}`,
+        });
       continue;
     }
     for (const s of lengths) {
       const t0 = performance.now();
       try {
         const dir = join(paths.home(), 'evals', c.id, `run-${s}`);
-        const r = rescore && existsSync(join(dir, 'script.json'))
-          ? savedRun(dir, s)
-          : await runPipeline(src, RenderSettings.parse({ seconds: s, width: 1280, height: 720 }), engines, dir, () => {}, undefined, { render });
+        const r =
+          rescore && existsSync(join(dir, 'script.json'))
+            ? savedRun(dir, s)
+            : await runPipeline(
+                src,
+                RenderSettings.parse({ seconds: s, width: 1280, height: 720 }),
+                engines,
+                dir,
+                () => {},
+                undefined,
+                { render },
+              );
         const narration = r.script.beats.map((b) => b.narration).join(' ');
         const said = `${narration} ${screenText(r.script)}`;
         const k = budgetFor(s).ideas.max;
         const top = c.key_points.slice(0, Math.max(1, k));
         const cov = top.filter((kp) => covered(kp, said));
-        const recheck = checkScript(r.script, src).flatMap((x) => x.verdicts).filter((v) => v.verdict === 'unsupported' && v.by !== 'overlap').length;
+        const recheck = checkScript(r.script, src)
+          .flatMap((x) => x.verdicts)
+          .filter((v) => v.verdict === 'unsupported' && v.by !== 'overlap').length;
         const u = await understanding(judge, c, r.script, s);
-        if (args.includes('--verbose')) questionsFor(c, s).forEach((q, i) => console.log(`      Q: ${q.q}\n      expected: ${q.a}\n      got: ${u.answers[i]}`));
+        if (args.includes('--verbose'))
+          questionsFor(c, s).forEach((q, i) =>
+            console.log(`      Q: ${q.q}\n      expected: ${q.a}\n      got: ${u.answers[i]}`),
+          );
         rows.push({
           case: c.id,
           kind: c.kind,
@@ -198,16 +271,38 @@ async function main(): Promise<void> {
           understanding: u.total ? `${u.correct}/${u.total}` : '-',
           understandingFrac: u.total ? u.correct / u.total : 0,
         });
-        console.log(`  ${c.id} ${s}s: ${r.durations.actual.toFixed(1)} s · unsupported ${r.faith.unsupported}/${recheck} · k1 ${rows.at(-1)!.k1 ? '✓' : '✗'} · coverage ${rows.at(-1)!.coverage} · understanding ${rows.at(-1)!.understanding} · ${((performance.now() - t0) / 1000).toFixed(0)} s`);
+        console.log(
+          `  ${c.id} ${s}s: ${r.durations.actual.toFixed(1)} s · unsupported ${r.faith.unsupported}/${recheck} · k1 ${rows.at(-1)!.k1 ? '✓' : '✗'} · coverage ${rows.at(-1)!.coverage} · understanding ${rows.at(-1)!.understanding} · ${((performance.now() - t0) / 1000).toFixed(0)} s`,
+        );
       } catch (e) {
-        rows.push({ case: c.id, kind: c.kind, seconds: s, engine: label, actual: 0, inTolerance: false, beats: 0, unsupported: 0, recheckUnsupported: 0, dropped: 0, k1: false, coverage: 0, coveredIds: [], understanding: '-', understandingFrac: 0, error: (e as Error).message });
+        rows.push({
+          case: c.id,
+          kind: c.kind,
+          seconds: s,
+          engine: label,
+          actual: 0,
+          inTolerance: false,
+          beats: 0,
+          unsupported: 0,
+          recheckUnsupported: 0,
+          dropped: 0,
+          k1: false,
+          coverage: 0,
+          coveredIds: [],
+          understanding: '-',
+          understandingFrac: 0,
+          error: (e as Error).message,
+        });
         console.log(`  ${c.id} ${s}s: ERROR ${(e as Error).message}`);
       }
     }
   }
   mkdirSync(join(ROOT, 'evals/results'), { recursive: true });
   const stamp = new Date().toISOString();
-  writeFileSync(join(ROOT, 'evals/results/latest.json'), JSON.stringify({ stamp, engine: label, lengths, rows }, null, 2));
+  writeFileSync(
+    join(ROOT, 'evals/results/latest.json'),
+    JSON.stringify({ stamp, engine: label, lengths, rows }, null, 2),
+  );
   writeFileSync(join(ROOT, 'docs/EVALS.md'), report(stamp, label, rows));
   console.log('wrote docs/EVALS.md');
 }
@@ -221,23 +316,28 @@ function report(stamp: string, label: string, rows: Row[]): string {
     '',
     `_Generated by \`make evals\` (evals/run.ts) on ${stamp.slice(0, 16).replace('T', ' ')} UTC · engine **${label}** · ${new Set(rows.map((r) => r.case)).size} cases._`,
     '',
-    'Metrics: **unsupported** = claims left in the final script that the faithfulness gate could not support (target 0); **recheck** = an independent deterministic re-check of the final script (numbers/names, target 0); **k1** = the source\'s single most important idea is in the video (target: every case, every length); **coverage** = hand-written key points covered, out of the number of ideas that fit the length; **understanding** = a fresh model that only sees the narration and on-screen text answers the case\'s questions; **timing** = within ±10 % of the chosen length.',
+    "Metrics: **unsupported** = claims left in the final script that the faithfulness gate could not support (target 0); **recheck** = an independent deterministic re-check of the final script (numbers/names, target 0); **k1** = the source's single most important idea is in the video (target: every case, every length); **coverage** = hand-written key points covered, out of the number of ideas that fit the length; **understanding** = a fresh model that only sees the narration and on-screen text answers the case's questions; **timing** = within ±10 % of the chosen length.",
     '',
     '## Summary',
     '',
     '| length | runs | unsupported (total) | recheck | k1 covered | mean coverage | understanding | timing ±10% |',
     '|---|---|---|---|---|---|---|---|',
-    ...[...new Set(ok.map((r) => r.seconds))].sort((a, b) => a - b).map((s) => {
-      const rs = by(s);
-      const mean = (f: (r: Row) => number) => rs.reduce((n, r) => n + f(r), 0) / Math.max(1, rs.length);
-      return `| ${s} s | ${rs.length} | ${rs.reduce((n, r) => n + r.unsupported, 0)} | ${rs.reduce((n, r) => n + r.recheckUnsupported, 0)} | ${rs.filter((r) => r.k1).length}/${rs.length} | ${pct(mean((r) => r.coverage))} | ${pct(mean((r) => r.understandingFrac))} | ${rs.filter((r) => r.inTolerance).length}/${rs.length} |`;
-    }),
+    ...[...new Set(ok.map((r) => r.seconds))]
+      .sort((a, b) => a - b)
+      .map((s) => {
+        const rs = by(s);
+        const mean = (f: (r: Row) => number) => rs.reduce((n, r) => n + f(r), 0) / Math.max(1, rs.length);
+        return `| ${s} s | ${rs.length} | ${rs.reduce((n, r) => n + r.unsupported, 0)} | ${rs.reduce((n, r) => n + r.recheckUnsupported, 0)} | ${rs.filter((r) => r.k1).length}/${rs.length} | ${pct(mean((r) => r.coverage))} | ${pct(mean((r) => r.understandingFrac))} | ${rs.filter((r) => r.inTolerance).length}/${rs.length} |`;
+      }),
     '',
     '## Per case',
     '',
     '| case | kind | length | actual | beats | unsupported | recheck | dropped | k1 | coverage | understanding | note |',
     '|---|---|---|---|---|---|---|---|---|---|---|---|',
-    ...rows.map((r) => `| ${r.case} | ${r.kind} | ${r.seconds} s | ${r.actual} s${r.inTolerance ? '' : ' ⚠'} | ${r.beats} | ${r.unsupported} | ${r.recheckUnsupported} | ${r.dropped} | ${r.k1 ? '✓' : '✗'} | ${pct(r.coverage)} (${r.coveredIds.join(' ') || '–'}) | ${r.understanding} | ${r.error ? `ERROR: ${r.error.slice(0, 80)}` : ''} |`),
+    ...rows.map(
+      (r) =>
+        `| ${r.case} | ${r.kind} | ${r.seconds} s | ${r.actual} s${r.inTolerance ? '' : ' ⚠'} | ${r.beats} | ${r.unsupported} | ${r.recheckUnsupported} | ${r.dropped} | ${r.k1 ? '✓' : '✗'} | ${pct(r.coverage)} (${r.coveredIds.join(' ') || '–'}) | ${r.understanding} | ${r.error ? `ERROR: ${r.error.slice(0, 80)}` : ''} |`,
+    ),
     '',
   ];
   return lines.join('\n');

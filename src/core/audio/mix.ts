@@ -1,6 +1,6 @@
 /**
  * Mixer: voice clips placed on the timeline + music bed (ducked under the voice) + SFX → one stereo master,
- * normalised to −14 LUFS integrated with a −1 dBFS peak ceiling (EXPLAINER_CRAFT rule 38).
+ * normalised to −14 LUFS integrated with a −2 dBFS sample-peak ceiling (so the AAC encode stays ≤ −1 dBTP; rule 38).
  * Also: ITU-R BS.1770 integrated loudness (K-weighting, 400 ms blocks, absolute and relative gates).
  */
 import type { Timeline } from '../schema.ts';
@@ -23,7 +23,7 @@ export interface MixResult {
   master: Stereo;
   lufs: number;
   peakDb: number;
-  /** Measured voice-vs-music level difference while speaking (dB). */
+  /** Designed voice-vs-music level difference while speaking (dB): the duck depth applied, not a measurement. */
   duckDb: number;
 }
 

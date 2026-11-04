@@ -284,6 +284,8 @@ function Review({
   async function loadIdeas() {
     setLoadingIdeas(true);
     setIdeasErr(null);
+    setPinned(new Set());
+    setDropped(new Set());
     try {
       setAnalysis(await api.ideas(src.id, seconds, llm));
     } catch (e) {
@@ -452,7 +454,12 @@ function Review({
             Script written by
             <select
               value={llm}
-              onChange={(e) => (setLlm(e.target.value), setAnalysis(null))}
+              onChange={(e) => (
+                setLlm(e.target.value),
+                setAnalysis(null),
+                setPinned(new Set()),
+                setDropped(new Set())
+              )}
               aria-label="Script engine"
             >
               {engines.map((e) => (

@@ -124,8 +124,11 @@ export function captionCues(beats: TimedBeat[], maxChars = 32, maxWords = 5): Cu
   for (let i = 0; i < cues.length; i++) {
     const next = cues[i + 1];
     const c = cues[i]!;
-    c.end = round3(next ? Math.min(next.start - 0.02, c.end + 0.35) : c.end + 0.5);
-    if (c.end < c.start + 0.3) c.end = round3(c.start + 0.3);
+    const limit = next ? next.start - 0.02 : Infinity;
+    const want = next ? c.end + 0.35 : c.end + 0.5;
+    // at least 0.3 s on screen, but never past the next cue (cueAt relies on non-overlap)
+    c.end = round3(Math.min(Math.max(want, c.start + 0.3), limit));
+    if (c.end <= c.start) c.end = round3(Math.min(c.start + 0.05, limit > c.start ? limit : c.start + 0.05));
   }
   return cues;
 }
@@ -149,17 +152,16 @@ export function sfxCues(beats: TimedBeat[], duration: number): Timeline['sfx'] {
   });
   raw.push({ t: Math.max(0, duration - 1.4), kind: 'chime', gain: 0.6, prio: 2 });
   raw.sort((a, b) => a.t - b.t);
-  const out: Timeline['sfx'] = [];
-  for (const s of raw) {
-    const last = out[out.length - 1];
-    if (last && s.t - last.t < 2 && s.kind !== 'riser' && last.kind !== 'riser') {
-      // keep the higher-priority one
-      const lastPrio = raw.find((r) => r.t === last.t && r.kind === last.kind)?.prio ?? 0;
-      if (s.prio > lastPrio) out[out.length - 1] = { t: s.t, kind: s.kind, gain: s.gain };
+  const kept: typeof raw = [];
+  for (const x of raw) {
+    const last = kept[kept.length - 1];
+    if (last && x.t - last.t < 2 && x.kind !== 'riser' && last.kind !== 'riser') {
+      if (x.prio > last.prio) kept[kept.length - 1] = x; // keep the higher-priority cue
       continue;
     }
-    out.push({ t: round3(s.t), kind: s.kind, gain: s.gain });
+    kept.push(x);
   }
+  const out: Timeline['sfx'] = kept.map((x) => ({ t: round3(x.t), kind: x.kind, gain: x.gain }));
   return out;
 }
 

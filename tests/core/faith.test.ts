@@ -73,7 +73,7 @@ describe('faithfulness checks', () => {
     const checks = script.beats.map((b) => checkBeat(b, src));
     const g = gate(script, checks);
     expect(g.script.beats.length).toBe(2);
-    expect(g.report.actions.find((a) => a.beatId === 'b3')!.action).toBe('dropped');
+    expect(g.report.actions.find((a) => a.beatId === 'x-b3')!.action).toBe('dropped');
     expect(g.report.unsupported).toBe(0);
   });
   it('judge rulings can rescue a paraphrase', () => {

@@ -58,11 +58,13 @@ export class JobQueue {
       try {
         const j = JSON.parse(readFileSync(f, 'utf8')) as JobRecord;
         // a job that was running when the server stopped did not finish
+        this.jobs.set(id, j);
         if (j.state === 'running' || j.state === 'queued') {
           j.state = 'failed';
           j.error = 'interrupted (the server stopped)';
+          rmSync(join(paths.jobs(), id, 'tmp'), { recursive: true, force: true }); // disk rule
+          this.save(j);
         }
-        this.jobs.set(id, j);
       } catch {
         /* ignore corrupt */
       }

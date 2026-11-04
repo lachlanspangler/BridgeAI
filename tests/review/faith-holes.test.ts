@@ -33,7 +33,9 @@ const beat = (over: Partial<Beat>): Beat => ({
 
 describe('numbers', () => {
   it('spelled-out quantities in a claim are checked (rule 7)', () => {
-    expect(missingNumbers('Sleep makes memory ten times better.', 'Sleep improves memory in adults.')).not.toEqual([]);
+    expect(
+      missingNumbers('Sleep makes memory ten times better.', 'Sleep improves memory in adults.'),
+    ).not.toEqual([]);
   });
   it('magnitude suffixes are not discarded (7B is not 7M)', () => {
     expect(missingNumbers('a 7B parameter model', 'a 7M parameter model')).not.toEqual([]);
@@ -45,7 +47,9 @@ describe('numbers', () => {
 
 describe('names', () => {
   it('a sentence-initial invented name is caught', () => {
-    expect(missingNames('Microsoft ran this trial.', 'The trial enrolled 120 adults.')).toEqual(['Microsoft']);
+    expect(missingNames('Microsoft ran this trial.', 'The trial enrolled 120 adults.')).toEqual([
+      'Microsoft',
+    ]);
   });
   it('a short acronym is not "found" as a substring of an ordinary word', () => {
     expect(missingNames('Researchers at MIT agree.', 'We submit results within the limit.')).toEqual(['MIT']);

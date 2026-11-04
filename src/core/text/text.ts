@@ -96,6 +96,33 @@ export function numbers(text: string): string[] {
   return m.map(normNumber).filter((x) => x !== '');
 }
 
+export type Mag = '' | '%' | 'x' | 'k' | 'M' | 'B';
+
+/** Numbers with their magnitude/unit suffix, normalised ("7B", "7 billion" → { n: "7", mag: "B" }). */
+export function numberTokens(text: string): { raw: string; n: string; mag: Mag }[] {
+  const re =
+    /(?<![A-Za-z\d.])[-−]?\d[\d,]*(?:\.\d+)?(?:e-?\d+)?(?:\s?(%|×|x\b|k\b|K\b|M\b|B\b|percent\b|times\b|thousand\b|million\b|billion\b))?/g;
+  const out: { raw: string; n: string; mag: Mag }[] = [];
+  for (const m of text.matchAll(re)) {
+    const suf = (m[1] ?? '').toLowerCase();
+    const mag: Mag =
+      suf === '%' || suf === 'percent'
+        ? '%'
+        : suf === '×' || suf === 'x' || suf === 'times'
+          ? 'x'
+          : suf === 'k' || suf === 'thousand'
+            ? 'k'
+            : m[1] === 'M' || suf === 'million'
+              ? 'M'
+              : m[1] === 'B' || suf === 'billion'
+                ? 'B'
+                : '';
+    const n = normNumber(m[0]);
+    if (n) out.push({ raw: m[0].trim(), n, mag });
+  }
+  return out;
+}
+
 export function normNumber(raw: string): string {
   const s = raw.trim().replace(/−/g, '-').replace(/\s/g, '');
   const m = s.match(/^(-?)([\d,]+(?:\.\d+)?(?:e-?\d+)?)(.*)$/);
@@ -169,6 +196,33 @@ export function stem(w: string): string {
 }
 
 /** Capitalised names/terms that are not sentence-initial: "Transformer", "BLEU", "WMT", "GPT-4". */
+/** Words that commonly start an explainer sentence; never treated as names. */
+const STARTERS = new Set(
+  'it its this that these those there here you your we our they their he she his her imagine think picture meet without with instead now then so but and or yet still first next finally today each every most some many few old new simple one two three why how what when where which who because if while after before since once just only even also plus meanwhile however same both all any no not see look notice remember take start researchers scientists authors experts people users developers engineers teams studies results models systems methods data experiments tests numbers scores papers projects images the a an'.split(
+    ' ',
+  ),
+);
+
+/** Sentence-initial capitalised words that may be names (unknown to `known` and not common starters). */
+export function initialCandidates(text: string, known: string): string[] {
+  const hay = ` ${known.toLowerCase().replace(/[^a-z0-9-]+/g, ' ')} `;
+  const out: string[] = [];
+  for (const s of sentences(text)) {
+    const w = (s.split(/\s+/)[0] ?? '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9-]+$/g, '');
+    if (!/^[A-Z][a-z]+[A-Za-z0-9-]*$/.test(w)) continue;
+    const l = w.toLowerCase();
+    if (
+      STARTERS.has(l) ||
+      STOPWORDS.has(l) ||
+      hay.includes(` ${l} `) ||
+      hay.includes(` ${l.replace(/s$/, '')} `)
+    )
+      continue;
+    out.push(w);
+  }
+  return [...new Set(out)];
+}
+
 export function properNouns(text: string): string[] {
   const out: string[] = [];
   for (const s of sentences(text)) {

@@ -73,8 +73,15 @@ function summary(src: Source) {
 }
 
 /** Cached analysis per engine; the engine id is hashed so it can never become a path. */
-const analysisFile = (srcId: string, llm: string) =>
-  join(sourceDir(srcId), `analysis-${createHash('sha256').update(llm).digest('hex').slice(0, 16)}.json`);
+const analysisFile = (srcId: string, llm: string, seconds: number) =>
+  join(
+    sourceDir(srcId),
+    // keyed by engine AND by how many ideas the length needs (a 20 s idea list is too short for 5 min)
+    `analysis-${createHash('sha256')
+      .update(`${llm}|${budgetFor(seconds).ideas.max}`)
+      .digest('hex')
+      .slice(0, 16)}.json`,
+  );
 
 function loadSource(id: string): Source | null {
   const f = join(sourceDir(id), 'source.json');
@@ -114,7 +121,7 @@ export function createApp(opts: AppOptions) {
       log,
     });
     // reuse the reviewed idea list if the user looked at it (pins/drops apply on top)
-    const cached = analysisFile(job.sourceId, job.settings.llm);
+    const cached = analysisFile(job.sourceId, job.settings.llm, job.settings.seconds);
     if (existsSync(cached)) {
       const a = JSON.parse(readFileSync(cached, 'utf8')) as Analysis;
       engines.analyze = async () => a;
@@ -217,11 +224,12 @@ export function createApp(opts: AppOptions) {
     const spec = EngineSpec.safeParse(body.llm ?? 'auto');
     if (!spec.success) return c.json({ error: 'bad engine id' }, 400);
     const llm = spec.data;
-    const cached = analysisFile(id, llm);
+    const seconds = Math.max(10, Math.min(900, Number(body.seconds) || 60));
+    const cached = analysisFile(id, llm, seconds);
     if (existsSync(cached)) return c.json(JSON.parse(readFileSync(cached, 'utf8')));
     try {
       const { engines } = await pickEngines({ llm, tts: 'system', providers: providerFromKeys });
-      const a = await engines.analyze!(src, budgetFor(Number(body.seconds) || 60));
+      const a = await engines.analyze!(src, budgetFor(seconds));
       writeFileSync(cached, JSON.stringify(a));
       return c.json(a);
     } catch (e) {

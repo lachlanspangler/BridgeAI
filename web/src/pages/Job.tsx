@@ -17,14 +17,19 @@ export function JobPage({ id }: { id: string }) {
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
     let off = () => {};
+    let cancelled = false;
     api
       .job(id)
       .then((j) => {
+        if (cancelled) return;
         setJob(j);
         if (j.state === 'queued' || j.state === 'running') off = api.events(id, setJob);
       })
-      .catch((e: Error) => setErr(e.message));
-    return () => off();
+      .catch((e: Error) => !cancelled && setErr(e.message));
+    return () => {
+      cancelled = true;
+      off();
+    };
   }, [id]);
   if (err) return <p className="error">{err}</p>;
   if (!job) return <p className="muted">Loading…</p>;

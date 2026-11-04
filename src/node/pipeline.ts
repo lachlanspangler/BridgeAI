@@ -9,7 +9,7 @@ import { budgetFor, type Budget } from '../core/budget.ts';
 import { analyzeExtractive } from '../core/analyze/extractive.ts';
 import { toSrt, toVtt } from '../core/captions/captions.ts';
 import { checkBeat, checkScript } from '../core/faith/check.ts';
-import { gate } from '../core/faith/gate.ts';
+import { gate, judgeKey, markVerified } from '../core/faith/gate.ts';
 import { repairCitations } from '../core/faith/repair.ts';
 import { encodeWav, mix, speechBounds } from '../core/audio/mix.ts';
 import type {
@@ -126,30 +126,29 @@ export async function runPipeline(
     if (engines.judge) {
       for (const c of checks)
         for (const j of c.needsJudge)
-          judged.set(j.claim, await engines.judge(j.claim, j.support, signal, j.context));
+          judged.set(judgeKey(c.beatId, j.claim), await engines.judge(j.claim, j.support, signal, j.context));
     }
+    // fallback takeaway: the top idea's verbatim evidence quote (source words, not model words), and only if it checks out
     const top = analysis.ideas[0];
-    const fallback: Beat | undefined = top
-      ? {
-          id: 'bx',
-          role: 'takeaway',
-          narration: trimSentence(top.statement, 14, top.terms),
-          visual: {
-            type: 'takeaway',
-            text: trimSentence(top.statement, budget.maxScreenWords).replace(/\.$/, ''),
-            highlight: top.terms.slice(0, 1),
-          },
-          claims: [
-            {
-              text: trimSentence(top.statement, 14),
-              support: top.evidence.map((e) => e.segmentId),
-              kind: 'fact',
-            },
-          ],
-          ideas: [top.id],
-          keywords: [],
-        }
-      : undefined;
+    const quote = top?.evidence.find((e) => e.quote)?.quote;
+    let fallback: Beat | undefined;
+    if (top && quote) {
+      const said = trimSentence(quote, 14, top.terms);
+      const cand: Beat = {
+        id: 'bx',
+        role: 'takeaway',
+        narration: said,
+        visual: {
+          type: 'takeaway',
+          text: trimSentence(quote, 12, top.terms).replace(/\.$/, ''),
+          highlight: top.terms.slice(0, 1),
+        },
+        claims: [{ text: said, support: top.evidence.map((e) => e.segmentId), kind: 'fact' }],
+        ideas: [top.id],
+        keywords: [],
+      };
+      if (checkBeat(cand, src).ok) fallback = markVerified(cand);
+    }
     const g = gate(script, checks, judged, fallback);
     script = g.script;
     return g.report;
@@ -246,7 +245,9 @@ export async function runPipeline(
       await synth(i);
     }
     const target = settings.seconds;
+    let extraHold = 0;
     for (let attempt = 0; attempt < 8; attempt++) {
+      extraHold = 0;
       timeline = buildTimeline(script, voiceClips(), budget, tlOpts);
       const d = timeline.duration;
       if (d <= target * 1.08 && d >= target * 0.92) break;
@@ -258,6 +259,11 @@ export async function runPipeline(
           .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway');
         if (over > 1.12 && droppable.length > 1) {
           const victim = droppable[droppable.length - 1]!;
+          faith.actions.push({
+            beatId: `x-fit-${victim.b.id}`,
+            action: 'dropped',
+            reason: 'length fit: least important idea beat',
+          });
           script = {
             ...script,
             beats: script.beats.filter((_, i) => i !== victim.i).map((b, i) => ({ ...b, id: `b${i + 1}` })),
@@ -271,9 +277,37 @@ export async function runPipeline(
           if (longest) {
             const words = longest.b.narration.split(/\s+/).length;
             const narration = await engines.tighten(longest.b, Math.max(5, Math.floor(words / over)), signal);
-            script.beats[longest.i] = { ...longest.b, narration };
-            await synth(longest.i);
-            continue;
+            // a shortened line is a new line: it goes through the same checks before it is voiced
+            const support = [...new Set(longest.b.claims.flatMap((c) => c.support))];
+            const cand: Beat = {
+              ...longest.b,
+              narration,
+              claims: [{ text: narration, support, kind: 'fact' }],
+            };
+            const chk = checkBeat(cand, src);
+            let ok = narration !== longest.b.narration && chk.ok;
+            if (
+              !ok &&
+              narration !== longest.b.narration &&
+              engines.judge &&
+              chk.verdicts.every((v) => v.verdict !== 'unsupported' || v.by === 'overlap')
+            )
+              ok = await engines.judge(
+                narration,
+                support.map((id) => seg.get(id) ?? '').join('\n'),
+                signal,
+                narration,
+              );
+            if (ok) {
+              script.beats[longest.i] = cand;
+              faith.actions.push({
+                beatId: longest.b.id,
+                action: 'rewritten',
+                reason: 'tightened to fit the length (re-checked)',
+              });
+              await synth(longest.i);
+              continue;
+            }
           }
         }
         if (speed < 1.18) {
@@ -298,11 +332,15 @@ export async function runPipeline(
         const missing = target - d;
         const per = Math.min(0.8, missing / Math.max(1, script.beats.length));
         timeline = buildTimeline(script, voiceClips(), budget, { ...tlOpts, extraHold: per });
+        extraHold = per;
         if (timeline.duration >= target * 0.92 || speed <= 0.92) break;
         speed = Math.max(0.92, speed * 0.95);
         for (let i = 0; i < script.beats.length; i++) await synth(i);
       }
     }
+    // always rebuild from the FINAL script and clips (the last attempt may have changed either)
+    if (clips.length !== script.beats.length) throw new Error('internal: voice clips out of sync with beats');
+    timeline = buildTimeline(script, voiceClips(), budget, { ...tlOpts, extraHold });
   });
   write(jobDir, 'script.json', script);
   write(jobDir, 'timeline.json', timeline);

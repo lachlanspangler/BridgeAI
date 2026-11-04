@@ -41,7 +41,10 @@ export class LocalLlm implements LlmProvider {
       const ctx = await model.createContext({ contextSize: this.opts.contextSize ?? 12288, sequences: 1 });
       // one sequence for the life of the model; every call starts from a cleared history
       return { llama, model, ctx, seq: ctx.getSequence() };
-    })();
+    })().catch((e: unknown) => {
+      this.state = null; // a failed load must not stick until restart
+      throw e;
+    });
     return this.state;
   }
 

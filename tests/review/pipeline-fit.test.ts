@@ -83,7 +83,8 @@ describe('length fit', () => {
       entries: { narration: string; claims: { text: string }[] }[];
     };
     // the source map's claims must describe what is actually said
-    for (const e of map.entries) expect(e.claims.map((c) => c.text).join(' ')).toContain(e.narration.slice(0, 12));
+    for (const e of map.entries)
+      expect(e.claims.map((c) => c.text).join(' ')).toContain(e.narration.slice(0, 12));
   });
 });
 

@@ -138,7 +138,8 @@ async function main(): Promise<void> {
     case 'keys': {
       const { keyStatus, setKey, removeKey, isProvider } = await import('../node/keys/keystore.ts');
       const [sub, prov] = rest;
-      if ((sub === 'set' || sub === 'remove') && (!prov || !isProvider(prov))) throw new Error('usage: bridge keys set|remove <anthropic|openai|gemini|openrouter|elevenlabs>');
+      if ((sub === 'set' || sub === 'remove') && (!prov || !isProvider(prov)))
+        throw new Error('usage: bridge keys set|remove <anthropic|openai|gemini|openrouter|elevenlabs>');
       if (sub === 'set') {
         // read the key from stdin so it never lands in shell history or argv
         const key = readFileSync(0, 'utf8').trim();
@@ -151,7 +152,10 @@ async function main(): Promise<void> {
         console.log(`✓ ${prov} key removed`);
         return;
       }
-      for (const k of await keyStatus()) console.log(`${k.present ? '✓' : '·'} ${k.provider.padEnd(11)} ${k.present ? `${k.masked} (${k.source})` : 'not set'}`);
+      for (const k of await keyStatus())
+        console.log(
+          `${k.present ? '✓' : '·'} ${k.provider.padEnd(11)} ${k.present ? `${k.masked} (${k.source})` : 'not set'}`,
+        );
       return;
     }
     case 'doctor':
