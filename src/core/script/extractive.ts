@@ -132,10 +132,20 @@ function ideaVisual(idea: Idea, src: Source, budget: Budget): Visual {
   };
 }
 
+/** A paper's "we/our" read aloud by a narrator becomes "the authors/their" (same claim, right voice). */
+export function thirdPerson(t: string): string {
+  return t
+    .replace(/^We\b/, 'The authors')
+    .replace(/^Our\b/, 'Their')
+    .replace(/\bwe\b/g, 'the authors')
+    .replace(/\bour\b/g, 'their')
+    .replace(/\bus\b/g, 'them');
+}
+
 /** One faithful beat for an idea, in the source's own words (its verbatim evidence quote, trimmed). */
 export function sourceBeat(idea: Idea, src: Source, budget: Budget, id: string): Beat | null {
   const quote = idea.evidence.find((e) => e.quote)?.quote ?? idea.statement;
-  const narration = trimSentence(quote, budget.wordsPerBeat.max + 2, idea.terms);
+  const narration = thirdPerson(trimSentence(quote, budget.wordsPerBeat.max + 2, idea.terms));
   if (wordCount(narration) < 4 || !VERB.test(narration)) return null; // a real sentence, not a fragment
   return {
     id,
