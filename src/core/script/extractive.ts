@@ -6,7 +6,7 @@
  */
 import type { Budget } from '../budget.ts';
 import type { Analysis, Beat, Idea, Script, Source, Visual } from '../schema.ts';
-import { rawNumbers } from '../analyze/extractive.ts';
+import { analyzeExtractive, rawNumbers } from '../analyze/extractive.ts';
 import { clampWords, cleanForSpeech, contentWords, sentenceCase, wordCount } from '../text/text.ts';
 
 const LEADINS =
@@ -129,7 +129,12 @@ export function composeExtractive(src: Source, analysis: Analysis, budget: Budge
   const takeawayWords = Math.min(12, Math.round(budget.words * 0.18));
   let remaining = budget.words - hookWords - takeawayWords;
   const maxIdeaBeats = Math.max(1, budget.beats.max - 2);
-  const ideas = analysis.ideas.slice(0, Math.max(budget.ideas.max, 1));
+  // long videos need more beats than there are top ideas: top up with the source's own ranked sentences
+  let ideas = analysis.ideas.slice(0, Math.max(budget.ideas.max, 1));
+  if (ideas.length < maxIdeaBeats) {
+    const extra = analyzeExtractive(src, maxIdeaBeats + 4).ideas.filter((x) => !ideas.some((i) => i.evidence[0]?.quote === x.evidence[0]?.quote || i.statement === x.statement));
+    ideas = [...ideas, ...extra.map((x, k) => ({ ...x, id: `x${k + 1}` }))].slice(0, maxIdeaBeats);
+  }
   for (const idea of ideas) {
     if (beats.length - 1 >= maxIdeaBeats || remaining < budget.wordsPerBeat.min) break;
     const cap = Math.min(budget.wordsPerBeat.max, remaining);
