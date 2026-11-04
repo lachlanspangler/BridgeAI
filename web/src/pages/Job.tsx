@@ -116,6 +116,7 @@ function Watch({ job }: { job: Job }) {
             <span className="chip">voice: {r.engines.tts}</span>
           </div>
         )}
+        {r?.durations.note && <p className="muted small">{r.durations.note}</p>}
         <div className="row wrap downloads">
           <a className="button primary" href={api.file(job.id, 'video.mp4', true)} download>
             Download mp4

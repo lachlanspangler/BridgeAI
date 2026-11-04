@@ -65,7 +65,7 @@ export interface RunResult {
   script: Script;
   analysis: Analysis;
   faith: FaithReport;
-  durations: { target: number; actual: number; withinTolerance: boolean };
+  durations: { target: number; actual: number; withinTolerance: boolean; note?: string };
   timings: Record<string, number>;
   engines: { analyze: string; script: string; tts: string };
 }
@@ -330,7 +330,7 @@ export async function runPipeline(
           continue;
         }
         const missing = target - d;
-        const per = Math.min(0.8, missing / Math.max(1, script.beats.length));
+        const per = Math.min(1.1, missing / Math.max(1, script.beats.length));
         timeline = buildTimeline(script, voiceClips(), budget, { ...tlOpts, extraHold: per });
         extraHold = per;
         if (timeline.duration >= target * 0.92 || speed <= 0.92) break;
@@ -342,6 +342,11 @@ export async function runPipeline(
     if (clips.length !== script.beats.length) throw new Error('internal: voice clips out of sync with beats');
     timeline = buildTimeline(script, voiceClips(), budget, { ...tlOpts, extraHold });
   });
+  // honest about thin sources: we don't pad with filler, we say so
+  const shortNote = () =>
+    timeline.duration < settings.seconds * 0.9
+      ? `Your source supports about ${Math.round(timeline.duration)} s of faithful narration; Bridge won't pad it with filler.`
+      : undefined;
   write(jobDir, 'script.json', script);
   write(jobDir, 'timeline.json', timeline);
   write(jobDir, 'captions.vtt', toVtt(timeline.captions));
@@ -362,6 +367,7 @@ export async function runPipeline(
         target: settings.seconds,
         actual: timeline.duration,
         withinTolerance: Math.abs(timeline.duration - settings.seconds) <= settings.seconds * 0.1,
+        note: shortNote(),
       },
       timings,
       engines: { analyze: analysis.engine, script: script.engine, tts: engines.tts.id },
@@ -436,6 +442,7 @@ export async function runPipeline(
       target: settings.seconds,
       actual: timeline.duration,
       withinTolerance: Math.abs(timeline.duration - settings.seconds) <= settings.seconds * 0.1,
+      note: shortNote(),
     },
     timings,
     engines: { analyze: analysis.engine, script: script.engine, tts: engines.tts.id },

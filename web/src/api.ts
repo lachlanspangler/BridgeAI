@@ -70,7 +70,7 @@ export interface Job {
   created: string;
   settings: { seconds: number; llm: string; voice: string };
   result?: {
-    durations: { target: number; actual: number; withinTolerance: boolean };
+    durations: { target: number; actual: number; withinTolerance: boolean; note?: string };
     engines: { analyze: string; script: string; tts: string };
     unsupported: number;
     beats: number;
