@@ -42,6 +42,8 @@ export interface SceneProps {
   theme: Theme;
   assets: Map<string, Img>;
   seed: number;
+  /** Beat index, used to vary layouts and tones so consecutive beats don't look the same. */
+  variant?: number;
 }
 
 interface Box {
@@ -281,21 +283,21 @@ function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): vo
   const s = S(p);
   const b = contentBox(W, H);
   const icon = v.icon && v.icon in ICONS ? v.icon : iconFor(`${v.highlight.join(' ')} ${v.text}`);
+  const layout = (p.variant ?? 0) % 3;
+  const tone = [p.theme.tone.primary, p.theme.tone.secondary, p.theme.tone.positive][layout]!;
+  const text = { maxPx: TYPE.headline * s, minPx: TYPE.body * s, maxLines: 4, weight: 700, enterAt: 0.12 } as const;
+  if (layout === 2) {
+    // centred: icon above, words below
+    const r = Math.min(b.h * 0.2, 130 * s);
+    iconDisc(p, icon, W / 2, b.y + r * 1.25, r, tone, 0);
+    richText(p, v.text, v.highlight, { x: b.x + b.w * 0.06, y: b.y + r * 2.6, w: b.w * 0.88, h: b.h - r * 2.6 }, { ...text, maxLines: 3, align: 'center', tone });
+    return;
+  }
   const r = Math.min(b.h * 0.3, 210 * s);
-  iconDisc(p, icon, b.x + r * 1.35, b.y + b.h / 2, r, p.theme.tone.primary, 0);
-  richText(
-    p,
-    v.text,
-    v.highlight,
-    { x: b.x + r * 3.1, y: b.y, w: b.w - r * 3.1, h: b.h },
-    {
-      maxPx: TYPE.headline * s,
-      minPx: TYPE.body * s,
-      maxLines: 4,
-      weight: 700,
-      enterAt: 0.12,
-    },
-  );
+  const iconX = layout === 0 ? b.x + r * 1.35 : b.x + b.w - r * 1.35;
+  iconDisc(p, icon, iconX, b.y + b.h / 2, r, tone, 0);
+  const tx = layout === 0 ? b.x + r * 3.1 : b.x;
+  richText(p, v.text, v.highlight, { x: tx, y: b.y, w: b.w - r * 3.1, h: b.h }, text);
 }
 
 /** Parse a displayed number for count-up: keeps decimals and thousands separators. */
@@ -386,7 +388,7 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
     const g = easeOutCubic(prog(p.t, 0.5, 0.9));
     [
       { val: c, label: v.compare.label, color: p.theme.tone.neutral, x: bx },
-      { val: a, label: 'this', color: p.theme.tone.accent, x: bx + bw * 1.6 },
+      { val: a, label: v.unit || 'this', color: p.theme.tone.accent, x: bx + bw * 1.6 },
     ].forEach((bar) => {
       const h = (bar.val / max) * hMax * g;
       ctx.fillStyle = bar.color;

@@ -78,55 +78,61 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
   const analyze = async (src: Source, budget: Budget, signal?: AbortSignal): Promise<Analysis> => {
     const maxIdeas = Math.min(10, Math.max(4, budget.ideas.max + 2));
     const total = src.segments.reduce((n, s) => n + Math.min(tokensOf(s.text), 400), 0);
+    const assetIds = src.assets.filter((a) => a.kind !== 'page').map((a) => a.id);
     try {
-      let parts: Analysis[];
-      if (total <= CHUNK_TOKENS * 1.3 || budget.seconds <= 75) {
-        // one call over the most relevant segments
-        const segs =
-          total <= CHUNK_TOKENS * 1.3
-            ? src.segments.filter((s) => s.kind !== 'figure')
-            : selectSegments(src, CHUNK_TOKENS * 1.2);
-        const p = analyzePrompt(src, segs, maxIdeas);
-        const raw = await timed('analyze', `1 call, ${segs.length} segments`, () =>
-          llm.json({
-            ...p,
-            schema: analysisSchema(
-              segs.map((s) => s.id),
-              src.assets.filter((a) => a.kind !== 'page').map((a) => a.id),
-              maxIdeas,
-            ),
-            name: 'analysis',
-            maxTokens: 1800,
-            temperature: 0.2,
-            signal,
-          }),
-        );
-        const { analysis, dropped } = parseAnalysis(raw, src, engine);
-        if (dropped.length)
-          log({ stage: 'analyze', message: `dropped ${dropped.length} ideas with unverifiable evidence` });
-        parts = [analysis];
-      } else {
-        const chunks = chunkSegments(src);
-        parts = [];
-        for (const [k, segs] of chunks.entries()) {
-          const p = analyzePrompt(src, segs, 5);
-          const raw = await timed('analyze', `chunk ${k + 1}/${chunks.length}`, () =>
-            llm.json({
-              ...p,
-              schema: analysisSchema(
-                segs.map((s) => s.id),
-                src.assets.filter((a) => a.kind !== 'page').map((a) => a.id),
-                5,
-              ),
-              name: 'analysis',
-              maxTokens: 1400,
-              temperature: 0.2,
-              signal,
-            }),
+      const parts: Analysis[] = [];
+      const single = total <= CHUNK_TOKENS * 1.3 || budget.seconds <= 75;
+      const chunks = single
+        ? [
+            total <= CHUNK_TOKENS * 1.3
+              ? src.segments.filter((s) => s.kind !== 'figure')
+              : selectSegments(src, CHUNK_TOKENS * 1.2),
+          ]
+        : chunkSegments(src);
+      const per = single ? maxIdeas : 5;
+      for (const [k, segs] of chunks.entries()) {
+        const p = analyzePrompt(src, segs, per);
+        // JSON is token-hungry: leave room so the answer is never truncated (truncation = invalid JSON)
+        const call = (attempt: number) =>
+          timed(
+            'analyze',
+            single
+              ? `1 call, ${segs.length} segments${attempt ? ' (retry)' : ''}`
+              : `chunk ${k + 1}/${chunks.length}${attempt ? ' (retry)' : ''}`,
+            () =>
+              llm.json({
+                ...p,
+                schema: analysisSchema(
+                  segs.map((s) => s.id),
+                  assetIds,
+                  per,
+                ),
+                name: 'analysis',
+                maxTokens: 600 + 380 * per,
+                temperature: attempt ? 0.1 : 0.2,
+                signal,
+              }),
           );
-          parts.push(parseAnalysis(raw, src, engine).analysis);
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const { analysis, dropped } = parseAnalysis(await call(attempt), src, engine);
+            if (dropped.length)
+              log({
+                stage: 'analyze',
+                message: `dropped ${dropped.length} ideas with unverifiable evidence`,
+              });
+            parts.push(analysis);
+            break;
+          } catch (e) {
+            if (signal?.aborted) throw e;
+            log({
+              stage: 'analyze',
+              message: `${single ? 'call' : `chunk ${k + 1}`} attempt ${attempt + 1} failed: ${(e as Error).message}`,
+            });
+          }
         }
       }
+      if (!parts.length) throw new Error('every analysis call failed');
       const merged = parts.length === 1 ? parts[0]! : mergeAnalyses(parts, engine);
       if (!merged.ideas.length) throw new Error('no ideas');
       return blend(merged, src);
@@ -140,6 +146,21 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
     }
   };
 
+  /** One model call with a retry; returns null instead of throwing (callers fall back per part). */
+  const tryJson = async (label: string, req: Parameters<LlmProvider['json']>[0]): Promise<unknown | null> => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await timed('script', `${label}${attempt ? ' (retry)' : ''}`, () =>
+          llm.json({ ...req, temperature: attempt ? 0.2 : req.temperature }),
+        );
+      } catch (e) {
+        if (req.signal?.aborted) throw e;
+        log({ stage: 'script', message: `${label} attempt ${attempt + 1} failed: ${(e as Error).message}` });
+      }
+    }
+    return null;
+  };
+
   const script = async (
     src: Source,
     analysis: Analysis,
@@ -151,19 +172,18 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
     try {
       if (budget.seconds <= 90 || analysis.ideas.length < 2) {
         const p = scriptPrompt(src, ctx);
-        const raw = await timed('script', `1 call, ${budget.beats.max} beats max`, () =>
-          llm.json({
-            ...p,
-            schema: scriptSchema(src, budget.beats.max + 1),
-            name: 'script',
-            maxTokens: 300 + budget.beats.max * 170,
-            temperature: 0.4,
-            signal,
-          }),
-        );
+        const raw = await tryJson(`1 call, ${budget.beats.max} beats max`, {
+          ...p,
+          schema: scriptSchema(src, budget.beats.max + 1),
+          name: 'script',
+          maxTokens: 600 + budget.beats.max * 260,
+          temperature: 0.4,
+          signal,
+        });
+        if (!raw) throw new Error('no script');
         return tagIdeas(parseScript(raw, src, budget.seconds, engine), analysis);
       }
-      // long video: opening → one section per idea → takeaway
+      // long video: opening → one section per idea → takeaway; a failed part falls back on its own
       const nIdeas = Math.min(analysis.ideas.length, budget.ideas.max);
       const ideas = analysis.ideas.slice(0, nIdeas);
       const opening = budget.seconds >= 150 ? 2 : 1;
@@ -172,57 +192,64 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
       const wsum = weights.reduce((a, b) => a + b, 0);
       const alloc = weights.map((w) => Math.max(2, Math.min(6, Math.round((w / wsum) * ideaBeats))));
       const covered = ideas.map((i) => i.statement.replace(/\.$/, ''));
-      const raw0 = await timed('script', 'opening', () => {
-        const p = bookendPrompt(src, ctx, 'opening', covered);
-        return llm.json({
-          ...p,
-          schema: scriptSchema(src, opening),
-          name: 'opening',
-          maxTokens: 260 * opening + 200,
-          temperature: 0.5,
-          signal,
-        });
-      });
-      const beats: unknown[] = [...((raw0 as { beats?: unknown[] }).beats ?? []).slice(0, opening)];
+      const raw0 = (await tryJson('opening', {
+        ...bookendPrompt(src, ctx, 'opening', covered),
+        schema: scriptSchema(src, opening),
+        name: 'opening',
+        maxTokens: 400 * opening + 400,
+        temperature: 0.5,
+        signal,
+      })) as { title?: string; beats?: unknown[] } | null;
+      const beats: unknown[] = [...(raw0?.beats ?? []).slice(0, opening)];
       let previous = '';
       for (const [k, n] of alloc.entries()) {
-        const p = sectionPrompt(src, ctx, k, n, previous);
-        const raw = await timed('script', `section ${k + 1}/${alloc.length} (${n} beats)`, () =>
-          llm.json({
-            ...p,
-            schema: scriptSchema(src, n),
-            name: 'section',
-            maxTokens: 200 + n * 190,
-            temperature: 0.4,
-            signal,
-          }),
-        );
-        const bs = ((raw as { beats?: { narration?: string; role?: string }[] }).beats ?? [])
-          .slice(0, n)
-          .map((b) => ({
-            ...b,
-            role: b.role === 'hook' || b.role === 'takeaway' ? 'idea' : b.role,
-            _idea: ideas[k]!.id,
-          }));
-        beats.push(...bs);
-        previous = bs[bs.length - 1]?.narration ?? previous;
-      }
-      const rawT = await timed('script', 'takeaway', () => {
-        const p = bookendPrompt(src, ctx, 'takeaway', covered);
-        return llm.json({
-          ...p,
-          schema: scriptSchema(src, 1),
-          name: 'takeaway',
-          maxTokens: 400,
+        const raw = (await tryJson(`section ${k + 1}/${alloc.length} (${n} beats)`, {
+          ...sectionPrompt(src, ctx, k, n, previous),
+          schema: scriptSchema(src, n),
+          name: 'section',
+          maxTokens: 400 + n * 300,
           temperature: 0.4,
           signal,
+        })) as { beats?: { narration?: string; role?: string }[] } | null;
+        let bs: unknown[] = (raw?.beats ?? [])
+          .slice(0, n)
+          .map((b) => ({ ...b, role: b.role === 'hook' || b.role === 'takeaway' ? 'idea' : b.role }));
+        if (!bs.length) {
+          // this section failed twice: say the idea's own statement, cited to its evidence (gate-checked)
+          const i = ideas[k]!;
+          bs = [
+            {
+              role: 'idea',
+              narration: i.statement,
+              visual: { type: 'statement', text: i.statement, highlight: i.terms.slice(0, 2) },
+              claims: [{ text: i.statement, support: i.evidence.map((e) => e.segmentId), kind: 'fact' }],
+              keywords: i.terms.slice(0, 2),
+            },
+          ];
+        }
+        beats.push(...bs);
+        previous = (bs[bs.length - 1] as { narration?: string }).narration ?? previous;
+      }
+      const rawT = (await tryJson('takeaway', {
+        ...bookendPrompt(src, ctx, 'takeaway', covered),
+        schema: scriptSchema(src, 1),
+        name: 'takeaway',
+        maxTokens: 700,
+        temperature: 0.4,
+        signal,
+      })) as { beats?: unknown[] } | null;
+      if (rawT?.beats?.length) beats.push(rawT.beats[0]);
+      else {
+        const top = ideas[0]!;
+        beats.push({
+          role: 'takeaway',
+          narration: top.statement,
+          visual: { type: 'takeaway', text: top.statement, highlight: top.terms.slice(0, 1) },
+          claims: [{ text: top.statement, support: top.evidence.map((e) => e.segmentId), kind: 'fact' }],
+          keywords: [],
         });
-      });
-      beats.push(...((rawT as { beats?: unknown[] }).beats ?? []).slice(0, 1));
-      return tagIdeas(
-        parseScript({ title: (raw0 as { title?: string }).title, beats }, src, budget.seconds, engine),
-        analysis,
-      );
+      }
+      return tagIdeas(parseScript({ title: raw0?.title, beats }, src, budget.seconds, engine), analysis);
     } catch (e) {
       if (signal?.aborted) throw e;
       log({

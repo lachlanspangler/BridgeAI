@@ -104,6 +104,7 @@ function drawBeat(
     theme,
     assets,
     seed: tl.seed,
+    variant: tl.beats.indexOf(b),
   };
   ctx.save();
   if (exitP > 0) {
