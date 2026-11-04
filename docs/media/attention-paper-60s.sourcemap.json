@@ -1,0 +1,219 @@
+{
+  "schema": "bridge.sourcemap/1",
+  "origin": "attention.pdf",
+  "title": "Attention Is All You Need",
+  "entries": [
+    {
+      "beatId": "b1",
+      "start": 0,
+      "end": 4.1,
+      "narration": "Attention Is All You Need: here's the big idea.",
+      "claims": [
+        {
+          "text": "Attention Is All You Need: here's the big idea.",
+          "kind": "framing",
+          "verdict": "framing",
+          "sources": []
+        }
+      ]
+    },
+    {
+      "beatId": "b2",
+      "start": 4.1,
+      "end": 15.745,
+      "narration": "The authors propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.",
+      "claims": [
+        {
+          "text": "The authors propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.",
+          "kind": "fact",
+          "verdict": "unchecked",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "page": 1,
+              "section": "scholarly works.",
+              "excerpt": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Expe"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b3",
+      "start": 15.745,
+      "end": 21.74,
+      "narration": "It replaces complex recurrent networks with a simple attention-only architecture.",
+      "claims": [
+        {
+          "text": "It replaces complex recurrent networks",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s75",
+              "page": 10,
+              "section": "7 Conclusion",
+              "excerpt": "In this work, we presented the Transformer, the first sequence transduction model based entirely on attention, replacing the recurrent layers most commonly used in encoder-decoder architectures with multi-headed self-attention. For translation tasks, the Transformer can be trained significantly faster than architectures based on recurrent or convolutional layers. On both WMT 2014 English-to-German"
+            }
+          ]
+        },
+        {
+          "text": "With a simple attention-only architecture",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "page": 1,
+              "section": "scholarly works.",
+              "excerpt": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Expe"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b4",
+      "start": 21.74,
+      "end": 28.66,
+      "narration": "This allows parallel computation, making training significantly faster than sequential methods.",
+      "claims": [
+        {
+          "text": "It allows parallel computation",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "page": 1,
+              "section": "scholarly works.",
+              "excerpt": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Expe"
+            },
+            {
+              "segmentId": "s10",
+              "page": 2,
+              "section": "1 Introduction",
+              "excerpt": "Recurrent neural networks, long short-term memory [13] and gated recurrent [7] neural networks in particular, have been firmly established as state of the art approaches in sequence modeling and transduction problems such as language modeling and machine translation [35, 2, 5]. Numerous efforts have since continued to push the boundaries of recurrent language models and encoder-decoder architectur"
+            },
+            {
+              "segmentId": "s12",
+              "page": 2,
+              "section": "2 Background",
+              "excerpt": "The goal of reducing sequential computation also forms the foundation of the Extended Neural GPU [16], ByteNet [18] and ConvS2S [9], all of which use convolutional neural networks as basic building block, computing hidden representations in parallel for all input and output positions. In these models, the number of operations required to relate signals from two arbitrary input or output positions "
+            }
+          ]
+        },
+        {
+          "text": "Making training significantly faster",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s75",
+              "page": 10,
+              "section": "7 Conclusion",
+              "excerpt": "In this work, we presented the Transformer, the first sequence transduction model based entirely on attention, replacing the recurrent layers most commonly used in encoder-decoder architectures with multi-headed self-attention. For translation tasks, the Transformer can be trained significantly faster than architectures based on recurrent or convolutional layers. On both WMT 2014 English-to-German"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b5",
+      "start": 28.66,
+      "end": 36.105,
+      "narration": "It achieves a new state-of-the-art score of 28.4 BLEU on English-to-German translation.",
+      "claims": [
+        {
+          "text": "It achieves 28.4 BLEU on translation",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s64",
+              "page": 8,
+              "section": "6.1 Machine Translation",
+              "excerpt": "On the WMT 2014 English-to-German translation task, the big transformer model (Transformer (big) in Table 2) outperforms the best previously reported models (including ensembles) by more than 2.0 BLEU, establishing a new state-of-the-art BLEU score of 28.4. The configuration of this model is listed in the bottom line of Table 3. Training took 3.5 days on 8 P100 GPUs. Even our base model surpasses "
+            }
+          ]
+        },
+        {
+          "text": "This is over 2 BLEU better than the best before",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s64",
+              "page": 8,
+              "section": "6.1 Machine Translation",
+              "excerpt": "On the WMT 2014 English-to-German translation task, the big transformer model (Transformer (big) in Table 2) outperforms the best previously reported models (including ensembles) by more than 2.0 BLEU, establishing a new state-of-the-art BLEU score of 28.4. The configuration of this model is listed in the bottom line of Table 3. Training took 3.5 days on 8 P100 GPUs. Even our base model surpasses "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b6",
+      "start": 36.105,
+      "end": 45.3,
+      "narration": "Multi-head attention lets the model jointly focus on different subspaces, avoiding the averaging that hurts single-head performance.",
+      "claims": [
+        {
+          "text": "Multi-head attention lets the model jointly focus on different subspaces, avoiding the averaging that hurts single-head performance.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s28",
+              "page": 4,
+              "section": "3.2.2 Multi-Head Attention",
+              "excerpt": "Instead of performing a single attention function with d -dimensional keys, values and queries, we found it beneficial to linearly project the queries, keys and values h times with different, learned linear projections to d , d and d dimensions, respectively. On each of these projected versions of queries, keys and values we then perform the attention function in parallel, yielding d -dimensional "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b7",
+      "start": 45.3,
+      "end": 55.02,
+      "narration": "Positional encodings using sine and cosine functions help the model understand token order by adding position info to embeddings.",
+      "claims": [
+        {
+          "text": "Positional encodings using sine and cosine functions help the model understand token order by adding position info to embeddings.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s43",
+              "page": 6,
+              "section": "3.5 Positional Encoding",
+              "excerpt": "Since our model contains no recurrence and no convolution, in order for the model to make use of the order of the sequence, we must inject some information about the relative or absolute position of the tokens in the sequence. To this end, we add \"positional encodings\" to the input embeddings at the bottoms of the encoder and decoder stacks. The positional encodings have the same dimension d as th"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b8",
+      "start": 55.02,
+      "end": 60.665,
+      "narration": "Attention alone replaces recurrence for faster, smarter translation.",
+      "claims": [
+        {
+          "text": "Attention alone replaces recurrence",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s75",
+              "page": 10,
+              "section": "7 Conclusion",
+              "excerpt": "In this work, we presented the Transformer, the first sequence transduction model based entirely on attention, replacing the recurrent layers most commonly used in encoder-decoder architectures with multi-headed self-attention. For translation tasks, the Transformer can be trained significantly faster than architectures based on recurrent or convolutional layers. On both WMT 2014 English-to-German"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "bridge.sourcemap/1",
+  "origin": "carbon-cycle.jpg",
+  "title": "Carbon cycle",
+  "entries": [
+    {
+      "beatId": "b1",
+      "start": 0,
+      "end": 7.175,
+      "narration": "Human actions add 9 gigatons of carbon to our atmosphere every single year.",
+      "claims": [
+        {
+          "text": "Human actions add 9 gigatons of carbon to our atmosphere every single year.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s1",
+              "excerpt": "A public-domain illustrated diagram of the carbon cycle across atmosphere, land and ocean. Arrows are labelled with fluxes in GtC/y (gigatons of carbon per year); numbers in parentheses are stored carbon pools; red indicates carbon from human emissions. Pools: Atmosphere (800), Plant biomass (550), Soil (2300), Fossil pool (10,000), Surface ocean (1000), Deep ocean (37,000), Reactive sediments (60"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b2",
+      "start": 7.175,
+      "end": 16.095,
+      "narration": "Arrows show yearly fluxes in gigatons, while parentheses list stored pools like the 10,000 in fossil fuels.",
+      "claims": [
+        {
+          "text": "Arrows show yearly fluxes in gigatons, while parentheses list stored pools like the 10,000 in fossil fuels.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s1",
+              "excerpt": "A public-domain illustrated diagram of the carbon cycle across atmosphere, land and ocean. Arrows are labelled with fluxes in GtC/y (gigatons of carbon per year); numbers in parentheses are stored carbon pools; red indicates carbon from human emissions. Pools: Atmosphere (800), Plant biomass (550), Soil (2300), Fossil pool (10,000), Surface ocean (1000), Deep ocean (37,000), Reactive sediments (60"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

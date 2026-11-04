@@ -1,0 +1,82 @@
+{
+  "schema": "bridge.sourcemap/1",
+  "origin": "https://arxiv.org/abs/2310.06825",
+  "title": "Mistral 7B",
+  "entries": [
+    {
+      "beatId": "b1",
+      "start": 0,
+      "end": 6.2,
+      "narration": "Mistral 7B beats the best 13B and 34B models on most benchmarks.",
+      "claims": [
+        {
+          "text": "Mistral 7B beats the best 13B and 34B models on most benchmarks.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s3",
+              "page": 1,
+              "section": "Abstract",
+              "excerpt": "We introduce Mistral 7B, a 7–billion-parameter language model engineered for superior performance and efficiency. Mistral 7B outperforms the best open 13B model (Llama 2) across all evaluated benchmarks, and the best released 34B model (Llama 1) in reasoning, mathematics, and code generation. Our model leverages grouped-query attention (GQA) for faster inference, coupled with sliding window attent"
+            },
+            {
+              "segmentId": "s18",
+              "page": 3,
+              "section": "3 Results",
+              "excerpt": "Detailed results for Mistral 7B, Llama 2 7B/13B, and Code-Llama 7B are reported in Table 2. Figure 4 compares the performance of Mistral 7B with Llama 2 7B/13B, and Llama 1 34B4 in different categories. Mistral 7B surpasses Llama 2 13B across all metrics, and outperforms Llama 1 34B on most benchmarks. In particular, Mistral 7B displays a superior performance in code, mathematics, and reasoning be"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b2",
+      "start": 6.2,
+      "end": 14.545,
+      "narration": "The authors introduce Mistral 7B, a 7–billion-parameter language model engineered for superior performance and efficiency.",
+      "claims": [
+        {
+          "text": "The authors introduce Mistral 7B, a 7–billion-parameter language model engineered for superior performance and efficiency.",
+          "kind": "fact",
+          "verdict": "unchecked",
+          "sources": [
+            {
+              "segmentId": "s3",
+              "page": 1,
+              "section": "Abstract",
+              "excerpt": "We introduce Mistral 7B, a 7–billion-parameter language model engineered for superior performance and efficiency. Mistral 7B outperforms the best open 13B model (Llama 2) across all evaluated benchmarks, and the best released 34B model (Llama 1) in reasoning, mathematics, and code generation. Our model leverages grouped-query attention (GQA) for faster inference, coupled with sliding window attent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b3",
+      "start": 14.545,
+      "end": 18.865,
+      "narration": "It beats Llama 1 34B in reasoning, math, and code.",
+      "claims": [
+        {
+          "text": "It beats Llama 1 34B in reasoning, math, and code.",
+          "kind": "fact",
+          "verdict": "unchecked",
+          "sources": [
+            {
+              "segmentId": "s3",
+              "page": 1,
+              "section": "Abstract",
+              "excerpt": "We introduce Mistral 7B, a 7–billion-parameter language model engineered for superior performance and efficiency. Mistral 7B outperforms the best open 13B model (Llama 2) across all evaluated benchmarks, and the best released 34B model (Llama 1) in reasoning, mathematics, and code generation. Our model leverages grouped-query attention (GQA) for faster inference, coupled with sliding window attent"
+            },
+            {
+              "segmentId": "s5",
+              "page": 1,
+              "section": "1 Introduction",
+              "excerpt": "In the rapidly evolving domain of Natural Language Processing (NLP), the race towards higher model performance often necessitates an escalation in model size. However, this scaling tends to increase computational costs and inference latency, thereby raising barriers to deployment in practical, real-world scenarios. In this context, the search for balanced models delivering both high-level performa"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

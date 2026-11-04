@@ -1,0 +1,297 @@
+{
+  "schema": "bridge.sourcemap/1",
+  "origin": "https://github.com/ai/nanoid",
+  "title": "Nano ID",
+  "entries": [
+    {
+      "beatId": "b1",
+      "start": 0,
+      "end": 5.625,
+      "narration": "Generate tiny, secure IDs in JavaScript that are lightning fast.",
+      "claims": [
+        {
+          "text": "Generate tiny, secure IDs in JavaScript that are lightning fast.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s4",
+              "lines": [
+                8,
+                8
+              ],
+              "file": "README.md",
+              "excerpt": "A tiny, secure, URL-friendly, unique string ID generator for JavaScript."
+            },
+            {
+              "segmentId": "s6",
+              "lines": [
+                13,
+                20
+              ],
+              "file": "README.md",
+              "excerpt": "- Small. 117 bytes (minified and brotlied). No dependencies. [Size Limit] controls the size. - Fast. Faster than native crypto.randomUUID(). - Safe. It uses hardware random generator. Can be used in clusters. - Short IDs. It uses a larger alphabet than UUID (A-Za-z0-9-`). So ID size was reduced from 36 to 21 symbols. - Portable. Nano ID was ported to over 20 programming languages."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b2",
+      "start": 5.625,
+      "end": 13.22,
+      "narration": "Nano ID is a tiny, secure, URL-friendly, unique string ID generator for JavaScript.",
+      "claims": [
+        {
+          "text": "Nano ID is a tiny, secure, URL-friendly, unique string ID generator for JavaScript.",
+          "kind": "fact",
+          "verdict": "unchecked",
+          "sources": [
+            {
+              "segmentId": "s4",
+              "lines": [
+                8,
+                8
+              ],
+              "file": "README.md",
+              "excerpt": "A tiny, secure, URL-friendly, unique string ID generator for JavaScript."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b3",
+      "start": 13.22,
+      "end": 19.215,
+      "narration": "Nano ID packs random bits into just 21 symbols instead of 36.",
+      "claims": [
+        {
+          "text": "Nano ID packs random bits into just 21 symbols instead of 36.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "lines": [
+                13,
+                20
+              ],
+              "file": "README.md",
+              "excerpt": "- Small. 117 bytes (minified and brotlied). No dependencies. [Size Limit] controls the size. - Fast. Faster than native crypto.randomUUID(). - Safe. It uses hardware random generator. Can be used in clusters. - Short IDs. It uses a larger alphabet than UUID (A-Za-z0-9-`). So ID size was reduced from 36 to 21 symbols. - Portable. Nano ID was ported to over 20 programming languages."
+            },
+            {
+              "segmentId": "s15",
+              "lines": [
+                58,
+                60
+              ],
+              "file": "README.md",
+              "section": "Comparison with UUID",
+              "excerpt": "Nano ID is quite comparable to UUID v4 (random-based). It has a similar number of random bits in the ID (126 in Nano ID and 122 in UUID), so it has a similar collision probability:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b4",
+      "start": 19.215,
+      "end": 24.91,
+      "narration": "Nano ID uses a hardware random generator for maximum security.",
+      "claims": [
+        {
+          "text": "Nano ID uses a hardware random generator for maximum security.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "lines": [
+                13,
+                20
+              ],
+              "file": "README.md",
+              "excerpt": "- Small. 117 bytes (minified and brotlied). No dependencies. [Size Limit] controls the size. - Fast. Faster than native crypto.randomUUID(). - Safe. It uses hardware random generator. Can be used in clusters. - Short IDs. It uses a larger alphabet than UUID (A-Za-z0-9-`). So ID size was reduced from 36 to 21 symbols. - Portable. Nano ID was ported to over 20 programming languages."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b5",
+      "start": 24.91,
+      "end": 30.98,
+      "narration": "The library weighs in at only 117 bytes with zero dependencies.",
+      "claims": [
+        {
+          "text": "The library weighs in at only 117 bytes with zero dependencies.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "lines": [
+                13,
+                20
+              ],
+              "file": "README.md",
+              "excerpt": "- Small. 117 bytes (minified and brotlied). No dependencies. [Size Limit] controls the size. - Fast. Faster than native crypto.randomUUID(). - Safe. It uses hardware random generator. Can be used in clusters. - Short IDs. It uses a larger alphabet than UUID (A-Za-z0-9-`). So ID size was reduced from 36 to 21 symbols. - Portable. Nano ID was ported to over 20 programming languages."
+            },
+            {
+              "segmentId": "s100",
+              "lines": [
+                1,
+                30
+              ],
+              "file": "package.json",
+              "section": "Manifests",
+              "excerpt": "package.json: the package is named \"nanoid\". Its description: A tiny (117 bytes), secure URL-friendly unique string ID generator. It has no runtime dependencies. Its scripts are: clean, start, test:coverage, test:lint, test:size, test:prebuild, test. It installs a command-line tool."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b6",
+      "start": 30.98,
+      "end": 35.95,
+      "narration": "Nano ID has been ported to over 20 different programming languages.",
+      "claims": [
+        {
+          "text": "Nano ID has been ported to over 20 different programming languages.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "lines": [
+                13,
+                20
+              ],
+              "file": "README.md",
+              "excerpt": "- Small. 117 bytes (minified and brotlied). No dependencies. [Size Limit] controls the size. - Fast. Faster than native crypto.randomUUID(). - Safe. It uses hardware random generator. Can be used in clusters. - Short IDs. It uses a larger alphabet than UUID (A-Za-z0-9-`). So ID size was reduced from 36 to 21 symbols. - Portable. Nano ID was ported to over 20 programming languages."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b7",
+      "start": 35.95,
+      "end": 41.245,
+      "narration": "Evil Martians built this tool for developer tools and AI startups.",
+      "claims": [
+        {
+          "text": "Evil Martians built this tool for developer tools and AI startups.",
+          "kind": "fact",
+          "verdict": "supported",
+          "sources": [
+            {
+              "segmentId": "s9",
+              "lines": [
+                29,
+                29
+              ],
+              "file": "README.md",
+              "excerpt": "<img src=\"https://cdn.evilmartians.com/badges/logo-no-label.svg\" alt=\"\" width=\"22\" height=\"16\" /> Nano ID is built by <b><a href=\"https://evilmartians.com/\">Evil Martians</a></b>, an American design and engineering consultancy for <b>developer tools, AI, and cybersecurity startups</b>."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b8",
+      "start": 41.245,
+      "end": 50.24,
+      "narration": "Short IDs. It uses a larger alphabet than UUID. So ID size was reduced from 36 to 21 symbols.",
+      "claims": [
+        {
+          "text": "Short IDs. It uses a larger alphabet than UUID. So ID size was reduced from 36 to 21 symbols.",
+          "kind": "fact",
+          "verdict": "unchecked",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "lines": [
+                13,
+                20
+              ],
+              "file": "README.md",
+              "excerpt": "- Small. 117 bytes (minified and brotlied). No dependencies. [Size Limit] controls the size. - Fast. Faster than native crypto.randomUUID(). - Safe. It uses hardware random generator. Can be used in clusters. - Short IDs. It uses a larger alphabet than UUID (A-Za-z0-9-`). So ID size was reduced from 36 to 21 symbols. - Portable. Nano ID was ported to over 20 programming languages."
+            },
+            {
+              "segmentId": "s15",
+              "lines": [
+                58,
+                60
+              ],
+              "file": "README.md",
+              "section": "Comparison with UUID",
+              "excerpt": "Nano ID is quite comparable to UUID v4 (random-based). It has a similar number of random bits in the ID (126 in Nano ID and 122 in UUID), so it has a similar collision probability:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b9",
+      "start": 50.24,
+      "end": 53.685,
+      "narration": "Nano ID uses a bigger alphabet.",
+      "claims": [
+        {
+          "text": "Nano ID uses a bigger alphabet.",
+          "kind": "fact",
+          "verdict": "unchecked",
+          "sources": [
+            {
+              "segmentId": "s18",
+              "lines": [
+                67,
+                69
+              ],
+              "file": "README.md",
+              "section": "Comparison with UUID",
+              "excerpt": "1. Nano ID uses a bigger alphabet, so a similar number of random bits are packed in just 21 symbols instead of 36. 2. Nano ID is faster than crypto.randomUUID and uuid/v4."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beatId": "b10",
+      "start": 53.685,
+      "end": 60.605,
+      "narration": "Nano ID supports over 20 programming languages and has no runtime dependencies.",
+      "claims": [
+        {
+          "text": "Nano ID supports over 20 programming languages and has no runtime dependencies.",
+          "kind": "fact",
+          "verdict": "unchecked",
+          "sources": [
+            {
+              "segmentId": "s6",
+              "lines": [
+                13,
+                20
+              ],
+              "file": "README.md",
+              "excerpt": "- Small. 117 bytes (minified and brotlied). No dependencies. [Size Limit] controls the size. - Fast. Faster than native crypto.randomUUID(). - Safe. It uses hardware random generator. Can be used in clusters. - Short IDs. It uses a larger alphabet than UUID (A-Za-z0-9-`). So ID size was reduced from 36 to 21 symbols. - Portable. Nano ID was ported to over 20 programming languages."
+            },
+            {
+              "segmentId": "s100",
+              "lines": [
+                1,
+                30
+              ],
+              "file": "package.json",
+              "section": "Manifests",
+              "excerpt": "package.json: the package is named \"nanoid\". Its description: A tiny (117 bytes), secure URL-friendly unique string ID generator. It has no runtime dependencies. Its scripts are: clean, start, test:coverage, test:lint, test:size, test:prebuild, test. It installs a command-line tool."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
