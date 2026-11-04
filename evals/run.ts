@@ -39,6 +39,21 @@ const engine = flag('engine', 'auto')!;
 const lengths = flag('lengths', '20,60')!.split(',').map(Number);
 const only = flag('cases')?.split(',');
 const render = args.includes('--render');
+const rescore = args.includes('--rescore');
+
+/** Re-score a previous run from its saved artifacts (no model calls for the script). */
+function savedRun(dir: string, seconds: number) {
+  const read = <T>(f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')) as T;
+  const script = read<Script>('script.json');
+  const faith = read<{ unsupported: number; actions: { action: string }[] }>('faith.json');
+  const tl = read<{ duration: number }>('timeline.json');
+  return {
+    script,
+    faith,
+    durations: { target: seconds, actual: tl.duration, withinTolerance: Math.abs(tl.duration - seconds) <= seconds * 0.1 },
+    engines: { analyze: script.engine, script: script.engine, tts: 'saved' },
+  };
+}
 
 export function loadCases(): Case[] {
   const dir = join(ROOT, 'evals/cases');
@@ -69,8 +84,17 @@ async function inputFor(c: Case): Promise<Input> {
   throw new Error(`case ${c.id} has no source`);
 }
 
-async function understanding(llm: LlmProvider | null, c: Case, script: Script): Promise<{ correct: number; total: number; answers: string[] }> {
+/** Only questions about key points that fit this length count (a 20 s video can't answer k4). */
+export function questionsFor(c: Case, seconds: number): Case['questions'] {
+  const k = Math.max(1, budgetFor(seconds).ideas.max);
+  const keys = new Set(c.key_points.slice(0, k).map((x) => x.id));
+  const qs = c.questions.filter((q) => keys.has(q.key));
+  return qs.length ? qs : c.questions.slice(0, 1);
+}
+
+async function understanding(llm: LlmProvider | null, c0: Case, script: Script, seconds: number): Promise<{ correct: number; total: number; answers: string[] }> {
   if (!llm) return { correct: 0, total: 0, answers: [] };
+  const c = { ...c0, questions: questionsFor(c0, seconds) };
   const narration = script.beats.map((b) => b.narration).join(' ');
   const screen = screenText(script);
   const r = await llm.json<{ answers: string[] }>({
@@ -145,14 +169,17 @@ async function main(): Promise<void> {
       const t0 = performance.now();
       try {
         const dir = join(paths.home(), 'evals', c.id, `run-${s}`);
-        const r = await runPipeline(src, RenderSettings.parse({ seconds: s, width: 1280, height: 720 }), engines, dir, () => {}, undefined, { render });
+        const r = rescore && existsSync(join(dir, 'script.json'))
+          ? savedRun(dir, s)
+          : await runPipeline(src, RenderSettings.parse({ seconds: s, width: 1280, height: 720 }), engines, dir, () => {}, undefined, { render });
         const narration = r.script.beats.map((b) => b.narration).join(' ');
         const said = `${narration} ${screenText(r.script)}`;
         const k = budgetFor(s).ideas.max;
         const top = c.key_points.slice(0, Math.max(1, k));
         const cov = top.filter((kp) => covered(kp, said));
         const recheck = checkScript(r.script, src).flatMap((x) => x.verdicts).filter((v) => v.verdict === 'unsupported' && v.by !== 'overlap').length;
-        const u = await understanding(judge, c, r.script);
+        const u = await understanding(judge, c, r.script, s);
+        if (args.includes('--verbose')) questionsFor(c, s).forEach((q, i) => console.log(`      Q: ${q.q}\n      expected: ${q.a}\n      got: ${u.answers[i]}`));
         rows.push({
           case: c.id,
           kind: c.kind,
