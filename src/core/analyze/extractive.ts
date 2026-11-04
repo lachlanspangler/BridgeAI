@@ -217,6 +217,8 @@ export function garbled(t: string): boolean {
     /^[A-Za-z]+$/.test(w) &&
     (w.toLowerCase().match(/the|will|never|and|that|with|be|is|of|to|was|are/g) ?? []).length >= 3;
   if (ws.some(glued)) return true;
+  // chart text spliced into a sentence: axis tick runs ("0 10 20 30 40") or a broken word then a number ("al- 0.4k")
+  if (/(^|\s)\d+(\.\d+)?(\s+\d+(\.\d+)?){3,}(\s|$)/.test(t) || /[a-z]-\s+\d/.test(t)) return true;
   const letters = (t.match(/[A-Za-z]/g) ?? []).length;
   if (letters / t.length < 0.6) return true; // mostly symbols/math
   const short = ws.filter((w) => w.replace(/[^A-Za-z]/g, '').length <= 1).length;

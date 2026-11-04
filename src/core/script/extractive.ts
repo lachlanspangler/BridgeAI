@@ -12,6 +12,7 @@ import {
   cleanForSpeech,
   sentences,
   contentWords,
+  coverage,
   sentenceCase,
   wordCount,
 } from '../text/text.ts';
@@ -303,6 +304,17 @@ export function whatIsIt(src: Source): { text: string; segmentId: string } | nul
       const t = cleanForSpeech(sen);
       if (wordCount(t) < 6 || wordCount(t) > 45 || garbled(t)) continue;
       if (INTRO.test(t) || (DEF.test(t) && mentionsSubject(t))) return { text: t, segmentId: seg.id };
+    }
+  }
+  // no definition sentence: the earliest lead sentence that names most of a descriptive title is the topic
+  // sentence ("Tackling Climate Change with Machine Learning" -> "Climate change is one of the greatest ...")
+  if (contentWords(src.title).length >= 3 && !/^\d+ (images|files)$/i.test(src.title.trim())) {
+    for (const seg of lead) {
+      for (const sen of sentences(seg.text)) {
+        const t = cleanForSpeech(sen);
+        if (wordCount(t) < 6 || wordCount(t) > 45 || garbled(t) || !VERB.test(t)) continue;
+        if (coverage(src.title, t) >= 0.6) return { text: t, segmentId: seg.id };
+      }
     }
   }
   return null;

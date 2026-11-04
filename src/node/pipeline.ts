@@ -341,6 +341,14 @@ export async function runPipeline(
     // the subject's name must be said too ("the Transformer", not just "it")
     const names = def ? properNouns(def.text).filter((n) => !/^(We|The|This|Our|A|An)$/.test(n)) : [];
     const nameMissing = names.length > 0 && !names.some((n) => said.toLowerCase().includes(n.toLowerCase()));
+    // the beat that already says the name carries it: protect it from later length-fit drops
+    if (def && !nameMissing && names.length) {
+      const carrier = script.beats.find(
+        (b) =>
+          b.role !== 'takeaway' && names.some((n) => b.narration.toLowerCase().includes(n.toLowerCase())),
+      );
+      if (carrier && !carrier.ideas.includes('core')) carrier.ideas = [...carrier.ideas, 'core'];
+    }
     if (def && (coverage(def.text, said) < 0.5 || nameMissing)) {
       const text = thirdPerson(trimSentence(def.text, Math.max(28, budget.wordsPerBeat.max + 6)));
       const nb: Beat = {
@@ -387,10 +395,15 @@ export async function runPipeline(
   if (top) {
     const topSegs = new Set(top.evidence.map((e) => e.segmentId));
     const topTerms = top.terms.map((t) => t.toLowerCase());
+    // citing the right segment is not enough: the beat must say the idea (its terms, or most of its words)
     const says = (b: Beat) =>
       b.claims.some((c) => c.support.some((id) => topSegs.has(id))) &&
-      (topTerms.length === 0 || topTerms.some((t) => b.narration.toLowerCase().includes(t)));
-    if (!script.beats.some((b) => b.role !== 'takeaway' && says(b))) {
+      (topTerms.length
+        ? topTerms.some((t) => b.narration.toLowerCase().includes(t))
+        : coverage(top.statement, b.narration) >= 0.6);
+    const sayer = script.beats.find((b) => b.role !== 'takeaway' && says(b));
+    if (sayer && !sayer.ideas.includes('core')) sayer.ideas = [...sayer.ideas, 'core'];
+    if (!sayer) {
       const text = trimSentence(top.statement, budget.wordsPerBeat.max + 4, top.terms);
       const nb: Beat = {
         id: 'bt',
@@ -499,7 +512,11 @@ export async function runPipeline(
       // still a restatement and nothing better passed: keep the takeaway, drop the beat it repeats
       if (!others.every((o) => sim(take.narration, o.narration) <= 0.6)) {
         const dupI = script.beats.findIndex(
-          (o, j) => j !== ti && o.role !== 'hook' && sim(take.narration, o.narration) > 0.6,
+          (o, j) =>
+            j !== ti &&
+            o.role !== 'hook' &&
+            !o.ideas.includes('core') &&
+            sim(take.narration, o.narration) > 0.6,
         );
         if (dupI >= 0 && script.beats.length > 3) {
           faith.actions.push({

@@ -65,12 +65,37 @@ describe('garbled text filter', () => {
     expect(garbled('TheLawwillneverbe perfect but its application')).toBe(true);
     expect(garbled('of continuous representations z = (z , ..., z ). Given z')).toBe(true);
     expect(garbled('The Transformer is based solely on attention mechanisms.')).toBe(false);
+    // chart axis text spliced into a PDF sentence (vLLM paper)
+    expect(
+      garbled(
+        'we propose PagedAttention, an attention al- 0.4k gorithm inspired by virtual memory and pag0 10 20 30 40 ing',
+      ),
+    ).toBe(true);
+    expect(garbled('It reaches 28.4 BLEU on WMT 2014 English-to-German.')).toBe(false);
   });
 });
 
 describe('whatIsIt', () => {
   it("finds the source's own definition sentence", async () => {
     const { whatIsIt } = await import('../../src/core/script/extractive.ts');
-    expect(whatIsIt(attention())!.text).toMatch(/We propose a new simple network architecture, the Transformer/);
+    expect(whatIsIt(attention())!.text).toMatch(
+      /We propose a new simple network architecture, the Transformer/,
+    );
+  });
+  it('falls back to the topic sentence that names a descriptive title', async () => {
+    const { whatIsIt } = await import('../../src/core/script/extractive.ts');
+    const src = {
+      ...attention(),
+      title: 'Tackling Climate Change with Machine Learning',
+      segments: [
+        {
+          id: 's1',
+          kind: 'paragraph' as const,
+          text: 'Climate change is one of the greatest challenges facing humanity, and machine learning experts may wonder how they can help.',
+        },
+      ],
+    };
+    expect(whatIsIt(src as never)!.text).toMatch(/^Climate change is one of/);
+    expect(whatIsIt({ ...src, title: '3 images' } as never)).toBeNull();
   });
 });
