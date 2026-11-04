@@ -118,3 +118,24 @@ parts. `git init` (no remote). Pinned the public npm registry in `.npmrc`. Launc
 - A protection added in one pass (the name rule) can be undone by a later pass (length fit). Protections have to travel with the beat (the `core` tag), not be checked once.
 
 **Next:** the final eval on this code, samples into docs/media, STATUS, clean tree.
+
+## 2026-11-04 16:10: Hang, timeouts, wrap-up
+**Did:**
+- The full eval before the last two wording fixes met the stop criterion: 20 s and 60 s k1 18/18, 0 unsupported.
+- Reading the 18 scripts by hand still found problems:
+  - a duplicate line (LIGO)
+  - big numbers the narration never says ("1", "50 %")
+  - "our universe" turned into "their universe"
+  - a sentence cut mid-phrase ("…observation of a binary.")
+  - a subject-less fragment with a math symbol ("…smaller than hC.")
+  - a diagram label voiced as a sentence
+  - "We"/"Our" at sentence start left in the first person
+
+  All fixed in a final polish pass, with tests.
+- The next full run hung: 0 % CPU, model loaded, a grammar-constrained `session.prompt` that never settled. The owner stopped it.
+- Added `withTimeout`: a local model call gets 4 min and then a fresh context, a job gets 30 min, an eval run gets 12 min. The caller is always released. There's a test with a runner that never settles.
+- Smoke eval on the final code: 3/3 k1 at 20 s, 0 unsupported.
+
+**Mistake:** I ran `git checkout` on the uncommitted `docs/EVALS.md`, which threw away the report from the 18/18 run. The hung run had already overwritten some saved artifacts. I regenerated the report with `--rescore` from the saved scripts and said so in STATUS. **Lesson:** commit eval reports the moment a run finishes.
+
+**Decided:** stopped at design grade C+/B (library). The gap to A is script quality on the 4B model; the next step is a BYOK run.
