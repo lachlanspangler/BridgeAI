@@ -8,7 +8,7 @@ licence: "MIT License. Copyright (c) 2010-2020 Jason Moiron and Contributors (py
 key_points:
   - id: k1
     text: "humanize is a Python package of utilities that turn numbers, times and sizes into human-readable text, like '3 minutes ago'."
-    any: [["humanize"], ["human-readable", "human readable", "readable", "friendly"]]
+    any: [["humanize"], ["human-readable", "human readable", "readable", "easy-to-read", "easy to read", "human text", "friendly", "humaniz"]]
   - id: k2
     text: "Integer helpers: intcomma (12345 -> '12,345'), intword (123455913 -> '123.5 million'), apnumber (4 -> 'four')."
     any: [["intcomma", "intword", "apnumber", "million", "comma"]]

@@ -1,247 +1,29 @@
 {
-  "stamp": "2026-11-04T11:36:01.044Z",
+  "stamp": "2026-11-04T11:49:27.155Z",
   "engine": "local:qwen3.5-4b-q4_k_m",
   "lengths": [
-    20,
-    60
+    20
   ],
   "rows": [
     {
-      "case": "attention-abstract",
-      "kind": "text",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20.8,
-      "inTolerance": true,
-      "beats": 4,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 0.5,
-      "coveredIds": [
-        "k1"
-      ],
-      "understanding": "0/2",
-      "understandingFrac": 0
-    },
-    {
-      "case": "attention-abstract",
-      "kind": "text",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 64.2,
-      "inTolerance": true,
-      "beats": 9,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 0,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
-      "understanding": "2/2",
-      "understandingFrac": 1
-    },
-    {
       "case": "carbon-cycle-diagram",
       "kind": "images",
       "seconds": 20,
       "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 18.5,
+      "actual": 20.1,
       "inTolerance": true,
       "beats": 3,
       "unsupported": 0,
       "recheckUnsupported": 0,
-      "dropped": 2,
-      "k1": false,
-      "coverage": 0,
-      "coveredIds": [],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
-    },
-    {
-      "case": "carbon-cycle-diagram",
-      "kind": "images",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 44.8,
-      "inTolerance": false,
-      "beats": 4,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 3,
+      "dropped": 1,
       "k1": true,
-      "coverage": 0.67,
+      "coverage": 1,
       "coveredIds": [
         "k1",
         "k2"
       ],
       "understanding": "2/2",
       "understandingFrac": 1
-    },
-    {
-      "case": "climate-ml-abstract",
-      "kind": "text",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 19.9,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
-    },
-    {
-      "case": "climate-ml-abstract",
-      "kind": "text",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 55.8,
-      "inTolerance": true,
-      "beats": 7,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 0,
-      "k1": true,
-      "coverage": 0.67,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
-    },
-    {
-      "case": "covid-herd-immunity-abstract",
-      "kind": "text",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 21.1,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 2,
-      "k1": true,
-      "coverage": 0.5,
-      "coveredIds": [
-        "k1"
-      ],
-      "understanding": "0/2",
-      "understandingFrac": 0
-    },
-    {
-      "case": "covid-herd-immunity-abstract",
-      "kind": "text",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 59.2,
-      "inTolerance": true,
-      "beats": 7,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 0,
-      "k1": true,
-      "coverage": 0.67,
-      "coveredIds": [
-        "k1",
-        "k3"
-      ],
-      "understanding": "1/3",
-      "understandingFrac": 0.3333333333333333
-    },
-    {
-      "case": "double-ml-abstract",
-      "kind": "text",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20.7,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
-    },
-    {
-      "case": "double-ml-abstract",
-      "kind": "text",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 56.4,
-      "inTolerance": true,
-      "beats": 9,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 0,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
-      "understanding": "1/3",
-      "understandingFrac": 0.3333333333333333
-    },
-    {
-      "case": "global-temperature-chart",
-      "kind": "images",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 21.3,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 0.5,
-      "coveredIds": [
-        "k1"
-      ],
-      "understanding": "0/2",
-      "understandingFrac": 0
-    },
-    {
-      "case": "global-temperature-chart",
-      "kind": "images",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 64.2,
-      "inTolerance": true,
-      "beats": 11,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 2,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
-      "understanding": "2/3",
-      "understandingFrac": 0.6666666666666666
     },
     {
       "case": "humanize-repo",
@@ -251,237 +33,59 @@
       "actual": 20,
       "inTolerance": true,
       "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 3,
-      "k1": false,
-      "coverage": 0,
-      "coveredIds": [],
-      "understanding": "0/2",
-      "understandingFrac": 0
-    },
-    {
-      "case": "humanize-repo",
-      "kind": "project",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 63.9,
-      "inTolerance": true,
-      "beats": 8,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 4,
-      "k1": false,
-      "coverage": 0.67,
-      "coveredIds": [
-        "k2",
-        "k3"
-      ],
-      "understanding": "0/2",
-      "understandingFrac": 0
-    },
-    {
-      "case": "hyperfine-repo",
-      "kind": "project",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20,
-      "inTolerance": true,
-      "beats": 4,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": false,
-      "coverage": 0.5,
-      "coveredIds": [
-        "k2"
-      ],
-      "understanding": "1/1",
-      "understandingFrac": 1
-    },
-    {
-      "case": "hyperfine-repo",
-      "kind": "project",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 63,
-      "inTolerance": true,
-      "beats": 11,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
-      "understanding": "2/2",
-      "understandingFrac": 1
-    },
-    {
-      "case": "ligo-gw150914-abstract",
-      "kind": "text",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 18.9,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 2,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "2/2",
-      "understandingFrac": 1
-    },
-    {
-      "case": "ligo-gw150914-abstract",
-      "kind": "text",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 53,
-      "inTolerance": false,
-      "beats": 6,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 0.67,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "2/3",
-      "understandingFrac": 0.6666666666666666
-    },
-    {
-      "case": "mistral-7b-pdf",
-      "kind": "pdf",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20.8,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 3,
-      "k1": true,
-      "coverage": 0.5,
-      "coveredIds": [
-        "k1"
-      ],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
-    },
-    {
-      "case": "mistral-7b-pdf",
-      "kind": "pdf",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 61.3,
-      "inTolerance": true,
-      "beats": 8,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 2,
-      "k1": true,
-      "coverage": 0.67,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "2/2",
-      "understandingFrac": 1
-    },
-    {
-      "case": "mixtral-pdf",
-      "kind": "pdf",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 19.4,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 2,
-      "k1": false,
-      "coverage": 0,
-      "coveredIds": [],
-      "understanding": "0/2",
-      "understandingFrac": 0
-    },
-    {
-      "case": "mixtral-pdf",
-      "kind": "pdf",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 57.4,
-      "inTolerance": true,
-      "beats": 7,
       "unsupported": 0,
       "recheckUnsupported": 0,
       "dropped": 5,
-      "k1": true,
-      "coverage": 0.67,
-      "coveredIds": [
-        "k1",
-        "k3"
-      ],
-      "understanding": "1/3",
-      "understandingFrac": 0.3333333333333333
+      "k1": false,
+      "coverage": 0,
+      "coveredIds": [],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
     },
     {
-      "case": "nanoid-repo",
+      "case": "hyperfine-repo",
       "kind": "project",
       "seconds": 20,
       "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 21.6,
+      "actual": 21.5,
       "inTolerance": true,
-      "beats": 3,
+      "beats": 4,
       "unsupported": 0,
       "recheckUnsupported": 0,
       "dropped": 1,
+      "k1": false,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k2"
+      ],
+      "understanding": "1/1",
+      "understandingFrac": 1
+    },
+    {
+      "case": "mixtral-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 22.3,
+      "inTolerance": false,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 3,
       "k1": true,
       "coverage": 0.5,
       "coveredIds": [
         "k1"
       ],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
-    },
-    {
-      "case": "nanoid-repo",
-      "kind": "project",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 64.2,
-      "inTolerance": true,
-      "beats": 10,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 3,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
-      "understanding": "2/3",
-      "understandingFrac": 0.6666666666666666
+      "understanding": "0/2",
+      "understandingFrac": 0
     },
     {
       "case": "plate-tectonics-diagrams",
       "kind": "images",
       "seconds": 20,
       "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 18.8,
+      "actual": 20,
       "inTolerance": true,
       "beats": 3,
       "unsupported": 0,
@@ -490,227 +94,6 @@
       "k1": false,
       "coverage": 0,
       "coveredIds": [],
-      "understanding": "0/2",
-      "understandingFrac": 0
-    },
-    {
-      "case": "plate-tectonics-diagrams",
-      "kind": "images",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 41.6,
-      "inTolerance": false,
-      "beats": 5,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
-      "understanding": "2/3",
-      "understandingFrac": 0.6666666666666666
-    },
-    {
-      "case": "tensorflow-abstract",
-      "kind": "text",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
-    },
-    {
-      "case": "tensorflow-abstract",
-      "kind": "text",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 56,
-      "inTolerance": true,
-      "beats": 9,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
-      "understanding": "2/3",
-      "understandingFrac": 0.6666666666666666
-    },
-    {
-      "case": "tree-of-thoughts-pdf",
-      "kind": "pdf",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 19.7,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 0.5,
-      "coveredIds": [
-        "k1"
-      ],
-      "understanding": "0/1",
-      "understandingFrac": 0
-    },
-    {
-      "case": "tree-of-thoughts-pdf",
-      "kind": "pdf",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 61.2,
-      "inTolerance": true,
-      "beats": 10,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 0.33,
-      "coveredIds": [
-        "k1"
-      ],
-      "understanding": "0/2",
-      "understandingFrac": 0
-    },
-    {
-      "case": "vllm-pagedattention-pdf",
-      "kind": "pdf",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20.8,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "1/2",
-      "understandingFrac": 0.5
-    },
-    {
-      "case": "vllm-pagedattention-pdf",
-      "kind": "pdf",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 62,
-      "inTolerance": true,
-      "beats": 10,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 0,
-      "k1": true,
-      "coverage": 0.67,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "2/2",
-      "understandingFrac": 1
-    },
-    {
-      "case": "wiki-crispr",
-      "kind": "text",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 20,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2"
-      ],
-      "understanding": "1/3",
-      "understandingFrac": 0.3333333333333333
-    },
-    {
-      "case": "wiki-crispr",
-      "kind": "text",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 59.4,
-      "inTolerance": true,
-      "beats": 9,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
-      "understanding": "3/3",
-      "understandingFrac": 1
-    },
-    {
-      "case": "wiki-water-cycle",
-      "kind": "text",
-      "seconds": 20,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 19.6,
-      "inTolerance": true,
-      "beats": 3,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 1,
-      "k1": true,
-      "coverage": 0.5,
-      "coveredIds": [
-        "k1"
-      ],
-      "understanding": "1/1",
-      "understandingFrac": 1
-    },
-    {
-      "case": "wiki-water-cycle",
-      "kind": "text",
-      "seconds": 60,
-      "engine": "local:qwen3.5-4b-q4_k_m",
-      "actual": 61.4,
-      "inTolerance": true,
-      "beats": 9,
-      "unsupported": 0,
-      "recheckUnsupported": 0,
-      "dropped": 0,
-      "k1": true,
-      "coverage": 1,
-      "coveredIds": [
-        "k1",
-        "k2",
-        "k3"
-      ],
       "understanding": "1/2",
       "understandingFrac": 0.5
     }

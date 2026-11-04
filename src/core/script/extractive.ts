@@ -276,13 +276,33 @@ export function numberLabel(narration: string, value: string): string | null {
  */
 export function whatIsIt(src: Source): { text: string; segmentId: string } | null {
   const lead = src.segments.filter((s) => s.kind === 'abstract' || s.kind === 'paragraph').slice(0, 4);
-  const DEF =
-    /\b(is an?|are an?|is the|refers to|we (introduce|propose|present)|this (package|library|tool|project|paper) (contains|provides|is|lets|helps|introduces)|(contains|provides) (various|a|an))\b/i;
+  const titleWords = new Set(contentWords(src.title).map((w) => w.toLowerCase()));
+  const subject = src.title.split(/[:—–]/)[0]!.trim();
+  const mentionsSubject = (t: string) => contentWords(t).some((w) => titleWords.has(w.toLowerCase()));
+  const INTRO =
+    /\b(we (introduce|propose|present)|this (modest )?(package|library|tool|project|paper|work) (contains|provides|is|lets|helps|introduces))\b/i;
+  const DEF = /\b(is an?|are an?|is the|refers to|(contains|provides) (various|a|an))\b/i;
+  // a project's tagline ("A command-line benchmarking tool.") reads as "<name> is a command-line benchmarking tool."
+  if (src.kind === 'project') {
+    for (const seg of lead.slice(0, 3)) {
+      const first = cleanForSpeech(sentences(seg.text)[0] ?? '').replace(/[.!]$/, '');
+      if (
+        /^(A|An)\s+[A-Za-z-]+/.test(first) &&
+        wordCount(first) <= 14 &&
+        !VERB.test(first) &&
+        !garbled(first)
+      )
+        return {
+          text: `${subject} is ${first.charAt(0).toLowerCase()}${first.slice(1)}.`,
+          segmentId: seg.id,
+        };
+    }
+  }
   for (const seg of lead) {
     for (const sen of sentences(seg.text)) {
       const t = cleanForSpeech(sen);
-      if (wordCount(t) >= 6 && wordCount(t) <= 45 && DEF.test(t) && !garbled(t))
-        return { text: t, segmentId: seg.id };
+      if (wordCount(t) < 6 || wordCount(t) > 45 || garbled(t)) continue;
+      if (INTRO.test(t) || (DEF.test(t) && mentionsSubject(t))) return { text: t, segmentId: seg.id };
     }
   }
   return null;

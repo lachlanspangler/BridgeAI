@@ -339,7 +339,7 @@ export async function runPipeline(
     const def = whatIsIt(src);
     const said = script.beats.map((b) => b.narration).join(' ');
     if (def && coverage(def.text, said) < 0.5) {
-      const text = thirdPerson(trimSentence(def.text, budget.wordsPerBeat.max + 6));
+      const text = thirdPerson(trimSentence(def.text, Math.max(28, budget.wordsPerBeat.max + 6)));
       const nb: Beat = {
         id: 'bd',
         role: 'idea',
