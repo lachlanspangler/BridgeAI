@@ -94,6 +94,30 @@ async function make(args: string[]): Promise<void> {
   );
 }
 
+/** Re-voice and re-render a finished job from its saved script (no model calls): for iterating on visuals/audio. */
+async function rerender(args: string[]): Promise<void> {
+  const job = args[0];
+  if (!job || !existsSync(join(job, 'script.json'))) throw new Error('usage: bridge rerender <jobDir> [--out dir]');
+  const read = <T>(f: string) => JSON.parse(readFileSync(join(job, f), 'utf8')) as T;
+  const src = read<import('../core/schema.ts').Source>('source.json');
+  const saved = read<import('../core/schema.ts').Script>('script.json');
+  const analysis = read<import('../core/schema.ts').Analysis>('analysis.json');
+  const faith = read<{ verdicts: { claim: string; verdict: string; by: string }[] }>('faith.json');
+  const ok = new Set(faith.verdicts.filter((v) => v.verdict === 'supported' && v.by === 'judge').map((v) => v.claim));
+  const { engines } = await pickEngines({ llm: 'extractive', tts: 'auto' });
+  engines.analyze = async () => analysis;
+  engines.script = async () => saved;
+  engines.judge = async (claim) => ok.has(claim);
+  const seconds = saved.targetSeconds;
+  const settings = RenderSettings.parse({ seconds });
+  const id = `${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}-${seconds}s-re`;
+  const res = await runPipeline(src, settings, engines, join(paths.jobs(), id));
+  const outDir = resolve(flag(args, 'out', 'artifacts/videos')!);
+  mkdirSync(outDir, { recursive: true });
+  copyFileSync(res.video, join(outDir, `${id}.mp4`));
+  console.log(`✓ ${join(outDir, `${id}.mp4`)} · ${res.durations.actual.toFixed(1)} s · unsupported ${res.faith.unsupported}`);
+}
+
 async function models(args: string[]): Promise<void> {
   const [sub, p] = args;
   if (sub === 'link') {
@@ -135,6 +159,8 @@ async function main(): Promise<void> {
       return make(rest);
     case 'models':
       return models(rest);
+    case 'rerender':
+      return rerender(rest);
     case 'keys': {
       const { keyStatus, setKey, removeKey, isProvider } = await import('../node/keys/keystore.ts');
       const [sub, prov] = rest;
