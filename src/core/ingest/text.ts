@@ -25,7 +25,9 @@ export function ingestText(text: string, origin = 'pasted text', titleHint?: str
       segs.push({
         id: id(),
         kind,
-        text: isList ? buf.map((l) => l.replace(/^\s*([-*•]|\d+[.)])\s+/, '').trim()).join('; ') : body.replace(/^abstract[:.—-]\s*/i, ''),
+        text: isList
+          ? buf.map((l) => l.replace(/^\s*([-*•]|\d+[.)])\s+/, '').trim()).join('; ')
+          : body.replace(/^abstract[:.—-]\s*/i, ''),
         loc: { lines: [bufStart, endLine], section: section.length ? [...section] : undefined },
       });
       if (kind === 'abstract') nextKind = null;
@@ -38,7 +40,13 @@ export function ingestText(text: string, origin = 'pasted text', titleHint?: str
     const line = raw.trimEnd();
     if (inCode) {
       if (/^```/.test(line.trim())) {
-        segs.push({ id: id(), kind: 'code', text: inCode.lines.join('\n'), lang: inCode.lang || undefined, loc: { lines: [inCode.start, n] } });
+        segs.push({
+          id: id(),
+          kind: 'code',
+          text: inCode.lines.join('\n'),
+          lang: inCode.lang || undefined,
+          loc: { lines: [inCode.start, n] },
+        });
         inCode = null;
       } else inCode.lines.push(raw);
       return;
@@ -82,7 +90,13 @@ export function ingestText(text: string, origin = 'pasted text', titleHint?: str
   });
   if (inCode) {
     const c = inCode as { lang: string; start: number; lines: string[] };
-    segs.push({ id: id(), kind: 'code', text: c.lines.join('\n'), lang: c.lang || undefined, loc: { lines: [c.start, lines.length] } });
+    segs.push({
+      id: id(),
+      kind: 'code',
+      text: c.lines.join('\n'),
+      lang: c.lang || undefined,
+      loc: { lines: [c.start, lines.length] },
+    });
   }
   flush(lines.length);
 

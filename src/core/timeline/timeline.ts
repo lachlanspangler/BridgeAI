@@ -46,7 +46,8 @@ export function buildTimeline(
   budget: Budget,
   opts: { fps: number; width: number; height: number; seed: number; extraHold?: number },
 ): Timeline {
-  if (clips.length !== script.beats.length) throw new Error(`need one voice clip per beat (${clips.length} ≠ ${script.beats.length})`);
+  if (clips.length !== script.beats.length)
+    throw new Error(`need one voice clip per beat (${clips.length} ≠ ${script.beats.length})`);
   const beats: TimedBeat[] = [];
   let t = 0;
   script.beats.forEach((beat, i) => {
@@ -55,12 +56,21 @@ export function buildTimeline(
     const voiceOffset = lead;
     const hold = (beat.role === 'takeaway' ? 0.6 : budget.gap) + (opts.extraHold ?? 0);
     const dur = Math.max(MIN_BEAT, lead + clip.duration + hold);
-    const words = (clip.words ?? estimateWordTimings(beat.narration, clip.speechStart, clip.speechEnd)).map((w) => ({
-      word: w.word,
-      start: round3(w.start + voiceOffset),
-      end: round3(w.end + voiceOffset),
-    }));
-    beats.push({ beat, start: round3(t), end: round3(t + dur), voiceOffset, voiceDuration: clip.duration, words });
+    const words = (clip.words ?? estimateWordTimings(beat.narration, clip.speechStart, clip.speechEnd)).map(
+      (w) => ({
+        word: w.word,
+        start: round3(w.start + voiceOffset),
+        end: round3(w.end + voiceOffset),
+      }),
+    );
+    beats.push({
+      beat,
+      start: round3(t),
+      end: round3(t + dur),
+      voiceOffset,
+      voiceDuration: clip.duration,
+      words,
+    });
     t += dur;
   });
   const duration = round3(t + budget.tail);
@@ -80,7 +90,9 @@ export function buildTimeline(
 
 /** Absolute word timings across the whole video. */
 export function absoluteWords(beats: TimedBeat[]): WordTiming[] {
-  return beats.flatMap((b) => b.words.map((w) => ({ word: w.word, start: round3(b.start + w.start), end: round3(b.start + w.end) })));
+  return beats.flatMap((b) =>
+    b.words.map((w) => ({ word: w.word, start: round3(b.start + w.start), end: round3(b.start + w.end) })),
+  );
 }
 
 /**
@@ -93,7 +105,11 @@ export function captionCues(beats: TimedBeat[], maxChars = 32, maxWords = 5): Cu
     let cur: WordTiming[] = [];
     const flush = () => {
       if (!cur.length) return;
-      cues.push({ start: round3(b.start + cur[0]!.start), end: round3(b.start + cur[cur.length - 1]!.end), text: cur.map((w) => w.word).join(' ') });
+      cues.push({
+        start: round3(b.start + cur[0]!.start),
+        end: round3(b.start + cur[cur.length - 1]!.end),
+        text: cur.map((w) => w.word).join(' '),
+      });
       cur = [];
     };
     for (const w of b.words) {
@@ -119,10 +135,17 @@ export function sfxCues(beats: TimedBeat[], duration: number): Timeline['sfx'] {
   const raw: { t: number; kind: SfxKind; gain: number; prio: number }[] = [];
   beats.forEach((b, i) => {
     const v = b.beat.visual;
-    if (i > 0) raw.push({ t: b.start, kind: b.beat.role === 'takeaway' ? 'impact' : 'whoosh', gain: 0.8, prio: b.beat.role === 'takeaway' ? 3 : 1 });
+    if (i > 0)
+      raw.push({
+        t: b.start,
+        kind: b.beat.role === 'takeaway' ? 'impact' : 'whoosh',
+        gain: 0.8,
+        prio: b.beat.role === 'takeaway' ? 3 : 1,
+      });
     if (v.type === 'bigNumber') raw.push({ t: b.start + 0.45, kind: 'pop', gain: 0.9, prio: 2 });
     if (v.type === 'title' && i === 0) raw.push({ t: 0.05, kind: 'chime', gain: 0.7, prio: 2 });
-    if (b.beat.role === 'takeaway' && i > 0) raw.push({ t: Math.max(0, b.start - 1.2), kind: 'riser', gain: 0.6, prio: 0 });
+    if (b.beat.role === 'takeaway' && i > 0)
+      raw.push({ t: Math.max(0, b.start - 1.2), kind: 'riser', gain: 0.6, prio: 0 });
   });
   raw.push({ t: Math.max(0, duration - 1.4), kind: 'chime', gain: 0.6, prio: 2 });
   raw.sort((a, b) => a.t - b.t);

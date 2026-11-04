@@ -150,7 +150,14 @@ function kWeight(x: Float32Array, sr: number): Float32Array {
   const Vh = 10 ** (G / 20);
   const Vb = Vh ** 0.4996667741545416;
   let a0 = 1 + K / Q + K * K;
-  const s1 = biquad(x, (Vh + (Vb * K) / Q + K * K) / a0, (2 * (K * K - Vh)) / a0, (Vh - (Vb * K) / Q + K * K) / a0, (2 * (K * K - 1)) / a0, (1 - K / Q + K * K) / a0);
+  const s1 = biquad(
+    x,
+    (Vh + (Vb * K) / Q + K * K) / a0,
+    (2 * (K * K - Vh)) / a0,
+    (Vh - (Vb * K) / Q + K * K) / a0,
+    (2 * (K * K - 1)) / a0,
+    (1 - K / Q + K * K) / a0,
+  );
   f0 = 38.13547087602444;
   Q = 0.5003270373238773;
   K = Math.tan((Math.PI * f0) / sr);
@@ -219,7 +226,13 @@ export function decodeWav(bytes: Uint8Array): { samples: Float32Array; sampleRat
   while (o + 8 <= bytes.length) {
     const id = String.fromCharCode(...bytes.slice(o, o + 4));
     const size = v.getUint32(o + 4, true);
-    if (id === 'fmt ') fmt = { format: v.getUint16(o + 8, true), ch: v.getUint16(o + 10, true), sr: v.getUint32(o + 12, true), bits: v.getUint16(o + 22, true) };
+    if (id === 'fmt ')
+      fmt = {
+        format: v.getUint16(o + 8, true),
+        ch: v.getUint16(o + 10, true),
+        sr: v.getUint32(o + 12, true),
+        bits: v.getUint16(o + 22, true),
+      };
     if (id === 'data') {
       const bps = fmt.bits / 8;
       const frames = Math.floor(size / (bps * fmt.ch));
@@ -240,7 +253,11 @@ export function decodeWav(bytes: Uint8Array): { samples: Float32Array; sampleRat
 }
 
 /** Speech onset/offset (seconds) by energy threshold (for timing word estimates and trimming). */
-export function speechBounds(sig: Float32Array, sr: number, thresholdDb = -40): { start: number; end: number } {
+export function speechBounds(
+  sig: Float32Array,
+  sr: number,
+  thresholdDb = -40,
+): { start: number; end: number } {
   const win = Math.round(0.01 * sr);
   let max = 0;
   for (const x of sig) max = Math.max(max, Math.abs(x));

@@ -26,10 +26,22 @@ export function findFfmpeg(): FfmpegInfo | null {
   const env = process.env.BRIDGE_FFMPEG;
   if (env) {
     const v = versionOf(env);
-    if (v) return (cached = { ffmpeg: env, ffprobe: process.env.BRIDGE_FFPROBE ?? null, version: v, source: 'env' });
+    if (v)
+      return (cached = {
+        ffmpeg: env,
+        ffprobe: process.env.BRIDGE_FFPROBE ?? null,
+        version: v,
+        source: 'env',
+      });
   }
   const sys = versionOf('ffmpeg');
-  if (sys) return (cached = { ffmpeg: 'ffmpeg', ffprobe: versionOf('ffprobe') ? 'ffprobe' : null, version: sys, source: 'system' });
+  if (sys)
+    return (cached = {
+      ffmpeg: 'ffmpeg',
+      ffprobe: versionOf('ffprobe') ? 'ffprobe' : null,
+      version: sys,
+      source: 'system',
+    });
   try {
     const require = createRequire(import.meta.url);
     const p = require('ffmpeg-static') as string | null;
@@ -45,7 +57,10 @@ export function findFfmpeg(): FfmpegInfo | null {
 
 export function requireFfmpeg(): FfmpegInfo {
   const f = findFfmpeg();
-  if (!f) throw new Error('ffmpeg not found. Install it (macOS: brew install ffmpeg · Windows: winget install ffmpeg · Linux: apt install ffmpeg) or run `npm install ffmpeg-static`. Then `make doctor`.');
+  if (!f)
+    throw new Error(
+      'ffmpeg not found. Install it (macOS: brew install ffmpeg · Windows: winget install ffmpeg · Linux: apt install ffmpeg) or run `npm install ffmpeg-static`. Then `make doctor`.',
+    );
   return f;
 }
 
@@ -53,11 +68,15 @@ export function requireFfmpeg(): FfmpegInfo {
 export function runFfmpeg(args: string[], opts: { input?: Buffer } = {}): Promise<void> {
   const f = requireFfmpeg();
   return new Promise((resolve, reject) => {
-    const p = spawn(f.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: ['pipe', 'ignore', 'pipe'] });
+    const p = spawn(f.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', ...args], {
+      stdio: ['pipe', 'ignore', 'pipe'],
+    });
     let err = '';
     p.stderr.on('data', (d: Buffer) => (err = (err + d.toString()).slice(-4000)));
     p.on('error', reject);
-    p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}: ${err.trim()}`))));
+    p.on('close', (code) =>
+      code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}: ${err.trim()}`)),
+    );
     if (opts.input) p.stdin.end(opts.input);
     else p.stdin.end();
   });
@@ -67,7 +86,11 @@ export function runFfmpeg(args: string[], opts: { input?: Buffer } = {}): Promis
 export function probeDuration(file: string): number {
   const f = requireFfmpeg();
   if (f.ffprobe) {
-    const r = spawnSync(f.ffprobe, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file], { encoding: 'utf8' });
+    const r = spawnSync(
+      f.ffprobe,
+      ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file],
+      { encoding: 'utf8' },
+    );
     const d = Number(r.stdout.trim());
     if (Number.isFinite(d)) return d;
   }

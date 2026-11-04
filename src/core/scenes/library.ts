@@ -57,7 +57,11 @@ export function contentBox(W: number, H: number): Box {
   return { x, y, w: W - 2 * x, h: H * (1 - SAFE.top - SAFE.bottom) };
 }
 
-const normW = (w: string): string => w.toLowerCase().replace(/[^a-z0-9%.]/g, '').replace(/\.$/, '');
+const normW = (w: string): string =>
+  w
+    .toLowerCase()
+    .replace(/[^a-z0-9%.]/g, '')
+    .replace(/\.$/, '');
 
 /** When (beat-relative seconds) is this phrase first spoken? Falls back to `fallback`. */
 export function spokenAt(words: WordTiming[], phrase: string, fallback: number): number {
@@ -68,7 +72,11 @@ export function spokenAt(words: WordTiming[], phrase: string, fallback: number):
     for (let k = 0; k < p.length; k++) {
       const a = normW(words[i + k]!.word);
       const b = p[k]!;
-      if (!(a === b || a.replace(/s$/, '') === b.replace(/s$/, '') || (b.length > 4 && a.startsWith(b.slice(0, -1))))) {
+      if (!(
+        a === b ||
+        a.replace(/s$/, '') === b.replace(/s$/, '') ||
+        (b.length > 4 && a.startsWith(b.slice(0, -1)))
+      )) {
         ok = false;
         break;
       }
@@ -79,7 +87,8 @@ export function spokenAt(words: WordTiming[], phrase: string, fallback: number):
 }
 
 /** Fraction of the narration spoken at time t (0..1). */
-const spoken = (p: SceneProps): number => clamp01((p.t - p.voice.start) / Math.max(0.1, p.voice.end - p.voice.start));
+const spoken = (p: SceneProps): number =>
+  clamp01((p.t - p.voice.start) / Math.max(0.1, p.voice.end - p.voice.start));
 
 const S = (p: SceneProps): number => p.H / 1080;
 
@@ -89,7 +98,16 @@ function richText(
   text: string,
   highlights: string[],
   box: Box,
-  opts: { maxPx: number; minPx: number; maxLines: number; weight: number; family?: 'display' | 'sans'; align?: 'left' | 'center'; enterAt?: number; tone?: string },
+  opts: {
+    maxPx: number;
+    minPx: number;
+    maxLines: number;
+    weight: number;
+    family?: 'display' | 'sans';
+    align?: 'left' | 'center';
+    enterAt?: number;
+    tone?: string;
+  },
 ): { bottom: number } {
   const { ctx } = p;
   const fam = opts.family ?? 'display';
@@ -150,16 +168,31 @@ function title(p: SceneProps, v: Extract<Visual, { type: 'title' }>): void {
   const b = contentBox(W, H);
   if (v.kicker) {
     const e = easeOutBack(prog(p.t, 0, MOTION.pop));
-    pill(ctx, v.kicker, W / 2, b.y + b.h * 0.22, TYPE.kicker * s, p.theme.tone.primary, p.theme.onTone.primary, clamp01(e));
+    pill(
+      ctx,
+      v.kicker,
+      W / 2,
+      b.y + b.h * 0.22,
+      TYPE.kicker * s,
+      p.theme.tone.primary,
+      p.theme.onTone.primary,
+      clamp01(e),
+    );
   }
-  const r = richText(p, v.title, [], { x: b.x + b.w * 0.05, y: b.y + b.h * 0.28, w: b.w * 0.9, h: b.h * 0.44 }, {
-    maxPx: TYPE.display * s,
-    minPx: TYPE.title * s,
-    maxLines: 3,
-    weight: 700,
-    align: 'center',
-    enterAt: 0.1,
-  });
+  const r = richText(
+    p,
+    v.title,
+    [],
+    { x: b.x + b.w * 0.05, y: b.y + b.h * 0.28, w: b.w * 0.9, h: b.h * 0.44 },
+    {
+      maxPx: TYPE.display * s,
+      minPx: TYPE.title * s,
+      maxLines: 3,
+      weight: 700,
+      align: 'center',
+      enterAt: 0.1,
+    },
+  );
   // animated underline bar in three tones
   const u = easeInOutCubic(prog(p.t, 0.35, 0.7));
   const uw = W * 0.28 * u;
@@ -203,7 +236,15 @@ function orbiters(p: SceneProps, cx: number, cy: number, r: number): void {
 }
 
 /** A glowing icon disc: tone-filled circle, icon stroked on, a slow orbit ring. */
-function iconDisc(p: SceneProps, name: string, cx: number, cy: number, r: number, tone: string, enterAt = 0): void {
+function iconDisc(
+  p: SceneProps,
+  name: string,
+  cx: number,
+  cy: number,
+  r: number,
+  tone: string,
+  enterAt = 0,
+): void {
   const { ctx } = p;
   const e = easeOutBack(prog(p.t, enterAt, MOTION.pop + 0.1));
   if (e <= 0) return;
@@ -242,13 +283,19 @@ function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): vo
   const icon = v.icon && v.icon in ICONS ? v.icon : iconFor(`${v.highlight.join(' ')} ${v.text}`);
   const r = Math.min(b.h * 0.3, 210 * s);
   iconDisc(p, icon, b.x + r * 1.35, b.y + b.h / 2, r, p.theme.tone.primary, 0);
-  richText(p, v.text, v.highlight, { x: b.x + r * 3.1, y: b.y, w: b.w - r * 3.1, h: b.h }, {
-    maxPx: TYPE.headline * s,
-    minPx: TYPE.body * s,
-    maxLines: 4,
-    weight: 700,
-    enterAt: 0.12,
-  });
+  richText(
+    p,
+    v.text,
+    v.highlight,
+    { x: b.x + r * 3.1, y: b.y, w: b.w - r * 3.1, h: b.h },
+    {
+      maxPx: TYPE.headline * s,
+      minPx: TYPE.body * s,
+      maxLines: 4,
+      weight: 700,
+      enterAt: 0.12,
+    },
+  );
 }
 
 /** Parse a displayed number for count-up: keeps decimals and thousands separators. */
@@ -261,7 +308,11 @@ export function countUp(value: string, k: number): string {
   const decimals = (raw.split('.')[1] ?? '').length;
   const cur = target * easeOutCubic(k);
   let str = cur.toFixed(decimals);
-  if (m[2]!.includes(',')) str = Number(str).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  if (m[2]!.includes(','))
+    str = Number(str).toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
   return `${m[1]}${str}${m[3]}`;
 }
 
@@ -283,7 +334,16 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
   ctx.fillRect(cx - 400 * s, cy - 400 * s, 800 * s, 800 * s);
   ctx.restore();
   const shown = countUp(v.value, k);
-  const fit = fitFont(ctx, v.value + (v.unit ? ` ${v.unit}` : ''), (v.compare ? b.w * 0.6 : b.w) * 0.92, 1, TYPE.number * s, 90 * s, 700, 'display');
+  const fit = fitFont(
+    ctx,
+    v.value + (v.unit ? ` ${v.unit}` : ''),
+    (v.compare ? b.w * 0.6 : b.w) * 0.92,
+    1,
+    TYPE.number * s,
+    90 * s,
+    700,
+    'display',
+  );
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(lerp(0.6, 1, pop), lerp(0.6, 1, pop));
@@ -335,7 +395,9 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
       ctx.font = font(TYPE.small * 0.8 * s, 600, 'sans');
       ctx.fillStyle = p.theme.muted;
       ctx.textAlign = 'center';
-      wrap(ctx, bar.label, bw * 1.5).forEach((l, i) => ctx.fillText(l, bar.x + bw / 2, base + 40 * s + i * 36 * s));
+      wrap(ctx, bar.label, bw * 1.5).forEach((l, i) =>
+        ctx.fillText(l, bar.x + bw / 2, base + 40 * s + i * 36 * s),
+      );
     });
   }
 }
@@ -356,8 +418,15 @@ function bullets(p: SceneProps, v: Extract<Visual, { type: 'bullets' }>): void {
     ctx.restore();
   }
   const n = v.items.length;
-  const rowH = Math.min(150 * s, (b.y + b.h - y) / n);
-  const tones = [p.theme.tone.primary, p.theme.tone.accent, p.theme.tone.secondary, p.theme.tone.positive, p.theme.tone.negative];
+  const rowH = Math.min(190 * s, (b.y + b.h - y) / n);
+  y += Math.max(0, (b.y + b.h - y - rowH * n) / 2);
+  const tones = [
+    p.theme.tone.primary,
+    p.theme.tone.accent,
+    p.theme.tone.secondary,
+    p.theme.tone.positive,
+    p.theme.tone.negative,
+  ];
   v.items.forEach((item, i) => {
     // reveal each item as the narration reaches it (or when its first word is said)
     const firstWord = item.split(/\s+/)[0] ?? '';
@@ -371,19 +440,21 @@ function bullets(p: SceneProps, v: Extract<Visual, { type: 'bullets' }>): void {
     ctx.translate((1 - clamp01(e)) * -60 * s, 0);
     ctx.fillStyle = tones[i % tones.length]!;
     ctx.beginPath();
-    ctx.arc(b.x + 34 * s, cy, 30 * s * clamp01(e), 0, Math.PI * 2);
+    ctx.arc(b.x + 46 * s, cy, 44 * s * clamp01(e), 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = p.theme.onTone.accent;
-    ctx.font = font(32 * s, 800, 'sans');
+    ctx.font = font(46 * s, 800, 'sans');
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(String(i + 1), b.x + 34 * s, cy + 2 * s);
-    const f = fitFont(ctx, item, b.w - 110 * s, 2, TYPE.body * s, TYPE.small * s, 600, 'sans');
-    ctx.font = font(f.px, 600, 'sans');
+    ctx.fillText(String(i + 1), b.x + 46 * s, cy + 2 * s);
+    const f = fitFont(ctx, item, b.w - 150 * s, 2, TYPE.title * s, TYPE.small * s, 700, 'display');
+    ctx.font = font(f.px, 700, 'display');
     ctx.fillStyle = p.theme.ink;
     ctx.textAlign = 'left';
-    const lh = f.px * 1.15;
-    f.lines.forEach((l, k) => ctx.fillText(l, b.x + 90 * s, cy + (k - (f.lines.length - 1) / 2) * lh));
+    const lh = f.px * 1.12;
+    f.lines.forEach((l, k) =>
+      ctx.fillText(l, b.x + 130 * s, cy + (k - (f.lines.length - 1) / 2) * lh + f.px * 0.05),
+    );
     ctx.restore();
   });
 }
@@ -426,10 +497,17 @@ function bars(p: SceneProps, v: Extract<Visual, { type: 'bars' }>): void {
     ctx.font = font(TYPE.small * s, 700, 'display');
     ctx.fillStyle = bar.highlight ? p.theme.tone.accent : p.theme.ink;
     ctx.textAlign = 'center';
-    if (g > 0.05) ctx.fillText(countUp(fmtNum(bar.value), g) + (v.unit ? ` ${v.unit}` : ''), x + bw / 2, base - h * g - 18 * s);
+    if (g > 0.05)
+      ctx.fillText(
+        countUp(fmtNum(bar.value), g) + (v.unit ? ` ${v.unit}` : ''),
+        x + bw / 2,
+        base - h * g - 18 * s,
+      );
     ctx.font = font(TYPE.small * 0.75 * s, 600, 'sans');
     ctx.fillStyle = p.theme.muted;
-    wrap(ctx, bar.label, gapW * 0.95).slice(0, 2).forEach((l, k) => ctx.fillText(l, x + bw / 2, base + 42 * s + k * 34 * s));
+    wrap(ctx, bar.label, gapW * 0.95)
+      .slice(0, 2)
+      .forEach((l, k) => ctx.fillText(l, x + bw / 2, base + 42 * s + k * 34 * s));
   });
 }
 
@@ -482,7 +560,16 @@ function flow(p: SceneProps, v: Extract<Visual, { type: 'flow' }>): void {
     const ux = dx / len;
     const uy = dy / len;
     const padA = Math.abs(ux) > Math.abs(uy) ? nw / 2 + 14 * s : nh / 2 + 14 * s;
-    arrow(ctx, a.x + ux * padA, a.y + uy * padA, c.x - ux * padA, c.y - uy * padA, k, withAlpha(p.theme.ink, 0.75), 6 * s);
+    arrow(
+      ctx,
+      a.x + ux * padA,
+      a.y + uy * padA,
+      c.x - ux * padA,
+      c.y - uy * padA,
+      k,
+      withAlpha(p.theme.ink, 0.75),
+      6 * s,
+    );
     if (e.label && k > 0.6) {
       ctx.font = font(30 * s, 600, 'sans');
       ctx.fillStyle = p.theme.muted;
@@ -521,7 +608,19 @@ function compare(p: SceneProps, v: Extract<Visual, { type: 'compare' }>): void {
   const cw = b.w * 0.46;
   const sides = [
     { side: v.left, x: b.x, tone: 'secondary' as const, at: 0 },
-    { side: v.right, x: b.x + b.w - cw, tone: 'primary' as const, at: Math.max(0.25, spokenAt(p.words, v.right.label.split(/\s+/)[0] ?? '', p.voice.start + (p.voice.end - p.voice.start) * 0.45) - 0.2) },
+    {
+      side: v.right,
+      x: b.x + b.w - cw,
+      tone: 'primary' as const,
+      at: Math.max(
+        0.25,
+        spokenAt(
+          p.words,
+          v.right.label.split(/\s+/)[0] ?? '',
+          p.voice.start + (p.voice.end - p.voice.start) * 0.45,
+        ) - 0.2,
+      ),
+    },
   ];
   sides.forEach(({ side, x, tone, at }, si) => {
     const e = easeOutCubic(prog(p.t, at, MOTION.enter));
@@ -538,19 +637,19 @@ function compare(p: SceneProps, v: Extract<Visual, { type: 'compare' }>): void {
     ctx.font = font(f.px, 700, 'display');
     ctx.fillStyle = p.theme.tone[tone];
     ctx.fillText(f.lines[0] ?? '', x + 40 * s, b.y + 50 * s + f.px);
-    let y = b.y + 80 * s + f.px * 1.5;
+    let y = b.y + 120 * s + f.px * 1.6;
     side.points.forEach((pt, k) => {
       const pe = easeOutCubic(prog(p.t, at + 0.25 + k * 0.25, 0.4));
       ctx.globalAlpha = e * pe;
-      const pf = fitFont(ctx, pt, cw - 130 * s, 2, 44 * s, 32 * s, 600, 'sans');
+      const pf = fitFont(ctx, pt, cw - 130 * s, 2, 60 * s, 36 * s, 600, 'sans');
       ctx.font = font(pf.px, 600, 'sans');
       ctx.fillStyle = p.theme.ink;
       pf.lines.forEach((l, li) => ctx.fillText(l, x + 90 * s, y + li * pf.px * 1.18));
       ctx.fillStyle = p.theme.tone[tone];
       ctx.beginPath();
-      ctx.arc(x + 58 * s, y - pf.px * 0.32, 10 * s, 0, Math.PI * 2);
+      ctx.arc(x + 58 * s, y - pf.px * 0.32, 13 * s, 0, Math.PI * 2);
       ctx.fill();
-      y += pf.lines.length * pf.px * 1.18 + 28 * s;
+      y += pf.lines.length * pf.px * 1.18 + 40 * s;
     });
     if (win) {
       const ce = prog(p.t, at + 0.9, 0.5);
@@ -590,14 +689,20 @@ function quote(p: SceneProps, v: Extract<Visual, { type: 'quote' }>): void {
   ctx.fillStyle = withAlpha(p.theme.tone.secondary, 0.5);
   ctx.fillText('“', b.x - 20 * s, b.y + 250 * s);
   ctx.restore();
-  const r = richText(p, v.text, [], { x: b.x + 120 * s, y: b.y, w: b.w - 160 * s, h: b.h * 0.85 }, {
-    maxPx: TYPE.title * s,
-    minPx: TYPE.small * s,
-    maxLines: 5,
-    weight: 500,
-    family: 'display',
-    enterAt: 0.1,
-  });
+  const r = richText(
+    p,
+    v.text,
+    [],
+    { x: b.x + 120 * s, y: b.y, w: b.w - 160 * s, h: b.h * 0.85 },
+    {
+      maxPx: TYPE.title * s,
+      minPx: TYPE.small * s,
+      maxLines: 5,
+      weight: 500,
+      family: 'display',
+      enterAt: 0.1,
+    },
+  );
   if (v.cite) {
     ctx.save();
     ctx.globalAlpha = easeOutCubic(prog(p.t, 0.6, 0.5));
@@ -618,7 +723,8 @@ export interface Tok {
 }
 export function tokenize(line: string): Tok[] {
   const out: Tok[] = [];
-  const re = /(\/\/.*|#.*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`)|(\b\d[\d_.]*\b)|([A-Za-z_$][\w$]*)|(\s+)|([^\w\s])/g;
+  const re =
+    /(\/\/.*|#.*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`)|(\b\d[\d_.]*\b)|([A-Za-z_$][\w$]*)|(\s+)|([^\w\s])/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(line))) {
     if (m[1]) out.push({ text: m[1], kind: 'com' });
@@ -639,7 +745,10 @@ function code(p: SceneProps, v: Extract<Visual, { type: 'code' }>): void {
   const b = contentBox(W, H);
   const lines = v.code.replace(/\t/g, '  ').split('\n').slice(0, 14);
   const longest = Math.max(...lines.map((l) => l.length), 20);
-  const px = Math.max(26 * s, Math.min(46 * s, (b.w - 120 * s) / (longest * 0.62), (b.h - 140 * s) / (lines.length * 1.5)));
+  const px = Math.max(
+    28 * s,
+    Math.min(64 * s, (b.w - 120 * s) / (longest * 0.62), (b.h - 140 * s) / (lines.length * 1.5)),
+  );
   const lh = px * 1.5;
   const winW = Math.min(b.w, longest * px * 0.62 + 140 * s);
   const winH = Math.min(b.h, lines.length * lh + 130 * s);
@@ -669,7 +778,15 @@ function code(p: SceneProps, v: Extract<Visual, { type: 'code' }>): void {
   const shown = Math.floor(total * clamp01(p.t / typeEnd));
   let budget = shown;
   ctx.font = font(px, 500, 'mono');
-  const colors = { kw: p.theme.code.keyword, str: p.theme.code.string, num: p.theme.code.number, com: p.theme.code.comment, fn: p.theme.code.fn, type: p.theme.code.type, ink: p.theme.code.ink };
+  const colors = {
+    kw: p.theme.code.keyword,
+    str: p.theme.code.string,
+    num: p.theme.code.number,
+    com: p.theme.code.comment,
+    fn: p.theme.code.fn,
+    type: p.theme.code.type,
+    ink: p.theme.code.ink,
+  };
   lines.forEach((line, i) => {
     const ly = y + 100 * s + i * lh;
     const focused = v.focus.includes(i + 1);
@@ -772,7 +889,7 @@ function tree(p: SceneProps, v: Extract<Visual, { type: 'tree' }>): void {
     ctx.restore();
     top += tf.px * 1.6;
   }
-  const lh = Math.min(64 * s, (b.y + b.h - top) / v.lines.length);
+  const lh = Math.min(96 * s, (b.y + b.h - top) / v.lines.length);
   const px = lh * 0.62;
   v.lines.forEach((line, i) => {
     const e = easeOutCubic(prog(p.t, 0.1 + i * 0.08, 0.35));
@@ -786,9 +903,18 @@ function tree(p: SceneProps, v: Extract<Visual, { type: 'tree' }>): void {
     ctx.save();
     ctx.globalAlpha = e;
     if (focused) {
-      const fe = easeInOutCubic(prog(p.t, spokenAt(p.words, name.replace(/\/$/, '').split(/[./]/)[0] ?? '', 0.8 + i * 0.1), 0.4));
+      const fe = easeInOutCubic(
+        prog(p.t, spokenAt(p.words, name.replace(/\/$/, '').split(/[./]/)[0] ?? '', 0.8 + i * 0.1), 0.4),
+      );
       ctx.fillStyle = withAlpha(p.theme.tone.accent, 0.2 * fe);
-      roundRect(ctx, x - 16 * s, y - lh * 0.72, Math.max(200 * s, name.length * px * 0.65 + 80 * s), lh * 0.95, 12 * s);
+      roundRect(
+        ctx,
+        x - 16 * s,
+        y - lh * 0.72,
+        Math.max(200 * s, name.length * px * 0.65 + 80 * s),
+        lh * 0.95,
+        12 * s,
+      );
       ctx.fill();
     }
     ctx.fillStyle = isDir ? p.theme.tone.primary : p.theme.tone.secondary;
@@ -809,21 +935,39 @@ function takeaway(p: SceneProps, v: Extract<Visual, { type: 'takeaway' }>): void
   for (let i = 0; i < 3; i++) {
     const k = prog(p.t, 0.1 + i * 0.25, 1.6);
     if (k <= 0 || k >= 1) continue;
-    ctx.strokeStyle = withAlpha([p.theme.tone.accent, p.theme.tone.primary, p.theme.tone.secondary][i]!, (1 - k) * 0.5);
+    ctx.strokeStyle = withAlpha(
+      [p.theme.tone.accent, p.theme.tone.primary, p.theme.tone.secondary][i]!,
+      (1 - k) * 0.5,
+    );
     ctx.lineWidth = 6 * s;
     ctx.beginPath();
     ctx.arc(W / 2, b.y + b.h / 2, lerp(100, 700, easeOutCubic(k)) * s, 0, Math.PI * 2);
     ctx.stroke();
   }
-  pill(ctx, 'The takeaway', W / 2, b.y + 40 * s, TYPE.kicker * s, p.theme.tone.accent, p.theme.onTone.accent, clamp01(easeOutBack(prog(p.t, 0, MOTION.pop))));
-  richText(p, v.text, v.highlight, { x: b.x + b.w * 0.04, y: b.y + 90 * s, w: b.w * 0.92, h: b.h - 90 * s }, {
-    maxPx: TYPE.headline * s,
-    minPx: TYPE.body * s,
-    maxLines: 4,
-    weight: 700,
-    align: 'center',
-    enterAt: 0.15,
-  });
+  pill(
+    ctx,
+    'The takeaway',
+    W / 2,
+    b.y + 40 * s,
+    TYPE.kicker * s,
+    p.theme.tone.accent,
+    p.theme.onTone.accent,
+    clamp01(easeOutBack(prog(p.t, 0, MOTION.pop))),
+  );
+  richText(
+    p,
+    v.text,
+    v.highlight,
+    { x: b.x + b.w * 0.04, y: b.y + 90 * s, w: b.w * 0.92, h: b.h - 90 * s },
+    {
+      maxPx: TYPE.headline * s,
+      minPx: TYPE.body * s,
+      maxLines: 4,
+      weight: 700,
+      align: 'center',
+      enterAt: 0.15,
+    },
+  );
 }
 
 export function drawVisual(p: SceneProps, v: Visual): void {

@@ -14,11 +14,17 @@ function ts(t: number, sep: '.' | ','): string {
 const clean = (s: string): string => s.replace(/-->/g, '→').replace(/\r?\n/g, ' ');
 
 export function toVtt(cues: Cue[]): string {
-  return ['WEBVTT', '', ...cues.flatMap((c, i) => [`${i + 1}`, `${ts(c.start, '.')} --> ${ts(c.end, '.')}`, clean(c.text), ''])].join('\n');
+  return [
+    'WEBVTT',
+    '',
+    ...cues.flatMap((c, i) => [`${i + 1}`, `${ts(c.start, '.')} --> ${ts(c.end, '.')}`, clean(c.text), '']),
+  ].join('\n');
 }
 
 export function toSrt(cues: Cue[]): string {
-  return cues.map((c, i) => [`${i + 1}`, `${ts(c.start, ',')} --> ${ts(c.end, ',')}`, clean(c.text), ''].join('\n')).join('\n');
+  return cues
+    .map((c, i) => [`${i + 1}`, `${ts(c.start, ',')} --> ${ts(c.end, ',')}`, clean(c.text), ''].join('\n'))
+    .join('\n');
 }
 
 /** The active cue at time t, if any. */

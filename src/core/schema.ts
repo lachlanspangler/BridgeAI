@@ -77,7 +77,11 @@ export const Source = z.object({
   /** Ingestion warnings shown to the user (e.g. "page 7 had no text layer"). */
   warnings: z.array(z.string()).default([]),
   stats: z
-    .object({ words: z.number().int(), pages: z.number().int().optional(), files: z.number().int().optional() })
+    .object({
+      words: z.number().int(),
+      pages: z.number().int().optional(),
+      files: z.number().int().optional(),
+    })
     .default({ words: 0 }),
 });
 export type Source = z.infer<typeof Source>;
@@ -91,7 +95,17 @@ export const Evidence = z.object({
 });
 export type Evidence = z.infer<typeof Evidence>;
 
-export const IdeaKind = z.enum(['claim', 'method', 'result', 'number', 'definition', 'problem', 'architecture', 'code', 'figure']);
+export const IdeaKind = z.enum([
+  'claim',
+  'method',
+  'result',
+  'number',
+  'definition',
+  'problem',
+  'architecture',
+  'code',
+  'figure',
+]);
 export type IdeaKind = z.infer<typeof IdeaKind>;
 
 export const Idea = z.object({
@@ -128,7 +142,12 @@ export type Tone = z.infer<typeof Tone>;
 
 /** The visual library: every beat picks exactly one; the renderer can draw all of them. */
 export const Visual = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('title'), title: z.string(), subtitle: z.string().optional(), kicker: z.string().optional() }),
+  z.object({
+    type: z.literal('title'),
+    title: z.string(),
+    subtitle: z.string().optional(),
+    kicker: z.string().optional(),
+  }),
   z.object({
     type: z.literal('statement'),
     /** Short on-screen line (≤ 10 words). */
@@ -155,12 +174,18 @@ export const Visual = z.discriminatedUnion('type', [
     type: z.literal('bars'),
     title: z.string(),
     unit: z.string().optional(),
-    bars: z.array(z.object({ label: z.string(), value: z.number(), highlight: z.boolean().default(false) })).min(2).max(8),
+    bars: z
+      .array(z.object({ label: z.string(), value: z.number(), highlight: z.boolean().default(false) }))
+      .min(2)
+      .max(8),
   }),
   z.object({
     type: z.literal('flow'),
     title: z.string().optional(),
-    nodes: z.array(z.object({ id: z.string(), label: z.string(), tone: Tone.default('primary') })).min(2).max(7),
+    nodes: z
+      .array(z.object({ id: z.string(), label: z.string(), tone: Tone.default('primary') }))
+      .min(2)
+      .max(7),
     edges: z.array(z.object({ from: z.string(), to: z.string(), label: z.string().optional() })).default([]),
   }),
   z.object({
@@ -250,7 +275,9 @@ export const FaithReport = z.object({
   verdicts: z.array(ClaimVerdict),
   unsupported: z.number().int(),
   /** Beats removed or rewritten by the gate. */
-  actions: z.array(z.object({ beatId: z.string(), action: z.enum(['dropped', 'rewritten', 'kept']), reason: z.string() })),
+  actions: z.array(
+    z.object({ beatId: z.string(), action: z.enum(['dropped', 'rewritten', 'kept']), reason: z.string() }),
+  ),
 });
 export type FaithReport = z.infer<typeof FaithReport>;
 

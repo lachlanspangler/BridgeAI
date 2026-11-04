@@ -38,7 +38,10 @@ export async function loadAssets(jobDir: string, assets: Asset[]): Promise<Map<s
   return out;
 }
 
-export async function renderVideo(tl: Timeline, opts: RenderOptions): Promise<{ frames: number; ms: number }> {
+export async function renderVideo(
+  tl: Timeline,
+  opts: RenderOptions,
+): Promise<{ frames: number; ms: number }> {
   ensureFonts();
   const ff = requireFfmpeg();
   const assets = await loadAssets(opts.jobDir, opts.assets);
@@ -125,7 +128,13 @@ export async function renderVideo(tl: Timeline, opts: RenderOptions): Promise<{ 
 }
 
 /** Render one still (PNG bytes) at time t, for golden tests, thumbnails and previews. */
-export async function renderStill(tl: Timeline, t: number, jobDir: string, assets: Asset[], opts: FrameOptions): Promise<Buffer> {
+export async function renderStill(
+  tl: Timeline,
+  t: number,
+  jobDir: string,
+  assets: Asset[],
+  opts: FrameOptions,
+): Promise<Buffer> {
   ensureFonts();
   const imgs = await loadAssets(jobDir, assets);
   const canvas = createCanvas(tl.width, tl.height);

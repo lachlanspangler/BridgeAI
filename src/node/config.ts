@@ -6,7 +6,9 @@ import { ensureDir, paths } from './paths.ts';
 export const Config = z.object({
   llm: z.object({ path: z.string().optional(), id: z.string().optional() }).default({}),
   /** Preferred provider per stage when the user picks "auto" and has keys: e.g. { script: "anthropic" }. */
-  defaults: z.object({ llm: z.string().default('auto'), tts: z.string().default('auto') }).default({ llm: 'auto', tts: 'auto' }),
+  defaults: z
+    .object({ llm: z.string().default('auto'), tts: z.string().default('auto') })
+    .default({ llm: 'auto', tts: 'auto' }),
   models: z.record(z.string(), z.string()).default({}),
 });
 export type Config = z.infer<typeof Config>;

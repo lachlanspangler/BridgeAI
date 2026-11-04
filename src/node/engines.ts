@@ -5,7 +5,17 @@
 import type { Budget } from '../core/budget.ts';
 import { analyzeExtractive, candidates, scoreCandidates } from '../core/analyze/extractive.ts';
 import { analysisSchema, judgeSchema, scriptSchema, tightenSchema } from '../core/llm/schemas.ts';
-import { analyzePrompt, bookendPrompt, judgePrompt, scriptPrompt, sectionPrompt, selectSegments, tightenPrompt, tokensOf, type ScriptContext } from '../core/llm/prompts.ts';
+import {
+  analyzePrompt,
+  bookendPrompt,
+  judgePrompt,
+  scriptPrompt,
+  sectionPrompt,
+  selectSegments,
+  tightenPrompt,
+  tokensOf,
+  type ScriptContext,
+} from '../core/llm/prompts.ts';
 import { mergeAnalyses, parseAnalysis, parseScript } from '../core/llm/parse.ts';
 import type { Analysis, Beat, RenderSettings, Script, Source } from '../core/schema.ts';
 import { composeExtractive } from '../core/script/extractive.ts';
@@ -71,13 +81,28 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
       let parts: Analysis[];
       if (total <= CHUNK_TOKENS * 1.3 || budget.seconds <= 75) {
         // one call over the most relevant segments
-        const segs = total <= CHUNK_TOKENS * 1.3 ? src.segments.filter((s) => s.kind !== 'figure') : selectSegments(src, CHUNK_TOKENS * 1.2);
+        const segs =
+          total <= CHUNK_TOKENS * 1.3
+            ? src.segments.filter((s) => s.kind !== 'figure')
+            : selectSegments(src, CHUNK_TOKENS * 1.2);
         const p = analyzePrompt(src, segs, maxIdeas);
         const raw = await timed('analyze', `1 call, ${segs.length} segments`, () =>
-          llm.json({ ...p, schema: analysisSchema(segs.map((s) => s.id), src.assets.filter((a) => a.kind !== 'page').map((a) => a.id), maxIdeas), name: 'analysis', maxTokens: 1800, temperature: 0.2, signal }),
+          llm.json({
+            ...p,
+            schema: analysisSchema(
+              segs.map((s) => s.id),
+              src.assets.filter((a) => a.kind !== 'page').map((a) => a.id),
+              maxIdeas,
+            ),
+            name: 'analysis',
+            maxTokens: 1800,
+            temperature: 0.2,
+            signal,
+          }),
         );
         const { analysis, dropped } = parseAnalysis(raw, src, engine);
-        if (dropped.length) log({ stage: 'analyze', message: `dropped ${dropped.length} ideas with unverifiable evidence` });
+        if (dropped.length)
+          log({ stage: 'analyze', message: `dropped ${dropped.length} ideas with unverifiable evidence` });
         parts = [analysis];
       } else {
         const chunks = chunkSegments(src);
@@ -85,7 +110,18 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
         for (const [k, segs] of chunks.entries()) {
           const p = analyzePrompt(src, segs, 5);
           const raw = await timed('analyze', `chunk ${k + 1}/${chunks.length}`, () =>
-            llm.json({ ...p, schema: analysisSchema(segs.map((s) => s.id), src.assets.filter((a) => a.kind !== 'page').map((a) => a.id), 5), name: 'analysis', maxTokens: 1400, temperature: 0.2, signal }),
+            llm.json({
+              ...p,
+              schema: analysisSchema(
+                segs.map((s) => s.id),
+                src.assets.filter((a) => a.kind !== 'page').map((a) => a.id),
+                5,
+              ),
+              name: 'analysis',
+              maxTokens: 1400,
+              temperature: 0.2,
+              signal,
+            }),
           );
           parts.push(parseAnalysis(raw, src, engine).analysis);
         }
@@ -95,18 +131,34 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
       return blend(merged, src);
     } catch (e) {
       if (signal?.aborted) throw e;
-      log({ stage: 'analyze', message: `model failed (${(e as Error).message}); using the extractive floor` });
+      log({
+        stage: 'analyze',
+        message: `model failed (${(e as Error).message}); using the extractive floor`,
+      });
       return analyzeExtractive(src);
     }
   };
 
-  const script = async (src: Source, analysis: Analysis, budget: Budget, settings: RenderSettings, signal?: AbortSignal): Promise<Script> => {
+  const script = async (
+    src: Source,
+    analysis: Analysis,
+    budget: Budget,
+    settings: RenderSettings,
+    signal?: AbortSignal,
+  ): Promise<Script> => {
     const ctx: ScriptContext = { budget, level: settings.level, analysis };
     try {
       if (budget.seconds <= 90 || analysis.ideas.length < 2) {
         const p = scriptPrompt(src, ctx);
         const raw = await timed('script', `1 call, ${budget.beats.max} beats max`, () =>
-          llm.json({ ...p, schema: scriptSchema(src, budget.beats.max + 1), name: 'script', maxTokens: 300 + budget.beats.max * 170, temperature: 0.4, signal }),
+          llm.json({
+            ...p,
+            schema: scriptSchema(src, budget.beats.max + 1),
+            name: 'script',
+            maxTokens: 300 + budget.beats.max * 170,
+            temperature: 0.4,
+            signal,
+          }),
         );
         return tagIdeas(parseScript(raw, src, budget.seconds, engine), analysis);
       }
@@ -121,28 +173,61 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
       const covered = ideas.map((i) => i.statement.replace(/\.$/, ''));
       const raw0 = await timed('script', 'opening', () => {
         const p = bookendPrompt(src, ctx, 'opening', covered);
-        return llm.json({ ...p, schema: scriptSchema(src, opening), name: 'opening', maxTokens: 260 * opening + 200, temperature: 0.5, signal });
+        return llm.json({
+          ...p,
+          schema: scriptSchema(src, opening),
+          name: 'opening',
+          maxTokens: 260 * opening + 200,
+          temperature: 0.5,
+          signal,
+        });
       });
-      const beats: unknown[] = [...(((raw0 as { beats?: unknown[] }).beats ?? []).slice(0, opening))];
+      const beats: unknown[] = [...((raw0 as { beats?: unknown[] }).beats ?? []).slice(0, opening)];
       let previous = '';
       for (const [k, n] of alloc.entries()) {
         const p = sectionPrompt(src, ctx, k, n, previous);
         const raw = await timed('script', `section ${k + 1}/${alloc.length} (${n} beats)`, () =>
-          llm.json({ ...p, schema: scriptSchema(src, n), name: 'section', maxTokens: 200 + n * 190, temperature: 0.4, signal }),
+          llm.json({
+            ...p,
+            schema: scriptSchema(src, n),
+            name: 'section',
+            maxTokens: 200 + n * 190,
+            temperature: 0.4,
+            signal,
+          }),
         );
-        const bs = ((raw as { beats?: { narration?: string; role?: string }[] }).beats ?? []).slice(0, n).map((b) => ({ ...b, role: b.role === 'hook' || b.role === 'takeaway' ? 'idea' : b.role, _idea: ideas[k]!.id }));
+        const bs = ((raw as { beats?: { narration?: string; role?: string }[] }).beats ?? [])
+          .slice(0, n)
+          .map((b) => ({
+            ...b,
+            role: b.role === 'hook' || b.role === 'takeaway' ? 'idea' : b.role,
+            _idea: ideas[k]!.id,
+          }));
         beats.push(...bs);
         previous = bs[bs.length - 1]?.narration ?? previous;
       }
       const rawT = await timed('script', 'takeaway', () => {
         const p = bookendPrompt(src, ctx, 'takeaway', covered);
-        return llm.json({ ...p, schema: scriptSchema(src, 1), name: 'takeaway', maxTokens: 400, temperature: 0.4, signal });
+        return llm.json({
+          ...p,
+          schema: scriptSchema(src, 1),
+          name: 'takeaway',
+          maxTokens: 400,
+          temperature: 0.4,
+          signal,
+        });
       });
       beats.push(...((rawT as { beats?: unknown[] }).beats ?? []).slice(0, 1));
-      return tagIdeas(parseScript({ title: (raw0 as { title?: string }).title, beats }, src, budget.seconds, engine), analysis);
+      return tagIdeas(
+        parseScript({ title: (raw0 as { title?: string }).title, beats }, src, budget.seconds, engine),
+        analysis,
+      );
     } catch (e) {
       if (signal?.aborted) throw e;
-      log({ stage: 'script', message: `model failed (${(e as Error).message}); using the extractive writer` });
+      log({
+        stage: 'script',
+        message: `model failed (${(e as Error).message}); using the extractive writer`,
+      });
       return composeExtractive(src, analysis, budget);
     }
   };
@@ -150,7 +235,14 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
   const judge = async (claim: string, support: string, signal?: AbortSignal): Promise<boolean> => {
     try {
       const p = judgePrompt(claim, support);
-      const r = await llm.json<{ verdict: string }>({ ...p, schema: judgeSchema(), name: 'judge', maxTokens: 120, temperature: 0, signal });
+      const r = await llm.json<{ verdict: string }>({
+        ...p,
+        schema: judgeSchema(),
+        name: 'judge',
+        maxTokens: 120,
+        temperature: 0,
+        signal,
+      });
       return r.verdict === 'supported';
     } catch {
       return false; // fail closed: unsupported
@@ -160,7 +252,14 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
   const tighten = async (beat: Beat, maxWords: number, signal?: AbortSignal): Promise<string> => {
     try {
       const p = tightenPrompt(beat.narration, maxWords, beat.claims.map((c) => c.text).join(' '));
-      const r = await llm.json<{ narration: string }>({ ...p, schema: tightenSchema(), name: 'tighten', maxTokens: 200, temperature: 0.2, signal });
+      const r = await llm.json<{ narration: string }>({
+        ...p,
+        schema: tightenSchema(),
+        name: 'tighten',
+        maxTokens: 200,
+        temperature: 0.2,
+        signal,
+      });
       const out = r.narration.trim();
       // accept only if shorter and it adds no number the original didn't have
       const orig = new Set(numbers(beat.narration));
@@ -168,7 +267,13 @@ export function aiEngines(llm: LlmProvider, tts: TtsEngine, log: AiLog = () => {
     } catch {
       /* fall through */
     }
-    return beat.narration.split(/\s+/).slice(0, maxWords).join(' ').replace(/[,;:]$/, '') + '.';
+    return (
+      beat.narration
+        .split(/\s+/)
+        .slice(0, maxWords)
+        .join(' ')
+        .replace(/[,;:]$/, '') + '.'
+    );
   };
 
   return { analyze, script, judge, tighten, tts };

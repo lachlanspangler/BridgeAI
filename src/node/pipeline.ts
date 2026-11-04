@@ -11,14 +11,23 @@ import { toSrt, toVtt } from '../core/captions/captions.ts';
 import { checkScript } from '../core/faith/check.ts';
 import { gate } from '../core/faith/gate.ts';
 import { encodeWav, mix, speechBounds } from '../core/audio/mix.ts';
-import type { Analysis, Beat, FaithReport, RenderSettings, Script, Source, Timeline } from '../core/schema.ts';
+import type {
+  Analysis,
+  Beat,
+  FaithReport,
+  RenderSettings,
+  Script,
+  Source,
+  Timeline,
+} from '../core/schema.ts';
 import { composeExtractive, trimSentence } from '../core/script/extractive.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
 import { renderVideo } from './render/render.ts';
 import type { Clip, TtsEngine } from './tts/types.ts';
 import { buildSourceMap, scriptMarkdown } from './outputs.ts';
 
-export type Stage = 'ingest' | 'analyze' | 'script' | 'faith' | 'voice' | 'timeline' | 'audio' | 'render' | 'done';
+export type Stage =
+  'ingest' | 'analyze' | 'script' | 'faith' | 'voice' | 'timeline' | 'audio' | 'render' | 'done';
 
 export interface Progress {
   stage: Stage;
@@ -31,7 +40,13 @@ export interface Engines {
   /** Source → ranked ideas. Defaults to the extractive floor. */
   analyze?: (src: Source, budget: Budget, signal?: AbortSignal) => Promise<Analysis>;
   /** Ideas → beat script. Defaults to the extractive writer. */
-  script?: (src: Source, analysis: Analysis, budget: Budget, settings: RenderSettings, signal?: AbortSignal) => Promise<Script>;
+  script?: (
+    src: Source,
+    analysis: Analysis,
+    budget: Budget,
+    settings: RenderSettings,
+    signal?: AbortSignal,
+  ) => Promise<Script>;
   /** Entailment judge for paraphrased claims: true if `support` entails `claim`. */
   judge?: (claim: string, support: string, signal?: AbortSignal) => Promise<boolean>;
   /** Shorten a beat's narration to at most n words without adding facts (LLM); default trims extractively. */
@@ -51,7 +66,8 @@ export interface RunResult {
   engines: { analyze: string; script: string; tts: string };
 }
 
-const write = (dir: string, name: string, data: unknown) => writeFileSync(join(dir, name), typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+const write = (dir: string, name: string, data: unknown) =>
+  writeFileSync(join(dir, name), typeof data === 'string' ? data : JSON.stringify(data, null, 2));
 
 export async function runPipeline(
   src: Source,
@@ -78,7 +94,9 @@ export async function runPipeline(
 
   // 1. analyze
   onProgress({ stage: 'analyze', progress: 0, message: 'Finding the key ideas' });
-  let analysis = await lap('analyze', async () => (engines.analyze ? engines.analyze(src, budget, signal) : analyzeExtractive(src)));
+  let analysis = await lap('analyze', async () =>
+    engines.analyze ? engines.analyze(src, budget, signal) : analyzeExtractive(src),
+  );
   if (settings.drop.length || settings.pin.length) {
     const pinned = analysis.ideas.filter((i) => settings.pin.includes(i.id));
     const rest = analysis.ideas.filter((i) => !settings.pin.includes(i.id) && !settings.drop.includes(i.id));
@@ -89,7 +107,9 @@ export async function runPipeline(
   // 2. script
   onProgress({ stage: 'script', progress: 0, message: `Writing a ${settings.seconds}-second script` });
   let script = await lap('script', async () =>
-    engines.script ? engines.script(src, analysis, budget, settings, signal) : composeExtractive(src, analysis, budget),
+    engines.script
+      ? engines.script(src, analysis, budget, settings, signal)
+      : composeExtractive(src, analysis, budget),
   );
 
   // 3. faithfulness gate
@@ -98,7 +118,8 @@ export async function runPipeline(
     const checks = checkScript(script, src);
     const judged = new Map<string, boolean>();
     if (engines.judge) {
-      for (const c of checks) for (const j of c.needsJudge) judged.set(j.claim, await engines.judge(j.claim, j.support, signal));
+      for (const c of checks)
+        for (const j of c.needsJudge) judged.set(j.claim, await engines.judge(j.claim, j.support, signal));
     }
     const top = analysis.ideas[0];
     const fallback: Beat | undefined = top
@@ -106,8 +127,18 @@ export async function runPipeline(
           id: 'bx',
           role: 'takeaway',
           narration: trimSentence(top.statement, 14),
-          visual: { type: 'takeaway', text: trimSentence(top.statement, budget.maxScreenWords).replace(/\.$/, ''), highlight: top.terms.slice(0, 1) },
-          claims: [{ text: trimSentence(top.statement, 14), support: top.evidence.map((e) => e.segmentId), kind: 'fact' }],
+          visual: {
+            type: 'takeaway',
+            text: trimSentence(top.statement, budget.maxScreenWords).replace(/\.$/, ''),
+            highlight: top.terms.slice(0, 1),
+          },
+          claims: [
+            {
+              text: trimSentence(top.statement, 14),
+              support: top.evidence.map((e) => e.segmentId),
+              kind: 'fact',
+            },
+          ],
           ideas: [top.id],
           keywords: [],
         }
@@ -128,14 +159,23 @@ export async function runPipeline(
   const voiceClips = (): VoiceClip[] =>
     clips.map((c) => {
       const b = speechBounds(c.samples, c.sampleRate);
-      return { duration: c.samples.length / c.sampleRate, speechStart: b.start, speechEnd: b.end, words: c.words };
+      return {
+        duration: c.samples.length / c.sampleRate,
+        speechStart: b.start,
+        speechEnd: b.end,
+        words: c.words,
+      };
     });
   const tlOpts = { fps: settings.fps, width: settings.width, height: settings.height, seed: settings.seed };
   let timeline!: Timeline;
   await lap('voice', async () => {
     for (let i = 0; i < script.beats.length; i++) {
       if (signal?.aborted) throw new Error('cancelled');
-      onProgress({ stage: 'voice', progress: i / script.beats.length, message: `Recording the voiceover (${i + 1}/${script.beats.length})` });
+      onProgress({
+        stage: 'voice',
+        progress: i / script.beats.length,
+        message: `Recording the voiceover (${i + 1}/${script.beats.length})`,
+      });
       await synth(i);
     }
     const target = settings.seconds;
@@ -146,10 +186,15 @@ export async function runPipeline(
       if (d > target * 1.08) {
         const over = d / target;
         // too long: first drop the least important idea beat (never hook/takeaway), then speed up a little
-        const droppable = script.beats.map((b, i) => ({ b, i })).filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway');
+        const droppable = script.beats
+          .map((b, i) => ({ b, i }))
+          .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway');
         if (over > 1.12 && droppable.length > 1) {
           const victim = droppable[droppable.length - 1]!;
-          script = { ...script, beats: script.beats.filter((_, i) => i !== victim.i).map((b, i) => ({ ...b, id: `b${i + 1}` })) };
+          script = {
+            ...script,
+            beats: script.beats.filter((_, i) => i !== victim.i).map((b, i) => ({ ...b, id: `b${i + 1}` })),
+          };
           clips.splice(victim.i, 1);
           continue;
         }
@@ -193,7 +238,14 @@ export async function runPipeline(
   const audioWav = join(tmp, 'mix.wav');
   const audioStats = await lap('audio', async () => {
     const rate = clips[0]?.sampleRate ?? 24000;
-    const m = mix({ timeline, voice: clips.map((c) => c.samples), voiceRate: rate, pace: budget.pace, music: settings.music, effects: settings.sfx });
+    const m = mix({
+      timeline,
+      voice: clips.map((c) => c.samples),
+      voiceRate: rate,
+      pace: budget.pace,
+      music: settings.music,
+      effects: settings.sfx,
+    });
     writeFileSync(audioWav, encodeWav([m.master.l, m.master.r], m.master.sampleRate));
     return { lufs: Math.round(m.lufs * 10) / 10, peakDb: Math.round(m.peakDb * 10) / 10 };
   });
@@ -204,15 +256,26 @@ export async function runPipeline(
     await renderVideo(timeline, {
       out: video,
       audioWav,
-      srt: settings.captions === 'track' || settings.captions === 'both' ? join(jobDir, 'captions.srt') : undefined,
+      srt:
+        settings.captions === 'track' || settings.captions === 'both'
+          ? join(jobDir, 'captions.srt')
+          : undefined,
       burnCaptions: settings.captions === 'burned' || settings.captions === 'both',
       jobDir,
       assets: src.assets,
       origin: src.origin,
       engine: analysis.engine,
-      kicker: src.kind === 'pdf' ? 'Paper' : src.kind === 'project' ? 'Project' : src.kind === 'images' ? 'Images' : 'Explained',
+      kicker:
+        src.kind === 'pdf'
+          ? 'Paper'
+          : src.kind === 'project'
+            ? 'Project'
+            : src.kind === 'images'
+              ? 'Images'
+              : 'Explained',
       signal,
-      onProgress: (f, total) => onProgress({ stage: 'render', progress: f / total, message: `Drawing frames (${f}/${total})` }),
+      onProgress: (f, total) =>
+        onProgress({ stage: 'render', progress: f / total, message: `Drawing frames (${f}/${total})` }),
     });
   });
   // temp renders never linger (disk rule)
@@ -224,11 +287,23 @@ export async function runPipeline(
     script,
     analysis,
     faith,
-    durations: { target: settings.seconds, actual: timeline.duration, withinTolerance: Math.abs(timeline.duration - settings.seconds) <= settings.seconds * 0.1 },
+    durations: {
+      target: settings.seconds,
+      actual: timeline.duration,
+      withinTolerance: Math.abs(timeline.duration - settings.seconds) <= settings.seconds * 0.1,
+    },
     timings,
     engines: { analyze: analysis.engine, script: script.engine, tts: engines.tts.id },
   };
-  write(jobDir, 'result.json', { ...result, timeline: undefined, script: undefined, analysis: undefined, faith: undefined, audio: audioStats, voiceSpeed: speed });
+  write(jobDir, 'result.json', {
+    ...result,
+    timeline: undefined,
+    script: undefined,
+    analysis: undefined,
+    faith: undefined,
+    audio: audioStats,
+    voiceSpeed: speed,
+  });
   onProgress({ stage: 'done', progress: 1, message: 'Done' });
   return result;
 }

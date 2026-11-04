@@ -8,7 +8,22 @@ import type { Timeline, TimedBeat } from '../schema.ts';
 import { cueAt } from '../captions/captions.ts';
 import { NIGHT, SAFE, TYPE, withAlpha, type Theme } from '../design/tokens.ts';
 import { absoluteWords } from '../timeline/timeline.ts';
-import { background, clamp01, easeInCubic, easeInOutCubic, easeOutBack, easeOutCubic, fitFont, font, lerp, pill, prog, roundRect, type Ctx, type Img } from './kit.ts';
+import {
+  background,
+  clamp01,
+  easeInCubic,
+  easeInOutCubic,
+  easeOutBack,
+  easeOutCubic,
+  fitFont,
+  font,
+  lerp,
+  pill,
+  prog,
+  roundRect,
+  type Ctx,
+  type Img,
+} from './kit.ts';
 import { drawVisual, type SceneProps } from './library.ts';
 
 export interface FrameOptions {
@@ -23,11 +38,23 @@ export interface FrameOptions {
 }
 
 const EXIT = 0.28;
+
+/** Tests set this so scene bugs fail loudly instead of being skipped. */
+export let strictScenes = false;
+export const setStrictScenes = (v: boolean): void => {
+  strictScenes = v;
+};
 const WIPE = 0.42;
 
 const BEAT_TONES = ['primary', 'accent', 'secondary', 'positive'] as const;
 
-export function drawFrame(ctx: Ctx, tl: Timeline, t: number, assets: Map<string, Img>, opts: FrameOptions): void {
+export function drawFrame(
+  ctx: Ctx,
+  tl: Timeline,
+  t: number,
+  assets: Map<string, Img>,
+  opts: FrameOptions,
+): void {
   const theme = opts.theme ?? NIGHT;
   const W = tl.width;
   const H = tl.height;
@@ -46,7 +73,8 @@ export function drawFrame(ctx: Ctx, tl: Timeline, t: number, assets: Map<string,
   // transition wipe across each beat boundary
   for (let i = 1; i < tl.beats.length; i++) {
     const tb = tl.beats[i]!.start;
-    if (Math.abs(t - tb) < WIPE / 2) wipe(ctx, W, H, (t - tb + WIPE / 2) / WIPE, theme.tone[BEAT_TONES[i % BEAT_TONES.length]!]);
+    if (Math.abs(t - tb) < WIPE / 2)
+      wipe(ctx, W, H, (t - tb + WIPE / 2) / WIPE, theme.tone[BEAT_TONES[i % BEAT_TONES.length]!]);
   }
   if (t >= last.end) endCard(ctx, tl, t - last.end, theme, opts);
   else chrome(ctx, tl, t, theme);
@@ -55,7 +83,15 @@ export function drawFrame(ctx: Ctx, tl: Timeline, t: number, assets: Map<string,
   ctx.restore();
 }
 
-function drawBeat(ctx: Ctx, tl: Timeline, b: TimedBeat, t: number, assets: Map<string, Img>, theme: Theme, exitP: number): void {
+function drawBeat(
+  ctx: Ctx,
+  tl: Timeline,
+  b: TimedBeat,
+  t: number,
+  assets: Map<string, Img>,
+  theme: Theme,
+  exitP: number,
+): void {
   const local = t - b.start;
   const p: SceneProps = {
     ctx,
@@ -75,7 +111,12 @@ function drawBeat(ctx: Ctx, tl: Timeline, b: TimedBeat, t: number, assets: Map<s
     ctx.globalAlpha = 1 - e;
     ctx.translate(-e * tl.width * 0.04, 0);
   }
-  drawVisual(p, b.beat.visual);
+  try {
+    drawVisual(p, b.beat.visual);
+  } catch (e) {
+    // a broken scene must never kill a render: skip the layer (tests run strict and rethrow)
+    if (strictScenes) throw e;
+  }
   ctx.restore();
 }
 
@@ -161,7 +202,11 @@ function captions(ctx: Ctx, tl: Timeline, t: number, theme: Theme, s: number): v
     const wt = said[i];
     const active = wt ? t >= wt.start && t < wt.end + 0.05 : false;
     const past = wt ? t >= wt.end : false;
-    ctx.fillStyle = active ? theme.caption.active : past ? theme.caption.ink : withAlpha(theme.caption.ink, 0.72);
+    ctx.fillStyle = active
+      ? theme.caption.active
+      : past
+        ? theme.caption.ink
+        : withAlpha(theme.caption.ink, 0.72);
     ctx.fillText(w, x, y + h / 2 + px * 0.36);
     x += widths[i]! + space;
   });
@@ -174,7 +219,16 @@ function sourceTag(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameO
   if (k <= 0) return;
   const s = tl.height / 1080;
   const label = `${opts.kicker ?? 'Explained'} · ${tl.title}`.slice(0, 64);
-  pill(ctx, label, tl.width / 2, tl.height * SAFE.top + 4 * s, TYPE.kicker * 0.85 * s, theme.tone.primary, theme.onTone.primary, easeOutCubic(k));
+  pill(
+    ctx,
+    label,
+    tl.width / 2,
+    tl.height * SAFE.top + 4 * s,
+    TYPE.kicker * 0.85 * s,
+    theme.tone.primary,
+    theme.onTone.primary,
+    easeOutCubic(k),
+  );
 }
 
 function endCard(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameOptions): void {
@@ -190,7 +244,16 @@ function endCard(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameOpt
   ctx.textAlign = 'center';
   f.lines.forEach((l, i) => ctx.fillText(l, W / 2, H * 0.4 + i * f.px * 1.15));
   const pe = easeOutBack(prog(t, 0.15, 0.4));
-  pill(ctx, 'Made with Bridge', W / 2, H * 0.4 - f.px * 1.1, TYPE.kicker * s, theme.tone.accent, theme.onTone.accent, clamp01(pe));
+  pill(
+    ctx,
+    'Made with Bridge',
+    W / 2,
+    H * 0.4 - f.px * 1.1,
+    TYPE.kicker * s,
+    theme.tone.accent,
+    theme.onTone.accent,
+    clamp01(pe),
+  );
   ctx.font = font(TYPE.small * 0.85 * s, 600, 'sans');
   ctx.fillStyle = theme.muted;
   const below = H * 0.4 + f.lines.length * f.px * 1.15 + 40 * s;

@@ -71,7 +71,11 @@ export function decay(n: number, sr: number, tau: number, attack = 0.002): Float
 }
 
 /** One-pole low-pass, in place. cutoff may vary per sample via a function. */
-export function lowpass(sig: Float32Array, sr: number, cutoff: number | ((i: number) => number)): Float32Array {
+export function lowpass(
+  sig: Float32Array,
+  sr: number,
+  cutoff: number | ((i: number) => number),
+): Float32Array {
   let y = 0;
   for (let i = 0; i < sig.length; i++) {
     const fc = typeof cutoff === 'number' ? cutoff : cutoff(i);
@@ -111,7 +115,13 @@ export function bandpass(sig: Float32Array, sr: number, fc: (i: number) => numbe
 }
 
 /** Oscillator with phase accumulation (handles pitch sweeps). shape: sine | tri | saw | square. */
-export function osc(n: number, sr: number, hz: number | ((i: number) => number), shape: 'sine' | 'tri' | 'saw' | 'square' = 'sine', phase0 = 0): Float32Array {
+export function osc(
+  n: number,
+  sr: number,
+  hz: number | ((i: number) => number),
+  shape: 'sine' | 'tri' | 'saw' | 'square' = 'sine',
+  phase0 = 0,
+): Float32Array {
   const out = new Float32Array(n);
   let ph = phase0;
   for (let i = 0; i < n; i++) {

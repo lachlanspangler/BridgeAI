@@ -19,7 +19,12 @@ const VOICES: Voice[] = [
   { id: 'bm_george', label: 'George (UK)', gender: 'male', accent: 'UK' },
 ];
 
-type KokoroLike = { generate(text: string, o: { voice: string; speed: number }): Promise<{ audio: Float32Array; sampling_rate: number }> };
+type KokoroLike = {
+  generate(
+    text: string,
+    o: { voice: string; speed: number },
+  ): Promise<{ audio: Float32Array; sampling_rate: number }>;
+};
 
 /** Is the model already on disk (so using it costs no download)? */
 export function kokoroDownloaded(): boolean {
@@ -64,7 +69,10 @@ export class KokoroTts implements TtsEngine {
       tf.env.cacheDir = paths.hf();
       if (!this.allowDownload) tf.env.allowRemoteModels = false;
       const { KokoroTTS } = await import('kokoro-js');
-      return (await KokoroTTS.from_pretrained(KOKORO_REPO, { dtype: KOKORO_DTYPE, device: 'cpu' })) as unknown as KokoroLike;
+      return (await KokoroTTS.from_pretrained(KOKORO_REPO, {
+        dtype: KOKORO_DTYPE,
+        device: 'cpu',
+      })) as unknown as KokoroLike;
     })();
     return this.model;
   }

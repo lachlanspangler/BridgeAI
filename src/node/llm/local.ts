@@ -29,7 +29,10 @@ export class LocalLlm implements LlmProvider {
     this.state ??= (async () => {
       const { getLlama } = await import('node-llama-cpp');
       const llama = await getLlama();
-      const model = await llama.loadModel({ modelPath: this.opts.modelPath, gpuLayers: this.opts.gpuLayers ?? 'auto' });
+      const model = await llama.loadModel({
+        modelPath: this.opts.modelPath,
+        gpuLayers: this.opts.gpuLayers ?? 'auto',
+      });
       const ctx = await model.createContext({ contextSize: this.opts.contextSize ?? 12288 });
       return { llama, model, ctx };
     })();
@@ -47,7 +50,14 @@ export class LocalLlm implements LlmProvider {
         const session = new LlamaChatSession({
           contextSequence: seq,
           systemPrompt: req.system,
-          ...(isQwen ? { chatWrapper: new QwenChatWrapper({ thoughts: 'discourage', variation: /qwen3\.5/i.test(this.model) ? '3.5' : '3' }) } : {}),
+          ...(isQwen
+            ? {
+                chatWrapper: new QwenChatWrapper({
+                  thoughts: 'discourage',
+                  variation: /qwen3\.5/i.test(this.model) ? '3.5' : '3',
+                }),
+              }
+            : {}),
         });
         const grammar = await llama.createGrammarForJsonSchema(req.schema as never);
         const out = await session.prompt(req.user, {

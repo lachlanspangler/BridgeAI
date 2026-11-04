@@ -1,0 +1,60 @@
+import { describe, expect, it } from 'vitest';
+import { analyzeExtractive, textRank } from '../../src/core/analyze/extractive.ts';
+import { budgetFor } from '../../src/core/budget.ts';
+import { checkScript } from '../../src/core/faith/check.ts';
+import { Analysis, Script } from '../../src/core/schema.ts';
+import { composeExtractive, scriptWords, trimSentence } from '../../src/core/script/extractive.ts';
+import { attention } from './fixtures.ts';
+
+describe('extractive analysis', () => {
+  const src = attention();
+  const a = Analysis.parse(analyzeExtractive(src));
+  it('ranks the core contribution first', () => {
+    expect(a.ideas[0]!.statement).toMatch(/Transformer/);
+    expect(a.ideas[0]!.importance).toBe(1);
+  });
+  it('every idea is a sentence of the source with evidence', () => {
+    for (const i of a.ideas) {
+      const seg = src.segments.find((s) => s.id === i.evidence[0]!.segmentId)!;
+      expect(seg.text.replace(/\s+/g, ' ')).toContain(i.statement.replace(/\.$/, '').slice(0, 40));
+    }
+  });
+  it('is deterministic', () => {
+    expect(analyzeExtractive(src)).toEqual(analyzeExtractive(src));
+  });
+  it('textRank scores central sentences higher', () => {
+    const r = textRank([
+      'cats chase mice in the house',
+      'cats and mice live in the house',
+      'stock markets fell today',
+    ]);
+    expect(r[2]).toBeLessThan(r[0]!);
+  });
+});
+
+describe('extractive script', () => {
+  const src = attention();
+  const a = analyzeExtractive(src);
+  for (const len of [20, 60, 180]) {
+    it(`${len}s: valid shape, within the word budget, zero unsupported claims`, () => {
+      const b = budgetFor(len);
+      const s = Script.parse(composeExtractive(src, a, b));
+      expect(s.beats[0]!.role).toBe('hook');
+      expect(s.beats[s.beats.length - 1]!.role).toBe('takeaway');
+      expect(s.beats.length).toBeLessThanOrEqual(b.beats.max);
+      expect(scriptWords(s)).toBeLessThanOrEqual(b.words * 1.1);
+      const bad = checkScript(s, src)
+        .flatMap((c) => c.verdicts)
+        .filter((v) => v.verdict === 'unsupported');
+      expect(bad).toEqual([]);
+    });
+  }
+  it('trimSentence keeps a verb and drops leading prepositional clauses', () => {
+    const t = trimSentence(
+      'On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs.',
+      16,
+    );
+    expect(t).toMatch(/establishes/);
+    expect(t.split(' ').length).toBeLessThanOrEqual(16);
+  });
+});

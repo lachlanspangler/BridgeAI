@@ -24,7 +24,9 @@ export const easeInOutCubic = (t: number): number => {
   return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
 };
 export const easeOutBack = (t: number, s = 1.7): number => {
-  const x = clamp01(t) - 1;
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const x = t - 1;
   return 1 + (s + 1) * x * x * x + s * x * x;
 };
 export const easeOutElastic = (t: number): number => {
@@ -33,7 +35,8 @@ export const easeOutElastic = (t: number): number => {
   return 2 ** (-10 * x) * Math.sin((x * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1;
 };
 /** Progress of an animation that starts at `start` and lasts `dur` (seconds), at time t. */
-export const prog = (t: number, start: number, dur: number): number => clamp01((t - start) / Math.max(1e-6, dur));
+export const prog = (t: number, start: number, dur: number): number =>
+  clamp01((t - start) / Math.max(1e-6, dur));
 
 // ───────────── fonts ─────────────
 export type Family = 'display' | 'sans' | 'mono';
@@ -78,7 +81,11 @@ export function fitFont(
   return { px: minPx, lines: wrap(ctx, text, maxWidth).slice(0, maxLines) };
 }
 
-const norm = (w: string): string => w.toLowerCase().replace(/[^a-z0-9%.-]/g, '').replace(/\.$/, '');
+const norm = (w: string): string =>
+  w
+    .toLowerCase()
+    .replace(/[^a-z0-9%.-]/g, '')
+    .replace(/\.$/, '');
 
 export interface RichWord {
   text: string;
@@ -91,7 +98,13 @@ export interface RichWord {
 }
 
 /** Lay out words with wrapping; mark the ones that match any highlight phrase (multi-word supported). */
-export function layoutWords(ctx: Ctx, text: string, maxWidth: number, lineHeight: number, highlights: string[]): RichWord[] {
+export function layoutWords(
+  ctx: Ctx,
+  text: string,
+  maxWidth: number,
+  lineHeight: number,
+  highlights: string[],
+): RichWord[] {
   const words = text.split(/\s+/).filter(Boolean);
   const hl = new Set<number>();
   const normWords = words.map(norm);
@@ -99,7 +112,11 @@ export function layoutWords(ctx: Ctx, text: string, maxWidth: number, lineHeight
     const p = phrase.split(/\s+/).map(norm).filter(Boolean);
     if (!p.length) continue;
     for (let i = 0; i + p.length <= normWords.length; i++) {
-      if (p.every((pw, k) => normWords[i + k] === pw || normWords[i + k]!.replace(/s$/, '') === pw.replace(/s$/, ''))) {
+      if (
+        p.every(
+          (pw, k) => normWords[i + k] === pw || normWords[i + k]!.replace(/s$/, '') === pw.replace(/s$/, ''),
+        )
+      ) {
         for (let k = 0; k < p.length; k++) hl.add(i + k);
       }
     }
@@ -139,7 +156,16 @@ export function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, 
   ctx.closePath();
 }
 
-export function panel(ctx: Ctx, x: number, y: number, w: number, h: number, r: number, theme: Theme, fill?: string): void {
+export function panel(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+  theme: Theme,
+  fill?: string,
+): void {
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.35)';
   ctx.shadowBlur = 40;
@@ -154,7 +180,16 @@ export function panel(ctx: Ctx, x: number, y: number, w: number, h: number, r: n
   ctx.stroke();
 }
 
-export function pill(ctx: Ctx, text: string, cx: number, cy: number, px: number, fill: string, ink: string, alpha = 1): number {
+export function pill(
+  ctx: Ctx,
+  text: string,
+  cx: number,
+  cy: number,
+  px: number,
+  fill: string,
+  ink: string,
+  alpha = 1,
+): number {
   ctx.save();
   ctx.globalAlpha *= alpha;
   ctx.font = font(px, 800, 'sans');
@@ -172,7 +207,16 @@ export function pill(ctx: Ctx, text: string, cx: number, cy: number, px: number,
   return w;
 }
 
-export function arrow(ctx: Ctx, x1: number, y1: number, x2: number, y2: number, p: number, color: string, width: number): void {
+export function arrow(
+  ctx: Ctx,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  p: number,
+  color: string,
+  width: number,
+): void {
   if (p <= 0) return;
   const x = lerp(x1, x2, p);
   const y = lerp(y1, y2, p);
@@ -226,7 +270,15 @@ export function check(ctx: Ctx, cx: number, cy: number, r: number, color: string
 
 // ───────────── background ─────────────
 /** Ambient background: deep gradient, three slow glowing blobs in palette colours, a faint dot grid. */
-export function background(ctx: Ctx, W: number, H: number, t: number, seed: number, theme: Theme = NIGHT, mood = 0): void {
+export function background(
+  ctx: Ctx,
+  W: number,
+  H: number,
+  t: number,
+  seed: number,
+  theme: Theme = NIGHT,
+  mood = 0,
+): void {
   const g = ctx.createLinearGradient(0, 0, W * 0.6, H * 1.2);
   g.addColorStop(0, theme.bg[0]);
   g.addColorStop(0.55, theme.bg[1]);

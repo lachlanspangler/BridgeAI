@@ -14,7 +14,10 @@ export function fontsourceRoot(): string {
 
 export function registerFonts(): { family: string; ok: boolean }[] {
   const root = fontsourceRoot();
-  const out = FONT_FILES.map((f) => ({ family: `${f.family} ${f.weight}`, ok: !!GlobalFonts.registerFromPath(join(root, f.file), f.family) }));
+  const out = FONT_FILES.map((f) => ({
+    family: `${f.family} ${f.weight}`,
+    ok: !!GlobalFonts.registerFromPath(join(root, f.file), f.family),
+  }));
   done = true;
   return out;
 }

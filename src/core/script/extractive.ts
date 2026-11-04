@@ -29,21 +29,26 @@ export function trimSentence(s: string, maxWords: number, terms: string[] = []):
   let bestScore = -Infinity;
   for (let i = 0; i < parts.length; i++) {
     for (let j = i; j < parts.length; j++) {
-      const run = parts.slice(i, j + 1).join(' ').replace(/[,;:]$/, '');
+      const run = parts
+        .slice(i, j + 1)
+        .join(' ')
+        .replace(/[,;:]$/, '');
       const n = wordCount(run);
       if (n > maxWords) break;
       if (n < Math.min(5, maxWords)) continue;
       const hasVerb = VERB.test(run);
       const startsWithPrep = PREP_LEAD.test(run);
       const hits = low.filter((x) => run.toLowerCase().includes(x)).length;
-      const score = (hasVerb ? 10 : 0) - (startsWithPrep && j === i ? 4 : 0) + hits * 2 + n * 0.15 - (i > 0 ? 0.5 : 0);
+      const score =
+        (hasVerb ? 10 : 0) - (startsWithPrep && j === i ? 4 : 0) + hits * 2 + n * 0.15 - (i > 0 ? 0.5 : 0);
       if (score > bestScore) {
         bestScore = score;
         best = run;
       }
     }
   }
-  if (best && VERB.test(best)) return ensurePeriod(sentenceCase(best.replace(/^(and|but|so|which|while)\s+/i, '')));
+  if (best && VERB.test(best))
+    return ensurePeriod(sentenceCase(best.replace(/^(and|but|so|which|while)\s+/i, '')));
   return ensurePeriod(clampWords(t, maxWords).replace(/…$/, ''));
 }
 
@@ -51,7 +56,9 @@ const ensurePeriod = (s: string): string => (/[.!?]$/.test(s) ? s : `${s}.`);
 
 /** A short on-screen headline (≤ n words) from a sentence: the clause with the most key terms. */
 export function headline(sentence: string, terms: string[], n: number): string {
-  const t = cleanForSpeech(sentence).replace(LEADINS, '').replace(/^we (propose|present|introduce|show that|find that)\s+/i, '');
+  const t = cleanForSpeech(sentence)
+    .replace(LEADINS, '')
+    .replace(/^we (propose|present|introduce|show that|find that)\s+/i, '');
   const clauses = t.split(/[,;:]\s+|\s+(?:which|that|while|because)\s+/).filter((c) => wordCount(c) >= 2);
   const low = terms.map((x) => x.toLowerCase());
   let best = clauses[0] ?? t;
@@ -66,7 +73,12 @@ export function headline(sentence: string, terms: string[], n: number): string {
   return sentenceCase(clampWords(best.replace(/[.!?]$/, ''), n).replace(/…$/, ''));
 }
 
-const SPOKEN_LENGTH: Record<number, string> = { 20: 'twenty seconds', 60: 'one minute', 180: 'three minutes', 300: 'five minutes' };
+const SPOKEN_LENGTH: Record<number, string> = {
+  20: 'twenty seconds',
+  60: 'one minute',
+  180: 'three minutes',
+  300: 'five minutes',
+};
 
 function hookBeat(src: Source, budget: Budget): Beat {
   const short = clampWords(src.title.replace(/[:.].*$/, ''), 8).replace(/…$/, '');
@@ -75,7 +87,11 @@ function hookBeat(src: Source, budget: Budget): Beat {
     id: 'b1',
     role: 'hook',
     narration: len ? `${short}, in ${len}.` : `${short}, explained.`,
-    visual: { type: 'title', title: short, kicker: src.kind === 'project' ? 'PROJECT' : src.kind === 'pdf' ? 'PAPER' : 'EXPLAINED' },
+    visual: {
+      type: 'title',
+      title: short,
+      kicker: src.kind === 'project' ? 'PROJECT' : src.kind === 'pdf' ? 'PAPER' : 'EXPLAINED',
+    },
     claims: [{ text: short, support: [], kind: 'framing' }],
     ideas: [],
     keywords: [],
@@ -84,7 +100,12 @@ function hookBeat(src: Source, budget: Budget): Beat {
 
 function ideaVisual(idea: Idea, src: Source, budget: Budget): Visual {
   const fig = idea.assets[0] ? src.assets.find((a) => a.id === idea.assets[0]) : undefined;
-  if (fig) return { type: 'figure', assetId: fig.id, caption: headline(idea.statement, idea.terms, budget.maxScreenWords) };
+  if (fig)
+    return {
+      type: 'figure',
+      assetId: fig.id,
+      caption: headline(idea.statement, idea.terms, budget.maxScreenWords),
+    };
   const nums = rawNumbers(idea.statement).filter((x) => /\d/.test(x) && !/^\d$/.test(x));
   if (nums.length && (idea.kind === 'number' || idea.kind === 'result')) {
     const m = nums[0]!.match(/^([\d.,]+)\s*(.*)$/);
@@ -118,7 +139,8 @@ export function composeExtractive(src: Source, analysis: Analysis, budget: Budge
     remaining -= n;
     beats.push({
       id: `b${beats.length + 1}`,
-      role: beats.length === 1 ? 'idea' : idea.kind === 'number' || idea.kind === 'result' ? 'evidence' : 'idea',
+      role:
+        beats.length === 1 ? 'idea' : idea.kind === 'number' || idea.kind === 'result' ? 'evidence' : 'idea',
       narration,
       visual: ideaVisual(idea, src, budget),
       claims: [{ text: narration, support: idea.evidence.map((e) => e.segmentId), kind: 'fact' }],
@@ -130,18 +152,33 @@ export function composeExtractive(src: Source, analysis: Analysis, budget: Budge
   const top = analysis.ideas[0];
   if (top) {
     let said = trimSentence(top.statement, Math.max(6, takeawayWords), top.terms);
-    if (beats.some((b) => b.narration === said)) said = trimSentence(top.statement, Math.max(5, Math.min(takeawayWords, wordCount(said) - 3)), top.terms);
+    if (beats.some((b) => b.narration === said))
+      said = trimSentence(
+        top.statement,
+        Math.max(5, Math.min(takeawayWords, wordCount(said) - 3)),
+        top.terms,
+      );
     beats.push({
       id: `b${beats.length + 1}`,
       role: 'takeaway',
       narration: said,
-      visual: { type: 'takeaway', text: headline(top.statement, top.terms, budget.maxScreenWords), highlight: top.terms.slice(0, 1) },
+      visual: {
+        type: 'takeaway',
+        text: headline(top.statement, top.terms, budget.maxScreenWords),
+        highlight: top.terms.slice(0, 1),
+      },
       claims: [{ text: said, support: top.evidence.map((e) => e.segmentId), kind: 'fact' }],
       ideas: [top.id],
       keywords: top.terms.slice(0, 2),
     });
   }
-  return { schema: 'bridge.script/1', title: src.title, targetSeconds: budget.seconds, beats, engine: 'extractive' };
+  return {
+    schema: 'bridge.script/1',
+    title: src.title,
+    targetSeconds: budget.seconds,
+    beats,
+    engine: 'extractive',
+  };
 }
 
 /** Total narration words in a script. */

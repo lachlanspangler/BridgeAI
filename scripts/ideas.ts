@@ -49,7 +49,12 @@ export function render(l: Ledger): string {
     '',
   ];
   for (const a of areas) {
-    out.push(`## ${a}`, '', '| ID | Idea | V | E | C | Score | Status | Why / notes |', '|---|---|---|---|---|---|---|---|');
+    out.push(
+      `## ${a}`,
+      '',
+      '| ID | Idea | V | E | C | Score | Status | Why / notes |',
+      '|---|---|---|---|---|---|---|---|',
+    );
     for (const i of l.ideas.filter((x) => x.area === a)) {
       const why = [i.why, ...i.notes].filter(Boolean).join(' — ').replace(/\|/g, '/').replace(/\n/g, ' ');
       out.push(
@@ -82,7 +87,8 @@ function main(argv: string[]): void {
       const n = Number(rest[0] ?? 8);
       const open = l.ideas.filter((i) => i.status === 'open' || i.status === 'doing');
       open.sort((a, b) => score(b) - score(a));
-      for (const i of open.slice(0, n)) console.log(`${i.id}  ${score(i).toFixed(2)}  [${i.area}] ${i.title} (${i.status})`);
+      for (const i of open.slice(0, n))
+        console.log(`${i.id}  ${score(i).toFixed(2)}  [${i.area}] ${i.title} (${i.status})`);
       return;
     }
     case 'add': {

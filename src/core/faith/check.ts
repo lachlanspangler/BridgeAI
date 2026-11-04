@@ -33,7 +33,11 @@ function sourceText(src: Source, ids: string[]): string {
 }
 
 function allText(src: Source): string {
-  return [src.title, ...src.segments.map((s) => s.text), ...src.assets.map((a) => `${a.caption ?? ''} ${a.ocr ?? ''}`)].join('\n');
+  return [
+    src.title,
+    ...src.segments.map((s) => s.text),
+    ...src.assets.map((a) => `${a.caption ?? ''} ${a.ocr ?? ''}`),
+  ].join('\n');
 }
 
 /** Numbers present in a text, normalised, plus forms like "28.4" from "28.40" and "3000" from "3,000". */
@@ -88,7 +92,11 @@ export function visualStrings(v: Visual): string[] {
     case 'statement':
       return [v.text];
     case 'bigNumber':
-      return [`${v.value} ${v.unit ?? ''}`, v.label, v.compare ? `${v.compare.value} ${v.compare.label}` : ''];
+      return [
+        `${v.value} ${v.unit ?? ''}`,
+        v.label,
+        v.compare ? `${v.compare.value} ${v.compare.label}` : '',
+      ];
     case 'bullets':
       return [v.heading ?? '', ...v.items];
     case 'bars':
@@ -115,7 +123,9 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
   const everything = allText(src);
   const verdicts: ClaimVerdict[] = [];
   const needsJudge: BeatCheck['needsJudge'] = [];
-  const cited = [...new Set(beat.claims.flatMap((c) => c.support))].filter((id) => src.segments.some((s) => s.id === id));
+  const cited = [...new Set(beat.claims.flatMap((c) => c.support))].filter((id) =>
+    src.segments.some((s) => s.id === id),
+  );
   const beatSupport = cited.length ? sourceText(src, cited) : '';
   const isFraming = beat.role === 'hook' && beat.claims.every((c) => c.kind === 'framing');
 
@@ -125,42 +135,82 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       const nums = missingNumbers(c.text, everything);
       const names = missingNames(c.text, everything);
       if (nums.length || names.length) {
-        verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'unsupported', by: nums.length ? 'numbers' : 'names', reason: `framing mentions ${[...nums, ...names].join(', ')} not in the source` });
+        verdicts.push({
+          beatId: beat.id,
+          claim: c.text,
+          verdict: 'unsupported',
+          by: nums.length ? 'numbers' : 'names',
+          reason: `framing mentions ${[...nums, ...names].join(', ')} not in the source`,
+        });
       } else verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'framing', by: 'framing' });
       continue;
     }
     const ids = c.support.filter((id) => src.segments.some((s) => s.id === id));
     if (!ids.length) {
-      verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'unsupported', by: 'overlap', reason: 'cites no real source segment' });
+      verdicts.push({
+        beatId: beat.id,
+        claim: c.text,
+        verdict: 'unsupported',
+        by: 'overlap',
+        reason: 'cites no real source segment',
+      });
       continue;
     }
     const sup = sourceText(src, ids);
     const nums = missingNumbers(c.text, sup);
     if (nums.length) {
-      verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'unsupported', by: 'numbers', reason: `numbers not in cited source: ${nums.join(', ')}` });
+      verdicts.push({
+        beatId: beat.id,
+        claim: c.text,
+        verdict: 'unsupported',
+        by: 'numbers',
+        reason: `numbers not in cited source: ${nums.join(', ')}`,
+      });
       continue;
     }
     const names = missingNames(c.text, `${sup}\n${src.title}`);
     if (names.length) {
-      verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'unsupported', by: 'names', reason: `names not in cited source: ${names.join(', ')}` });
+      verdicts.push({
+        beatId: beat.id,
+        claim: c.text,
+        verdict: 'unsupported',
+        by: 'names',
+        reason: `names not in cited source: ${names.join(', ')}`,
+      });
       continue;
     }
     if (c.kind === 'analogy') {
-      verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'framing', by: 'framing', reason: 'analogy (not presented as a source claim)' });
+      verdicts.push({
+        beatId: beat.id,
+        claim: c.text,
+        verdict: 'framing',
+        by: 'framing',
+        reason: 'analogy (not presented as a source claim)',
+      });
       continue;
     }
     const ov = coverage(c.text, sup);
-    if (ov >= minOverlap) verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'supported', by: 'overlap' });
+    if (ov >= minOverlap)
+      verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'supported', by: 'overlap' });
     else {
       needsJudge.push({ claim: c.text, support: sup });
-      verdicts.push({ beatId: beat.id, claim: c.text, verdict: 'unsupported', by: 'overlap', reason: `low overlap ${ov.toFixed(2)} (needs judge)` });
+      verdicts.push({
+        beatId: beat.id,
+        claim: c.text,
+        verdict: 'unsupported',
+        by: 'overlap',
+        reason: `low overlap ${ov.toFixed(2)} (needs judge)`,
+      });
     }
   }
 
   // the narration as a whole and the on-screen text: no number or name may appear that the beat's sources lack
   if (!isFraming) {
     const hay = beatSupport || everything;
-    for (const [what, text] of [['narration', beat.narration], ...visualStrings(beat.visual).map((s) => ['screen', s] as const)] as const) {
+    for (const [what, text] of [
+      ['narration', beat.narration],
+      ...visualStrings(beat.visual).map((s) => ['screen', s] as const),
+    ] as const) {
       if (!text) continue;
       const nums = missingNumbers(text, hay);
       const names = missingNames(text, `${hay}\n${src.title}`);
@@ -179,7 +229,13 @@ export function checkBeat(beat: Beat, src: Source, opts: CheckOptions = {}): Bea
       const nums = missingNumbers(text, everything);
       const names = missingNames(text, everything);
       if (nums.length || names.length)
-        verdicts.push({ beatId: beat.id, claim: text, verdict: 'unsupported', by: nums.length ? 'numbers' : 'names', reason: `hook has ${[...nums, ...names].join(', ')} not in the source` });
+        verdicts.push({
+          beatId: beat.id,
+          claim: text,
+          verdict: 'unsupported',
+          by: nums.length ? 'numbers' : 'names',
+          reason: `hook has ${[...nums, ...names].join(', ')} not in the source`,
+        });
     }
   }
   return { beatId: beat.id, verdicts, needsJudge, ok: verdicts.every((v) => v.verdict !== 'unsupported') };

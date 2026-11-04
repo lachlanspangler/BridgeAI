@@ -20,8 +20,24 @@ export interface ModelSpec {
 
 /** Default local LLM (MODELS.md): Qwen3.5-4B Q4_K_M, Apache-2.0, 2.74 GB. Low-RAM fallback: Qwen3.5-2B. */
 export const LLM_MODELS: ModelSpec[] = [
-  { id: 'qwen3.5-4b-q4_k_m', kind: 'llm', label: 'Qwen3.5 4B (Q4_K_M)', url: 'https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf', file: 'Qwen3.5-4B-Q4_K_M.gguf', bytes: 2_740_937_888, licence: 'Apache-2.0' },
-  { id: 'qwen3.5-2b-q4_k_m', kind: 'llm', label: 'Qwen3.5 2B (Q4_K_M, low RAM)', url: 'https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf', file: 'Qwen3.5-2B-Q4_K_M.gguf', bytes: 1_280_835_840, licence: 'Apache-2.0' },
+  {
+    id: 'qwen3.5-4b-q4_k_m',
+    kind: 'llm',
+    label: 'Qwen3.5 4B (Q4_K_M)',
+    url: 'https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf',
+    file: 'Qwen3.5-4B-Q4_K_M.gguf',
+    bytes: 2_740_937_888,
+    licence: 'Apache-2.0',
+  },
+  {
+    id: 'qwen3.5-2b-q4_k_m',
+    kind: 'llm',
+    label: 'Qwen3.5 2B (Q4_K_M, low RAM)',
+    url: 'https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf',
+    file: 'Qwen3.5-2B-Q4_K_M.gguf',
+    bytes: 1_280_835_840,
+    licence: 'Apache-2.0',
+  },
 ];
 
 export const MODEL_BUDGET_BYTES = 8 * 1024 ** 3;
@@ -50,16 +66,26 @@ function dirBytes(dir: string): number {
 /** Bytes used by models Bridge owns (in ~/.bridge/models) plus linked files outside it. */
 export function modelBytes(): { owned: number; linked: number } {
   const cfg = loadConfig();
-  const linked = cfg.llm.path && existsSync(cfg.llm.path) && !cfg.llm.path.startsWith(paths.models()) ? statSync(cfg.llm.path).size : 0;
+  const linked =
+    cfg.llm.path && existsSync(cfg.llm.path) && !cfg.llm.path.startsWith(paths.models())
+      ? statSync(cfg.llm.path).size
+      : 0;
   return { owned: dirBytes(paths.models()), linked };
 }
 
 export function canDownload(bytes: number): { ok: boolean; reason?: string } {
   const free = freeDiskBytes();
   const used = modelBytes().owned;
-  if (used + bytes > MODEL_BUDGET_BYTES) return { ok: false, reason: `would exceed the ${MODEL_BUDGET_BYTES / 1024 ** 3} GB model budget (${(used / 1024 ** 3).toFixed(1)} GB used)` };
+  if (used + bytes > MODEL_BUDGET_BYTES)
+    return {
+      ok: false,
+      reason: `would exceed the ${MODEL_BUDGET_BYTES / 1024 ** 3} GB model budget (${(used / 1024 ** 3).toFixed(1)} GB used)`,
+    };
   if (Number.isFinite(free) && free - bytes < MIN_FREE_AFTER_BYTES)
-    return { ok: false, reason: `only ${(free / 1024 ** 3).toFixed(1)} GB free; need ${((bytes + MIN_FREE_AFTER_BYTES) / 1024 ** 3).toFixed(1)} GB` };
+    return {
+      ok: false,
+      reason: `only ${(free / 1024 ** 3).toFixed(1)} GB free; need ${((bytes + MIN_FREE_AFTER_BYTES) / 1024 ** 3).toFixed(1)} GB`,
+    };
   return { ok: true };
 }
 
@@ -68,7 +94,8 @@ export function findLocalLlm(): { path: string; id: string } | null {
   const env = process.env.BRIDGE_LLM_GGUF;
   if (env && existsSync(env)) return { path: env, id: idFor(env) };
   const cfg = loadConfig();
-  if (cfg.llm.path && existsSync(cfg.llm.path)) return { path: cfg.llm.path, id: cfg.llm.id ?? idFor(cfg.llm.path) };
+  if (cfg.llm.path && existsSync(cfg.llm.path))
+    return { path: cfg.llm.path, id: cfg.llm.id ?? idFor(cfg.llm.path) };
   const dir = paths.llm();
   if (existsSync(dir)) {
     const files = readdirSync(dir).filter((f) => f.endsWith('.gguf'));

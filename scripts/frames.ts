@@ -26,14 +26,30 @@ mkdirSync(out, { recursive: true });
 for (const f of readdirSync(out)) rmSync(join(out, f), { force: true, recursive: true });
 const dur = probeDuration(video);
 const every = Number(flag('every') ?? (dur <= 25 ? 1 : dur <= 70 ? 3 : 10));
-const times = flag('at') ? flag('at')!.split(',').map(Number) : Array.from({ length: Math.floor(dur / every) }, (_, i) => 0.5 + i * every).filter((t) => t < dur);
+const times = flag('at')
+  ? flag('at')!.split(',').map(Number)
+  : Array.from({ length: Math.floor(dur / every) }, (_, i) => 0.5 + i * every).filter((t) => t < dur);
 
 for (const t of times) {
-  spawnSync(ff, ['-hide_banner', '-loglevel', 'error', '-y', '-ss', t.toFixed(2), '-i', video, '-frames:v', '1', join(out, `t${String(Math.round(t * 1000)).padStart(6, '0')}.png`)]);
+  spawnSync(ff, [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-y',
+    '-ss',
+    t.toFixed(2),
+    '-i',
+    video,
+    '-frames:v',
+    '1',
+    join(out, `t${String(Math.round(t * 1000)).padStart(6, '0')}.png`),
+  ]);
 }
 
 // contact sheet
-const files = readdirSync(out).filter((f) => /^t\d+\.png$/.test(f)).sort();
+const files = readdirSync(out)
+  .filter((f) => /^t\d+\.png$/.test(f))
+  .sort();
 const ims = await Promise.all(files.map((f) => loadImage(join(out, f))));
 const cols = Math.min(5, ims.length);
 const w = 384;
@@ -56,17 +72,33 @@ ims.forEach((im, i) => {
 writeFileSync(join(out, 'contact.jpg'), sheet.toBuffer('image/jpeg', 80));
 
 // waveform + loudness
-spawnSync(ff, ['-hide_banner', '-loglevel', 'error', '-y', '-i', video, '-filter_complex', 'aformat=channel_layouts=mono,showwavespic=s=1600x240:colors=0x4CC9F0', '-frames:v', '1', join(out, 'waveform.png')]);
-const ln = spawnSync(ff, ['-hide_banner', '-i', video, '-af', 'ebur128=peak=true', '-f', 'null', '-'], { encoding: 'utf8' });
+spawnSync(ff, [
+  '-hide_banner',
+  '-loglevel',
+  'error',
+  '-y',
+  '-i',
+  video,
+  '-filter_complex',
+  'aformat=channel_layouts=mono,showwavespic=s=1600x240:colors=0x4CC9F0',
+  '-frames:v',
+  '1',
+  join(out, 'waveform.png'),
+]);
+const ln = spawnSync(ff, ['-hide_banner', '-i', video, '-af', 'ebur128=peak=true', '-f', 'null', '-'], {
+  encoding: 'utf8',
+});
 const summary = ln.stderr.split('Summary:')[1] ?? '';
 const I = summary.match(/I:\s+(-?[\d.]+) LUFS/)?.[1];
 const peak = summary.match(/Peak:\s+(-?[\d.]+) dBFS/)?.[1];
 const stats = [`duration ${dur.toFixed(2)} s`, `integrated ${I} LUFS`, `true peak ${peak} dBFS`];
 
 // transcript (optional: whisper-cli + a ggml model)
-const model = [process.env.BRIDGE_WHISPER_MODEL, join(homedir(), '.bridge/models/whisper/ggml-base.en.bin'), join(homedir(), 'Library/Application Support/LachedInAI/models/ggml-base.en.bin')].find(
-  (p) => p && existsSync(p),
-);
+const model = [
+  process.env.BRIDGE_WHISPER_MODEL,
+  join(homedir(), '.bridge/models/whisper/ggml-base.en.bin'),
+  join(homedir(), 'Library/Application Support/LachedInAI/models/ggml-base.en.bin'),
+].find((p) => p && existsSync(p));
 const hasWhisper = spawnSync('whisper-cli', ['--help'], { stdio: 'ignore' }).status === 0;
 if (model && hasWhisper) {
   const wav = join(out, 'audio16k.wav');
@@ -77,9 +109,13 @@ if (model && hasWhisper) {
   rmSync(wav, { force: true });
   const job = flag('job');
   if (job && existsSync(join(job, 'script.json'))) {
-    const script = JSON.parse(readFileSync(join(job, 'script.json'), 'utf8')) as { beats: { narration: string }[] };
+    const script = JSON.parse(readFileSync(join(job, 'script.json'), 'utf8')) as {
+      beats: { narration: string }[];
+    };
     const said = script.beats.map((b) => b.narration).join(' ');
-    stats.push(`transcript covers ${(coverage(said, transcript) * 100).toFixed(0)}% of the script's content words`);
+    stats.push(
+      `transcript covers ${(coverage(said, transcript) * 100).toFixed(0)}% of the script's content words`,
+    );
   }
 } else stats.push('transcript: skipped (needs whisper-cli and a ggml model; see make doctor)');
 writeFileSync(join(out, 'stats.txt'), stats.join('\n') + '\n');

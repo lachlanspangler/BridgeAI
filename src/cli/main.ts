@@ -26,15 +26,27 @@ async function make(args: string[]): Promise<void> {
   const seconds = Number(flag(args, 'len', '20'));
   const text = input === '-' ? readFileSync(0, 'utf8') : readFileSync(input, 'utf8');
   const src = ingestText(text, input === '-' ? 'pasted text' : basename(input));
-  const settings = RenderSettings.parse({ seconds, voice: flag(args, 'voice', 'af_heart'), seed: Number(flag(args, 'seed', '7')) });
-  const { engines, label } = await pickEngines({ llm: flag(args, 'engine', 'auto')!, tts: flag(args, 'tts', 'auto')!, log: (e) => console.log(`         · ${e.stage}: ${e.message}${e.ms ? ` (${(e.ms / 1000).toFixed(1)}s)` : ''}`) });
+  const settings = RenderSettings.parse({
+    seconds,
+    voice: flag(args, 'voice', 'af_heart'),
+    seed: Number(flag(args, 'seed', '7')),
+  });
+  const { engines, label } = await pickEngines({
+    llm: flag(args, 'engine', 'auto')!,
+    tts: flag(args, 'tts', 'auto')!,
+    log: (e) =>
+      console.log(`         · ${e.stage}: ${e.message}${e.ms ? ` (${(e.ms / 1000).toFixed(1)}s)` : ''}`),
+  });
   console.log(`engine   ${label} · voice ${engines.tts.id}`);
   const id = `${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}-${seconds}s`;
   const jobDir = join(paths.jobs(), id);
   let last = '';
   const res = await runPipeline(src, settings, engines, jobDir, (p: Progress) => {
     const line = `${p.stage.padEnd(8)} ${p.message}`;
-    if (line !== last && (p.stage !== 'render' || p.progress === 0 || p.progress >= 1 || Math.round(p.progress * 100) % 25 === 0)) {
+    if (
+      line !== last &&
+      (p.stage !== 'render' || p.progress === 0 || p.progress >= 1 || Math.round(p.progress * 100) % 25 === 0)
+    ) {
       process.stdout.write(`${line}\n`);
       last = line;
     }
@@ -44,23 +56,51 @@ async function make(args: string[]): Promise<void> {
   const out = join(outDir, `${id}.mp4`);
   copyFileSync(res.video, out);
   console.log(`\n✓ ${out}`);
-  console.log(`  target ${res.durations.target}s · actual ${res.durations.actual.toFixed(1)}s · ${res.durations.withinTolerance ? 'within ±10%' : 'OUTSIDE ±10%'}`);
-  console.log(`  engines: ${res.engines.analyze} → ${res.engines.script} → ${res.engines.tts} · unsupported claims: ${res.faith.unsupported}`);
+  console.log(
+    `  target ${res.durations.target}s · actual ${res.durations.actual.toFixed(1)}s · ${res.durations.withinTolerance ? 'within ±10%' : 'OUTSIDE ±10%'}`,
+  );
+  console.log(
+    `  engines: ${res.engines.analyze} → ${res.engines.script} → ${res.engines.tts} · unsupported claims: ${res.faith.unsupported}`,
+  );
   console.log(`  job: ${jobDir}`);
-  console.log(`  timings: ${Object.entries(res.timings).map(([k, v]) => `${k} ${(v / 1000).toFixed(1)}s`).join(' · ')}`);
+  console.log(
+    `  timings: ${Object.entries(res.timings)
+      .map(([k, v]) => `${k} ${(v / 1000).toFixed(1)}s`)
+      .join(' · ')}`,
+  );
 }
 
 async function models(args: string[]): Promise<void> {
   const [sub, p] = args;
   if (sub === 'link') {
-    if (!p || !existsSync(p) || !p.endsWith('.gguf')) throw new Error('usage: bridge models link <file.gguf>');
+    if (!p || !existsSync(p) || !p.endsWith('.gguf'))
+      throw new Error('usage: bridge models link <file.gguf>');
     const c = loadConfig();
     c.llm = { path: resolve(p) };
     saveConfig(c);
     console.log(`✓ linked ${resolve(p)} (no copy, no download)`);
     return;
   }
-  const { findLocalLlm } = await import('../node/models/catalog.ts');
+  const { findLocalLlm, LLM_MODELS } = await import('../node/models/catalog.ts');
+  if (sub === 'pull') {
+    // one download at a time: the LLM (unless one is already present/linked), then warm Kokoro
+    if (!findLocalLlm()) {
+      const { downloadModel } = await import('../node/models/download.ts');
+      const spec = LLM_MODELS.find((m) => m.id === p) ?? LLM_MODELS[0]!;
+      let last = -1;
+      const dest = await downloadModel(spec, (d, t) => {
+        const pct = Math.floor((d / t) * 100);
+        if (pct !== last && pct % 5 === 0) process.stdout.write(`  ${spec.label}: ${pct}%\n`);
+        last = pct;
+      });
+      console.log(`✓ ${dest}`);
+    } else console.log(`✓ local model present: ${findLocalLlm()!.id}`);
+    const { KokoroTts } = await import('../node/tts/kokoro.ts');
+    const k = new KokoroTts();
+    await k.synthesize('Ready.', {});
+    console.log('✓ Kokoro voice ready');
+    return;
+  }
   console.log(JSON.stringify({ llm: findLocalLlm() }, null, 2));
 }
 
@@ -71,6 +111,14 @@ async function main(): Promise<void> {
       return make(rest);
     case 'models':
       return models(rest);
+    case 'doctor':
+    case 'heal': {
+      const { runDoctor, formatChecks } = await import('../node/doctor.ts');
+      const cs = await runDoctor({ heal: cmd === 'heal' });
+      console.log(formatChecks(cs));
+      if (cs.some((c) => c.level === 'fail')) process.exitCode = 1;
+      return;
+    }
     default:
       console.log('usage: bridge make <file> [--len 20] | doctor | models | keys');
   }

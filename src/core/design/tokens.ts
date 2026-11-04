@@ -19,7 +19,16 @@ export interface Theme {
   /** Text colour to put on top of a tone fill. */
   onTone: Record<Tone, string>;
   caption: { bg: string; ink: string; active: string };
-  code: { bg: string; keyword: string; string: string; number: string; comment: string; fn: string; ink: string; type: string };
+  code: {
+    bg: string;
+    keyword: string;
+    string: string;
+    number: string;
+    comment: string;
+    fn: string;
+    ink: string;
+    type: string;
+  };
 }
 
 export const NIGHT: Theme = {
@@ -104,7 +113,13 @@ export const SAFE = { x: 0.07, top: 0.11, bottom: 0.2 } as const;
 // ── contrast helpers (WCAG 2.x) ──
 export function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
-  const v = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const v =
+    h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h;
   return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
 }
 export function luminance(hex: string): number {

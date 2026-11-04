@@ -1,8 +1,37 @@
 /** Text utilities: sentences, words, syllables, numbers, keywords. Pure and deterministic. */
 
 const ABBREV = new Set([
-  'e.g', 'i.e', 'et al', 'al', 'fig', 'figs', 'eq', 'eqs', 'sec', 'vs', 'etc', 'cf', 'approx', 'dr', 'mr', 'mrs',
-  'ms', 'prof', 'no', 'vol', 'pp', 'ref', 'refs', 'tab', 'resp', 'st', 'jr', 'inc', 'ltd', 'u.s', 'e.t.c',
+  'e.g',
+  'i.e',
+  'et al',
+  'al',
+  'fig',
+  'figs',
+  'eq',
+  'eqs',
+  'sec',
+  'vs',
+  'etc',
+  'cf',
+  'approx',
+  'dr',
+  'mr',
+  'mrs',
+  'ms',
+  'prof',
+  'no',
+  'vol',
+  'pp',
+  'ref',
+  'refs',
+  'tab',
+  'resp',
+  'st',
+  'jr',
+  'inc',
+  'ltd',
+  'u.s',
+  'e.t.c',
 ]);
 
 /** Split prose into sentences. Handles abbreviations, decimals, initials and citations like "[12]." */
@@ -62,7 +91,8 @@ function numberSpokenWords(n: string): number {
 
 /** Numbers as written in text: 28.4, 3,000, 2×, 41%, 1e-4, 3.5B. Returns normalised canonical strings. */
 export function numbers(text: string): string[] {
-  const m = text.match(/(?<![A-Za-z])[-−]?\d[\d,]*(?:\.\d+)?(?:e-?\d+)?\s?(?:%|×|x\b|k\b|K\b|M\b|B\b)?/g) ?? [];
+  const m =
+    text.match(/(?<![A-Za-z])[-−]?\d[\d,]*(?:\.\d+)?(?:e-?\d+)?\s?(?:%|×|x\b|k\b|K\b|M\b|B\b)?/g) ?? [];
   return m.map(normNumber).filter((x) => x !== '');
 }
 
@@ -75,9 +105,31 @@ export function normNumber(raw: string): string {
 }
 
 const NUMBER_WORDS: Record<string, string> = {
-  zero: '0', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9',
-  ten: '10', eleven: '11', twelve: '12', twenty: '20', thirty: '30', forty: '40', fifty: '50', hundred: '100',
-  thousand: '1000', million: '1000000', billion: '1000000000', half: '0.5', twice: '2', double: '2', triple: '3',
+  zero: '0',
+  one: '1',
+  two: '2',
+  three: '3',
+  four: '4',
+  five: '5',
+  six: '6',
+  seven: '7',
+  eight: '8',
+  nine: '9',
+  ten: '10',
+  eleven: '11',
+  twelve: '12',
+  twenty: '20',
+  thirty: '30',
+  forty: '40',
+  fifty: '50',
+  hundred: '100',
+  thousand: '1000',
+  million: '1000000',
+  billion: '1000000000',
+  half: '0.5',
+  twice: '2',
+  double: '2',
+  triple: '3',
 };
 
 /** Number words that carry quantity in narration ("two tasks", "twice as fast"). */
@@ -148,7 +200,12 @@ export function cleanForSpeech(s: string): string {
 export function clampWords(text: string, n: number): string {
   const ws = text.split(/\s+/).filter(Boolean);
   if (ws.length <= n) return text.trim();
-  return ws.slice(0, n).join(' ').replace(/[,;:]$/, '') + '…';
+  return (
+    ws
+      .slice(0, n)
+      .join(' ')
+      .replace(/[,;:]$/, '') + '…'
+  );
 }
 
 /** Jaccard-ish overlap of stemmed content words: |a ∩ b| / |a|. */

@@ -3,11 +3,25 @@
  * are converted from the flat model schema into the renderer's Visual type and repaired when they reference
  * numbers or assets that don't exist, and everything is validated with zod at the end.
  */
-import { Analysis, Script, Visual, type Beat, type Idea, type IdeaKind, type Source, type Tone } from '../schema.ts';
+import {
+  Analysis,
+  Script,
+  Visual,
+  type Beat,
+  type Idea,
+  type IdeaKind,
+  type Source,
+  type Tone,
+} from '../schema.ts';
 import { contentWords, normNumber, numbers, stem, wordCount } from '../text/text.ts';
 import { IDEA_KINDS } from './schemas.ts';
 
-const normQ = (s: string) => s.toLowerCase().replace(/[^a-z0-9%. ]+/g, ' ').replace(/\s+/g, ' ').trim();
+const normQ = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9%. ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 /** Is `quote` (near-)verbatim in `text`? Exact normalised substring, else ≥ 85% of its content stems in order-free match. */
 export function quoteFound(quote: string, text: string): boolean {
@@ -32,7 +46,11 @@ interface RawIdea {
   figure?: string;
 }
 
-export function parseAnalysis(raw: unknown, src: Source, engine: string): { analysis: Analysis; dropped: string[] } {
+export function parseAnalysis(
+  raw: unknown,
+  src: Source,
+  engine: string,
+): { analysis: Analysis; dropped: string[] } {
   const r = (raw ?? {}) as { gist?: string; ideas?: RawIdea[] };
   const seg = new Map(src.segments.map((s) => [s.id, s]));
   const dropped: string[] = [];
@@ -54,7 +72,9 @@ export function parseAnalysis(raw: unknown, src: Source, engine: string): { anal
       continue;
     }
     const allSupport = verified.map((e) => seg.get(e.segmentId)!.text).join(' ');
-    const nums = (it.numbers ?? []).filter((n) => numbers(n).every((x) => numbers(allSupport).map(normNumber).includes(normNumber(x))));
+    const nums = (it.numbers ?? []).filter((n) =>
+      numbers(n).every((x) => numbers(allSupport).map(normNumber).includes(normNumber(x))),
+    );
     const kind = (IDEA_KINDS.includes(it.kind ?? '') ? it.kind : 'claim') as IdeaKind;
     ideas.push({
       id: `i${ideas.length + 1}`,
@@ -63,14 +83,22 @@ export function parseAnalysis(raw: unknown, src: Source, engine: string): { anal
       importance: Math.max(0, Math.min(1, (it.importance ?? 3) / 5)),
       evidence: verified.map(({ segmentId, quote }) => ({ segmentId, quote })),
       numbers: nums,
-      terms: (it.terms ?? []).filter((t) => t && allSupport.toLowerCase().includes(t.toLowerCase())).slice(0, 3),
-      assets: it.figure && it.figure !== 'none' && src.assets.some((a) => a.id === it.figure) ? [it.figure] : [],
+      terms: (it.terms ?? [])
+        .filter((t) => t && allSupport.toLowerCase().includes(t.toLowerCase()))
+        .slice(0, 3),
+      assets:
+        it.figure && it.figure !== 'none' && src.assets.some((a) => a.id === it.figure) ? [it.figure] : [],
     });
   }
   // stable sort by importance (model order breaks ties)
   ideas.sort((a, b) => b.importance - a.importance);
   ideas.forEach((i, k) => (i.id = `i${k + 1}`));
-  const analysis = Analysis.parse({ schema: 'bridge.analysis/1', gist: (r.gist ?? '').trim() || src.title, ideas, engine });
+  const analysis = Analysis.parse({
+    schema: 'bridge.analysis/1',
+    gist: (r.gist ?? '').trim() || src.title,
+    ideas,
+    engine,
+  });
   return { analysis, dropped };
 }
 
@@ -89,7 +117,8 @@ export function mergeAnalyses(parts: Analysis[], engine: string, max = 14): Anal
     });
     if (dup) {
       // merge evidence
-      for (const e of idea.evidence) if (!dup.evidence.some((x) => x.segmentId === e.segmentId)) dup.evidence.push(e);
+      for (const e of idea.evidence)
+        if (!dup.evidence.some((x) => x.segmentId === e.segmentId)) dup.evidence.push(e);
       dup.evidence = dup.evidence.slice(0, 3);
       continue;
     }
@@ -126,18 +155,35 @@ function sourceHasNumber(src: Source, value: string): boolean {
 }
 
 /** Flat model visual → renderer Visual. Falls back to a statement when the model asked for something impossible. */
-export function toVisual(v: RawVisual | undefined, src: Source, narration: string, keywords: string[]): Visual {
-  const fallback: Visual = { type: 'statement', text: clampW(keywords.join(' · ') || narration, 7), highlight: keywords.slice(0, 2) };
+export function toVisual(
+  v: RawVisual | undefined,
+  src: Source,
+  narration: string,
+  keywords: string[],
+): Visual {
+  const fallback: Visual = {
+    type: 'statement',
+    text: clampW(keywords.join(' · ') || narration, 7),
+    highlight: keywords.slice(0, 2),
+  };
   if (!v || !v.type) return fallback;
   try {
     switch (v.type) {
       case 'title':
-        return Visual.parse({ type: 'title', title: clampW(s(v.title) || src.title, 9), subtitle: s(v.subtitle) || undefined });
+        return Visual.parse({
+          type: 'title',
+          title: clampW(s(v.title) || src.title, 9),
+          subtitle: s(v.subtitle) || undefined,
+        });
       case 'statement': {
         const text = s(v.text);
         // a statement must say something on its own (≥ 3 words); else show the narration's key clause
         const shown = wordCount(text) >= 3 ? text : clampW(narration.replace(/[.!?]$/, ''), 9);
-        return Visual.parse({ type: 'statement', text: clampW(shown, 9), highlight: sa(v.highlight).slice(0, 2) });
+        return Visual.parse({
+          type: 'statement',
+          text: clampW(shown, 9),
+          highlight: sa(v.highlight).slice(0, 2),
+        });
       }
       case 'bigNumber': {
         const value = s(v.value);
@@ -148,31 +194,73 @@ export function toVisual(v: RawVisual | undefined, src: Source, narration: strin
           value: value.replace(/\s*%$/, '%'),
           unit: s(v.unit) || undefined,
           label: clampW(s(v.label), 8),
-          compare: cv && sourceHasNumber(src, cv) ? { value: cv, label: clampW(s(v.compareLabel) || 'before', 4) } : undefined,
+          compare:
+            cv && sourceHasNumber(src, cv)
+              ? { value: cv, label: clampW(s(v.compareLabel) || 'before', 4) }
+              : undefined,
         });
       }
       case 'bullets':
-        return Visual.parse({ type: 'bullets', heading: s(v.heading) || undefined, items: sa(v.items).slice(0, 4).map((x) => clampW(x, 7)) });
+        return Visual.parse({
+          type: 'bullets',
+          heading: s(v.heading) || undefined,
+          items: sa(v.items)
+            .slice(0, 4)
+            .map((x) => clampW(x, 7)),
+        });
       case 'bars': {
-        const bars = (Array.isArray(v.bars) ? v.bars : []) as { label?: string; value?: number; highlight?: boolean }[];
-        const clean = bars.filter((b) => typeof b.value === 'number' && Number.isFinite(b.value) && sourceHasNumber(src, String(b.value)));
+        const bars = (Array.isArray(v.bars) ? v.bars : []) as {
+          label?: string;
+          value?: number;
+          highlight?: boolean;
+        }[];
+        const clean = bars.filter(
+          (b) =>
+            typeof b.value === 'number' && Number.isFinite(b.value) && sourceHasNumber(src, String(b.value)),
+        );
         if (clean.length < 2) return fallback;
-        return Visual.parse({ type: 'bars', title: clampW(s(v.title), 8), unit: s(v.unit) || undefined, bars: clean.slice(0, 6).map((b) => ({ label: clampW(s(b.label), 4), value: b.value!, highlight: !!b.highlight })) });
+        return Visual.parse({
+          type: 'bars',
+          title: clampW(s(v.title), 8),
+          unit: s(v.unit) || undefined,
+          bars: clean
+            .slice(0, 6)
+            .map((b) => ({ label: clampW(s(b.label), 4), value: b.value!, highlight: !!b.highlight })),
+        });
       }
       case 'flow': {
         const nodes = (Array.isArray(v.nodes) ? v.nodes : []) as { id?: string; label?: string }[];
-        const ns = nodes.filter((n) => s(n.label)).slice(0, 5).map((n, i) => ({ id: s(n.id) || `n${i}`, label: clampW(s(n.label), 4), tone: TONES[i % TONES.length]! }));
+        const ns = nodes
+          .filter((n) => s(n.label))
+          .slice(0, 5)
+          .map((n, i) => ({
+            id: s(n.id) || `n${i}`,
+            label: clampW(s(n.label), 4),
+            tone: TONES[i % TONES.length]!,
+          }));
         if (ns.length < 2) return fallback;
         const ids = new Set(ns.map((n) => n.id));
-        let edges = ((Array.isArray(v.edges) ? v.edges : []) as { from?: string; to?: string }[]).filter((e) => ids.has(s(e.from)) && ids.has(s(e.to)) && s(e.from) !== s(e.to)).map((e) => ({ from: s(e.from), to: s(e.to) }));
+        let edges = ((Array.isArray(v.edges) ? v.edges : []) as { from?: string; to?: string }[])
+          .filter((e) => ids.has(s(e.from)) && ids.has(s(e.to)) && s(e.from) !== s(e.to))
+          .map((e) => ({ from: s(e.from), to: s(e.to) }));
         if (!edges.length) edges = ns.slice(1).map((n, i) => ({ from: ns[i]!.id, to: n.id }));
         return Visual.parse({ type: 'flow', title: s(v.title) || undefined, nodes: ns, edges });
       }
       case 'compare':
         return Visual.parse({
           type: 'compare',
-          left: { label: clampW(s(v.leftLabel), 4), points: sa(v.leftPoints).slice(0, 3).map((x) => clampW(x, 7)) },
-          right: { label: clampW(s(v.rightLabel), 4), points: sa(v.rightPoints).slice(0, 3).map((x) => clampW(x, 7)) },
+          left: {
+            label: clampW(s(v.leftLabel), 4),
+            points: sa(v.leftPoints)
+              .slice(0, 3)
+              .map((x) => clampW(x, 7)),
+          },
+          right: {
+            label: clampW(s(v.rightLabel), 4),
+            points: sa(v.rightPoints)
+              .slice(0, 3)
+              .map((x) => clampW(x, 7)),
+          },
           winner: ['left', 'right'].includes(s(v.winner)) ? s(v.winner) : 'none',
         });
       case 'quote': {
@@ -185,22 +273,43 @@ export function toVisual(v: RawVisual | undefined, src: Source, narration: strin
         const seg = src.segments.find((x) => x.id === s(v.segmentId) && x.kind === 'code');
         if (!seg) return fallback;
         const lines = seg.text.split('\n');
-        const focus = (Array.isArray(v.focusLines) ? v.focusLines : []).filter((n): n is number => typeof n === 'number' && n >= 1 && n <= Math.min(14, lines.length));
-        return Visual.parse({ type: 'code', code: lines.slice(0, 14).join('\n'), lang: seg.lang ?? 'text', focus, caption: s(v.caption) || seg.loc.file || undefined });
+        const focus = (Array.isArray(v.focusLines) ? v.focusLines : []).filter(
+          (n): n is number => typeof n === 'number' && n >= 1 && n <= Math.min(14, lines.length),
+        );
+        return Visual.parse({
+          type: 'code',
+          code: lines.slice(0, 14).join('\n'),
+          lang: seg.lang ?? 'text',
+          focus,
+          caption: s(v.caption) || seg.loc.file || undefined,
+        });
       }
       case 'figure': {
         const a = src.assets.find((x) => x.id === s(v.assetId));
         if (!a) return fallback;
-        return Visual.parse({ type: 'figure', assetId: a.id, caption: clampW(s(v.caption) || a.caption || '', 8) || undefined });
+        return Visual.parse({
+          type: 'figure',
+          assetId: a.id,
+          caption: clampW(s(v.caption) || a.caption || '', 8) || undefined,
+        });
       }
       case 'tree': {
         const t = src.segments.find((x) => x.kind === 'meta' && x.text.startsWith('FILE TREE'));
         if (!t) return fallback;
         const lines = t.text.split('\n').slice(1).filter(Boolean).slice(0, 14);
-        return Visual.parse({ type: 'tree', title: s(v.title) || undefined, lines, focus: sa(v.focus).slice(0, 3) });
+        return Visual.parse({
+          type: 'tree',
+          title: s(v.title) || undefined,
+          lines,
+          focus: sa(v.focus).slice(0, 3),
+        });
       }
       case 'takeaway':
-        return Visual.parse({ type: 'takeaway', text: clampW(s(v.text) || narration, 12), highlight: sa(v.highlight).slice(0, 2) });
+        return Visual.parse({
+          type: 'takeaway',
+          text: clampW(s(v.text) || narration, 12),
+          highlight: sa(v.highlight).slice(0, 2),
+        });
     }
   } catch {
     return fallback;
@@ -215,17 +324,30 @@ export function parseScript(raw: unknown, src: Source, targetSeconds: number, en
   for (const rb of r.beats ?? []) {
     const narration = s(rb.narration).replace(/\s+/g, ' ');
     if (wordCount(narration) < 2) continue;
-    const keywords = sa(rb.keywords).filter((k) => narration.toLowerCase().includes(k.toLowerCase())).slice(0, 3);
-    const role = (['hook', 'context', 'idea', 'evidence', 'example', 'takeaway'].includes(s(rb.role)) ? s(rb.role) : 'idea') as Beat['role'];
+    const keywords = sa(rb.keywords)
+      .filter((k) => narration.toLowerCase().includes(k.toLowerCase()))
+      .slice(0, 3);
+    const role = (
+      ['hook', 'context', 'idea', 'evidence', 'example', 'takeaway'].includes(s(rb.role))
+        ? s(rb.role)
+        : 'idea'
+    ) as Beat['role'];
     const claims = (rb.claims ?? [])
-      .map((c) => ({ text: s(c.text), support: sa(c.support).filter((x) => ids.has(x)), kind: (['fact', 'framing', 'analogy'].includes(s(c.kind)) ? s(c.kind) : 'fact') as 'fact' | 'framing' | 'analogy' }))
+      .map((c) => ({
+        text: s(c.text),
+        support: sa(c.support).filter((x) => ids.has(x)),
+        kind: (['fact', 'framing', 'analogy'].includes(s(c.kind)) ? s(c.kind) : 'fact') as
+          'fact' | 'framing' | 'analogy',
+      }))
       .filter((c) => c.text);
     // the narration is what is actually said: make sure it's covered. If the model gave no fact claims, treat
     // the whole narration as one fact claim citing everything it cited (so the gate checks it).
     const support = [...new Set(claims.flatMap((c) => c.support))];
     const hasFact = claims.some((c) => c.kind === 'fact');
-    const finalClaims = hasFact || role === 'hook' ? claims : [{ text: narration, support, kind: 'fact' as const }];
-    if (role === 'hook' && !finalClaims.length) finalClaims.push({ text: narration, support, kind: support.length ? 'fact' : 'framing' });
+    const finalClaims =
+      hasFact || role === 'hook' ? claims : [{ text: narration, support, kind: 'fact' as const }];
+    if (role === 'hook' && !finalClaims.length)
+      finalClaims.push({ text: narration, support, kind: support.length ? 'fact' : 'framing' });
     beats.push({
       id: `b${beats.length + 1}`,
       role,
@@ -240,10 +362,26 @@ export function parseScript(raw: unknown, src: Source, targetSeconds: number, en
   // shape guarantees: first beat is a hook with a title card, last is a takeaway
   if (beats[0]!.role !== 'hook') beats[0] = { ...beats[0]!, role: 'hook' };
   // a title card on the hook always shows the source's real title (model titles can overclaim)
-  if (beats[0]!.visual.type === 'title') beats[0] = { ...beats[0]!, visual: { type: 'title', title: clampW(src.title, 9), kicker: src.kind === 'pdf' ? 'PAPER' : src.kind === 'project' ? 'PROJECT' : 'EXPLAINED' } };
+  if (beats[0]!.visual.type === 'title')
+    beats[0] = {
+      ...beats[0]!,
+      visual: {
+        type: 'title',
+        title: clampW(src.title, 9),
+        kicker: src.kind === 'pdf' ? 'PAPER' : src.kind === 'project' ? 'PROJECT' : 'EXPLAINED',
+      },
+    };
   const last = beats[beats.length - 1]!;
   if (beats.length > 1 && last.role !== 'takeaway') beats[beats.length - 1] = { ...last, role: 'takeaway' };
   const lb = beats[beats.length - 1]!;
-  if (beats.length > 1 && lb.visual.type !== 'takeaway') beats[beats.length - 1] = { ...lb, visual: { type: 'takeaway', text: clampW(lb.narration.replace(/[.!?]$/, ''), 12), highlight: lb.keywords.slice(0, 1) } };
+  if (beats.length > 1 && lb.visual.type !== 'takeaway')
+    beats[beats.length - 1] = {
+      ...lb,
+      visual: {
+        type: 'takeaway',
+        text: clampW(lb.narration.replace(/[.!?]$/, ''), 12),
+        highlight: lb.keywords.slice(0, 1),
+      },
+    };
   return Script.parse({ schema: 'bridge.script/1', title: src.title, targetSeconds, beats, engine });
 }

@@ -28,7 +28,16 @@ const SYSTEM_JUDGE =
 /** Rough token estimate (≈ 0.75 words per token for English). */
 export const tokensOf = (s: string): number => Math.ceil(wordCount(s) / 0.75) + 4;
 
-const KIND_TAG: Partial<Record<Segment['kind'], string>> = { abstract: 'abstract', caption: 'caption', heading: 'heading', title: 'title', code: 'code', list: 'list', table: 'table', meta: 'meta' };
+const KIND_TAG: Partial<Record<Segment['kind'], string>> = {
+  abstract: 'abstract',
+  caption: 'caption',
+  heading: 'heading',
+  title: 'title',
+  code: 'code',
+  list: 'list',
+  table: 'table',
+  meta: 'meta',
+};
 
 export function renderSegment(s: Segment, maxWords = 220): string {
   const where = s.loc.page ? ` p${s.loc.page}` : s.loc.file ? ` ${s.loc.file}` : '';
@@ -49,7 +58,13 @@ export function selectSegments(src: Source, tokenBudget: number): Segment[] {
   for (const c of scored) segScore.set(c.segmentId, Math.max(segScore.get(c.segmentId) ?? 0, c.score));
   const rest = src.segments
     .filter((s) => !must.includes(s) && s.kind !== 'heading' && s.kind !== 'figure')
-    .map((s) => ({ s, score: (segScore.get(s.id) ?? 0) + (s.kind === 'caption' ? 0.3 : 0) + (s.kind === 'code' || s.kind === 'meta' ? 0.5 : 0) }))
+    .map((s) => ({
+      s,
+      score:
+        (segScore.get(s.id) ?? 0) +
+        (s.kind === 'caption' ? 0.3 : 0) +
+        (s.kind === 'code' || s.kind === 'meta' ? 0.5 : 0),
+    }))
     .sort((a, b) => b.score - a.score);
   const chosen = new Set<Segment>(must);
   let used = must.reduce((n, s) => n + tokensOf(s.text), 0);
@@ -63,14 +78,17 @@ export function selectSegments(src: Source, tokenBudget: number): Segment[] {
 }
 
 const LEVEL_TEXT: Record<Level, string> = {
-  newcomer: 'a smart newcomer (a new engineer or student): define any jargon in five words or fewer the first time',
+  newcomer:
+    'a smart newcomer (a new engineer or student): define any jargon in five words or fewer the first time',
   practitioner: 'a practitioner in the field: skip basic definitions',
   expert: 'an expert: be precise and dense, skip all basics',
 };
 
 export function analyzePrompt(src: Source, segments: Segment[], maxIdeas: number): Prompt {
   const figures = src.assets.filter((a) => a.kind !== 'page');
-  const figText = figures.length ? `\nFigures you may attach to an idea:\n${figures.map((a) => `[${a.id}] ${a.caption ?? 'image'}${a.ocr ? ` (text in image: ${a.ocr.slice(0, 120)})` : ''}`).join('\n')}\n` : '';
+  const figText = figures.length
+    ? `\nFigures you may attach to an idea:\n${figures.map((a) => `[${a.id}] ${a.caption ?? 'image'}${a.ocr ? ` (text in image: ${a.ocr.slice(0, 120)})` : ''}`).join('\n')}\n`
+    : '';
   return {
     system: SYSTEM_ANALYST,
     user: `SOURCE (${src.kind}): "${src.title}"
@@ -178,13 +196,22 @@ export function rewritePrompt(narration: string, problem: string, support: strin
 }
 
 /** For long videos: write the beats for one idea (a "section") so a small model stays focused. */
-export function sectionPrompt(src: Source, ctx: ScriptContext, ideaIndex: number, nBeats: number, previous: string): Prompt {
+export function sectionPrompt(
+  src: Source,
+  ctx: ScriptContext,
+  ideaIndex: number,
+  nBeats: number,
+  previous: string,
+): Prompt {
   const b = ctx.budget;
   const idea = ctx.analysis.ideas[ideaIndex]!;
   const segIds = new Set(idea.evidence.map((e) => e.segmentId));
   // neighbours of the evidence give context (same section)
   const evidence = src.segments.filter((s) => segIds.has(s.id));
-  const codeSegs = idea.kind === 'code' || src.kind === 'project' ? src.segments.filter((s) => s.kind === 'code').slice(0, 3) : [];
+  const codeSegs =
+    idea.kind === 'code' || src.kind === 'project'
+      ? src.segments.filter((s) => s.kind === 'code').slice(0, 3)
+      : [];
   const figs = src.assets.filter((a) => idea.assets.includes(a.id));
   const isFirst = ideaIndex === 0;
   return {
@@ -207,7 +234,12 @@ ${VISUAL_GUIDE}`,
   };
 }
 
-export function bookendPrompt(src: Source, ctx: ScriptContext, kind: 'opening' | 'takeaway', covered: string[]): Prompt {
+export function bookendPrompt(
+  src: Source,
+  ctx: ScriptContext,
+  kind: 'opening' | 'takeaway',
+  covered: string[],
+): Prompt {
   const b = ctx.budget;
   const top = ctx.analysis.ideas.slice(0, 3);
   const segIds = new Set(top.flatMap((i) => i.evidence.map((e) => e.segmentId)));

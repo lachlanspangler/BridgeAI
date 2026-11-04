@@ -15,22 +15,34 @@ const flag = (k: string) => (args.indexOf(`--${k}`) >= 0 ? args[args.indexOf(`--
 const tl = JSON.parse(readFileSync(join(job, 'timeline.json'), 'utf8')) as Timeline;
 const src = JSON.parse(readFileSync(join(job, 'source.json'), 'utf8')) as Source;
 const every = Number(flag('every') ?? 1);
-const times = flag('at') ? flag('at')!.split(',').map(Number) : Array.from({ length: Math.floor(tl.duration / every) }, (_, i) => 0.5 + i * every).filter((t) => t < tl.duration);
+const times = flag('at')
+  ? flag('at')!.split(',').map(Number)
+  : Array.from({ length: Math.floor(tl.duration / every) }, (_, i) => 0.5 + i * every).filter(
+      (t) => t < tl.duration,
+    );
 const out = join('artifacts/stills', basename(job));
 mkdirSync(out, { recursive: true });
 for (const f of readdirSync(out)) rmSync(join(out, f));
 const kicker = src.kind === 'pdf' ? 'Paper' : src.kind === 'project' ? 'Project' : 'Explained';
-for (const t of times) writeFileSync(join(out, `t${String(Math.round(t * 1000)).padStart(6, '0')}.png`), await renderStill(tl, t, job, src.assets, { burnCaptions: true, origin: src.origin, kicker }));
-const files = readdirSync(out).filter((f) => f.endsWith('.png')).sort();
+for (const t of times)
+  writeFileSync(
+    join(out, `t${String(Math.round(t * 1000)).padStart(6, '0')}.png`),
+    await renderStill(tl, t, job, src.assets, { burnCaptions: true, origin: src.origin, kicker }),
+  );
+const files = readdirSync(out)
+  .filter((f) => f.endsWith('.png'))
+  .sort();
 const cols = Math.min(5, files.length);
-const w = 384, h = 216;
+const w = 384,
+  h = 216;
 const sheet = createCanvas(cols * w, Math.ceil(files.length / cols) * (h + 18));
 const c = sheet.getContext('2d');
 c.fillStyle = '#fff';
 c.fillRect(0, 0, sheet.width, sheet.height);
 for (const [i, f] of files.entries()) {
   const im = await loadImage(join(out, f));
-  const x = (i % cols) * w, y = Math.floor(i / cols) * (h + 18);
+  const x = (i % cols) * w,
+    y = Math.floor(i / cols) * (h + 18);
   c.fillStyle = '#333';
   c.font = '14px sans-serif';
   c.fillText(`${(Number(f.slice(1, 7)) / 1000).toFixed(1)} s`, x + 4, y + 13);

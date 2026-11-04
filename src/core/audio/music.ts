@@ -5,7 +5,21 @@
  * extraneous load (EXPLAINER_CRAFT §10), so it supports energy and never competes with the voice.
  */
 import { Rng } from '../rng.ts';
-import { addInto, addMono, decay, envelope, highpass, lowpass, midiHz, noise, osc, SR, stereo, stereoDelay, type Stereo } from './dsp.ts';
+import {
+  addInto,
+  addMono,
+  decay,
+  envelope,
+  highpass,
+  lowpass,
+  midiHz,
+  noise,
+  osc,
+  SR,
+  stereo,
+  stereoDelay,
+  type Stereo,
+} from './dsp.ts';
 
 export type Pace = 'sprint' | 'brisk' | 'steady' | 'deep';
 

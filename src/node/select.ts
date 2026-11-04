@@ -34,16 +34,28 @@ export async function pickTts(id: string, cloud?: TtsFactory): Promise<TtsEngine
   return new SystemTts();
 }
 
-export async function pickEngines(opts: { llm: string; tts: string; log?: AiLog; providers?: ProviderFactory; voices?: TtsFactory }): Promise<{ engines: Engines; label: string }> {
+export async function pickEngines(opts: {
+  llm: string;
+  tts: string;
+  log?: AiLog;
+  providers?: ProviderFactory;
+  voices?: TtsFactory;
+}): Promise<{ engines: Engines; label: string }> {
   const tts = await pickTts(opts.tts, opts.voices);
   if (opts.llm === 'extractive') return { engines: extractiveEngines(tts), label: 'extractive' };
   if (opts.llm === 'auto' || opts.llm === 'local') {
     const l = localLlm();
     if (l) return { engines: aiEngines(l, tts, opts.log), label: `local:${l.model}` };
-    if (opts.llm === 'local') throw new Error('no local model found: run `make models` (downloads Qwen3.5-4B, 2.7 GB) or `bridge models link <file.gguf>`');
+    if (opts.llm === 'local')
+      throw new Error(
+        'no local model found: run `make models` (downloads Qwen3.5-4B, 2.7 GB) or `bridge models link <file.gguf>`',
+      );
     return { engines: extractiveEngines(tts), label: 'extractive' };
   }
   const p = opts.providers ? await opts.providers(opts.llm) : null;
-  if (!p) throw new Error(`provider "${opts.llm}" is not configured: add a key in Settings or run \`bridge keys set ${opts.llm}\``);
+  if (!p)
+    throw new Error(
+      `provider "${opts.llm}" is not configured: add a key in Settings or run \`bridge keys set ${opts.llm}\``,
+    );
   return { engines: aiEngines(p, tts, opts.log), label: `${p.id}:${p.model}` };
 }

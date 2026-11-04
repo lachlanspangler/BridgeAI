@@ -7,7 +7,15 @@
  * cue phrases like "we propose", numbers with units) × length fit.
  */
 import type { Analysis, Idea, IdeaKind, Segment, Source } from '../schema.ts';
-import { cleanForSpeech, contentWords, numbers, properNouns, sentences, stem, wordCount } from '../text/text.ts';
+import {
+  cleanForSpeech,
+  contentWords,
+  numbers,
+  properNouns,
+  sentences,
+  stem,
+  wordCount,
+} from '../text/text.ts';
 
 export interface Candidate {
   segmentId: string;
@@ -21,12 +29,16 @@ export interface Candidate {
 
 const CUE_STRONG =
   /\b(we (propose|present|introduce|show|find|demonstrate|develop)|this (paper|work|project|library|tool) (proposes|presents|introduces|shows|is|lets|provides)|our (main |key )?(contribution|result|finding|approach|method|model)s?|in this (paper|work)|achiev(es|ed|ing)|outperform|state[- ]of[- ]the[- ]art|for the first time|key (idea|insight)|we conclude|the main)/i;
-const CUE_CORE = /\b(we (propose|introduce|present)|this (paper|work) (proposes|introduces|presents)|is a (new|novel)|main (idea|contribution))\b/i;
-const CUE_WEAK = /\b(significant(ly)?|improv(e|es|ed|ement)|reduc(e|es|ed|tion)|faster|better|novel|simple|enables?|allows?|so that|because)\b/i;
+const CUE_CORE =
+  /\b(we (propose|introduce|present)|this (paper|work) (proposes|introduces|presents)|is a (new|novel)|main (idea|contribution))\b/i;
+const CUE_WEAK =
+  /\b(significant(ly)?|improv(e|es|ed|ement)|reduc(e|es|ed|tion)|faster|better|novel|simple|enables?|allows?|so that|because)\b/i;
 const CUE_BAD =
   /\b(acknowledg|copyright|licen[cs]e|arxiv|preprint|correspond(ing|ence)|e-?mail|https?:|doi|table \d|figure \d|appendix|et al\b|ibid|section \d|see \w+ \d)/i;
-const SECTION_GOOD = /abstract|introduction|conclusion|summary|overview|discussion|results?|readme|about|features/i;
-const SECTION_BAD = /related work|references|bibliography|acknowledg|appendix|license|contributing|changelog|install/i;
+const SECTION_GOOD =
+  /abstract|introduction|conclusion|summary|overview|discussion|results?|readme|about|features/i;
+const SECTION_BAD =
+  /related work|references|bibliography|acknowledg|appendix|license|contributing|changelog|install/i;
 
 export function candidates(src: Source): Candidate[] {
   const out: Candidate[] = [];
@@ -81,9 +93,16 @@ export function textRank(texts: string[], iterations = 40, d = 0.85): number[] {
 }
 
 export function classify(text: string): IdeaKind {
-  if (/\b(we (propose|present|introduce|develop)|architecture|consists of|composed of|layers?|module|pipeline)\b/i.test(text))
+  if (
+    /\b(we (propose|present|introduce|develop)|architecture|consists of|composed of|layers?|module|pipeline)\b/i.test(
+      text,
+    )
+  )
     return /architecture|layers?|module|consists|composed/i.test(text) ? 'architecture' : 'method';
-  if (numbers(text).length && /\b(achiev|improv|outperform|reduc|accuracy|score|faster|times|%|percent|bleu|f1)\b/i.test(text))
+  if (
+    numbers(text).length &&
+    /\b(achiev|improv|outperform|reduc|accuracy|score|faster|times|%|percent|bleu|f1)\b/i.test(text)
+  )
     return 'number';
   if (/\b(results?|show|find|demonstrate|outperform|achiev)\b/i.test(text)) return 'result';
   if (/\b(problem|challenge|limitation|difficult|bottleneck|however|but)\b/i.test(text)) return 'problem';
@@ -162,7 +181,8 @@ export function analyzeExtractive(src: Source, maxIdeas = 12): Analysis {
   const scored = scoreCandidates(src, candidates(src)).filter((c) => c.kind !== 'title');
   const picked = selectDiverse(scored, maxIdeas);
   const df = new Map<string, number>();
-  for (const c of scored) for (const w of new Set(contentWords(c.text).map(stem))) df.set(w, (df.get(w) ?? 0) + 1);
+  for (const c of scored)
+    for (const w of new Set(contentWords(c.text).map(stem))) df.set(w, (df.get(w) ?? 0) + 1);
   const top = picked[0]?.score ?? 1;
   const ideas: Idea[] = picked.map((c, i) => ({
     id: `i${i + 1}`,
@@ -180,6 +200,8 @@ export function analyzeExtractive(src: Source, maxIdeas = 12): Analysis {
 /** Numbers as they appear (with units), for on-screen display. */
 export function rawNumbers(text: string): string[] {
   const m =
-    text.match(/(?<![A-Za-z\d.])\d[\d,]*(?:\.\d+)?\s?(?:%|×|x(?=\s)|percent|BLEU|ms|s\b|GB|MB|B\b|M\b|K\b|k\b|times)?/g) ?? [];
+    text.match(
+      /(?<![A-Za-z\d.])\d[\d,]*(?:\.\d+)?\s?(?:%|×|x(?=\s)|percent|BLEU|ms|s\b|GB|MB|B\b|M\b|K\b|k\b|times)?/g,
+    ) ?? [];
   return [...new Set(m.map((s) => s.trim()))].filter((s) => !/^(19|20)\d\d$/.test(s) || /\D/.test(s));
 }
