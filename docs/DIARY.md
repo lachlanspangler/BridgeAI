@@ -62,3 +62,19 @@ parts. `git init` (no remote). Pinned the public npm registry in `.npmrc`. Launc
 
 **Next:** 3/5-minute videos, run the evals, a design pass, then the review agents.
 **Ideas:** 47 marked done; I-078…I-085 added; I-051 blocked (HF client id).
+
+## 2026-11-04 04:15: Reviews, and making the gate honest
+**Did:** Security review (agent): 1 high, 5 medium, 9 low; all fixed except M4 (local non-browser clients are trusted), which is accepted and documented in ADR 0006. Code review (agent): 15 correctness bugs with proof tests, 8 of them ways an unsupported claim could reach a video. All fixed; the proof tests are now regression tests (`tests/review`, `tests/security`). Playwright e2e for the whole browser flow. Provider contract tests. Long videos: 3 min = 193 s on the local model; the sectioned writer now retries and falls back per part.
+
+**Broke / learned:**
+- The faith gate was weaker than it looked: spelled-out numbers, magnitude suffixes (7B vs 7M), sentence-initial invented names, narration beyond the listed claims, and an unchecked fallback takeaway could all get through. It is now strict by default, and the judge handles the soft cases.
+- Every model claim that contains a number now goes to the judge, even when overlap is high. A video said "Atmosphere holds 800 gigatons; 9 new each year", where 9 was emissions and the net was 4: the numbers were real, the claim was wrong.
+- The image-set video never showed the image (the model picked drawn visuals). Sources with figures now always show one.
+- Small models reuse ids (three flow nodes all called "s1" stacked on one spot). Ids are positional now.
+- Prettier reformatting between my scripted edits made several `str.replace` patches silently miss. Every edit now asserts its anchor exists.
+
+**Decided (and why):**
+- **Thin sources get honest short videos.** A 175-word abstract at 1 min becomes ~40–50 s with a note saying so, not padding. Faithfulness beats the clock; the ±10 % promise holds whenever the source has enough material.
+- Evals: understanding is scored only on questions about the key points that fit the chosen length.
+
+**Next:** finish EVALS (running), 5-minute render, design-critic and learner reviews on fresh samples, then a final eval run on the final code.
