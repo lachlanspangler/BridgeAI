@@ -1,0 +1,42 @@
+id: humanize-repo
+kind: project
+title: "humanize: Python humanization utilities"
+source:
+  url: https://github.com/python-humanize/humanize
+  note: "Public GitHub repository (default branch main). README read 2026-11-03. Fetched at eval time; not stored."
+licence: "MIT License. Copyright (c) 2010-2020 Jason Moiron and Contributors (python-humanize/humanize)."
+key_points:
+  - id: k1
+    text: "humanize is a Python package of utilities that turn numbers, times and sizes into human-readable text, like '3 minutes ago'."
+    any: [["humanize"], ["human-readable", "human readable", "readable", "friendly"]]
+  - id: k2
+    text: "Integer helpers: intcomma (12345 -> '12,345'), intword (123455913 -> '123.5 million'), apnumber (4 -> 'four')."
+    any: [["intcomma", "intword", "apnumber", "million", "comma"]]
+  - id: k3
+    text: "Date and time helpers: naturalday ('today', 'yesterday'), naturaldelta ('17 minutes'), naturaltime ('an hour ago'), precisedelta."
+    any: [["naturaltime", "naturalday", "naturaldelta", "precisedelta", "ago", "yesterday"]]
+  - id: k4
+    text: "naturalsize formats file sizes, e.g. 1,000,000 bytes -> '1.0 MB', or '976.6 KiB' in binary mode."
+    any: [["naturalsize", "file size", "mb", "kib", "megabyte"]]
+  - id: k5
+    text: "It is localized to many languages, and the locale can be switched at runtime with humanize.i18n.activate()."
+    any: [["locali", "language", "i18n", "locale", "translat"]]
+  - id: k6
+    text: "It also formats fractions (fractional: 1.5 -> '1 1/2') and scientific notation (scientific)."
+    any: [["fraction", "scientific"]]
+  - id: k7
+    text: "Install from PyPI with pip install humanize."
+    any: [["pip", "pypi", "install"]]
+questions:
+  - q: "What does humanize.intword(123455913) return?"
+    a: "'123.5 million'"
+    key: k2
+  - q: "Which function turns a byte count into a string like '1.0 MB'?"
+    a: "naturalsize"
+    key: k4
+  - q: "How do you switch humanize's output language at runtime?"
+    a: "humanize.i18n.activate(<locale>)"
+    key: k5
+  - q: "Which programming language is humanize for?"
+    a: "Python"
+    key: k1

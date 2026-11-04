@@ -1,0 +1,42 @@
+id: tree-of-thoughts-pdf
+kind: pdf
+title: "Tree of Thoughts: Deliberate Problem Solving with Large Language Models"
+source:
+  url: https://arxiv.org/abs/2305.10601
+  note: "PDF https://arxiv.org/pdf/2305.10601v2 (14 pages, NeurIPS 2023, with figures). Downloaded at eval time; not stored."
+licence: "CC BY 4.0 (per arXiv abs page). Yao et al., arXiv:2305.10601"
+key_points:
+  - id: k1
+    text: "Tree of Thoughts (ToT) lets a language model explore multiple reasoning paths as a tree of 'thoughts', self-evaluating them and looking ahead or backtracking, instead of decoding left to right."
+    any: [["tree of thought", "tree-of-thought"], ["path", "branch", "explor", "backtrack", "search"]]
+  - id: k2
+    text: "On Game of 24, GPT-4 with chain-of-thought solved only 4% of tasks while ToT achieved 74%."
+    any: [["74", "seventy-four", "seventy four"], ["24"]]
+  - id: k3
+    text: "ToT generalizes chain-of-thought prompting; a thought is a coherent unit of text that serves as an intermediate step."
+    any: [["chain of thought", "chain-of-thought"]]
+  - id: k4
+    text: "Standard LM inference makes token-level, left-to-right decisions, which falls short on tasks needing exploration, strategic lookahead, or where early decisions are pivotal."
+    any: [["left-to-right", "left to right", "token", "one by one"]]
+  - id: k5
+    text: "ToT combines LM-generated and LM-evaluated thoughts with search algorithms such as breadth-first search (BFS) and depth-first search (DFS)."
+    any: [["breadth", "depth", "bfs", "dfs", "search algorithm"]]
+  - id: k6
+    text: "It was tested on three new tasks needing planning or search: Game of 24, Creative Writing and Mini Crosswords."
+    any: [["creative writing", "crossword"]]
+  - id: k7
+    text: "The idea draws on 'System 2' deliberate thinking from dual-process cognition and on Newell, Shaw and Simon's view of problem solving as tree search."
+    any: [["system 2", "system two", "deliberat", "newell"]]
+questions:
+  - q: "What success rate did ToT reach on Game of 24, versus GPT-4 with chain-of-thought?"
+    a: "74% versus 4%"
+    key: k2
+  - q: "Which prompting approach does ToT generalize?"
+    a: "chain-of-thought prompting"
+    key: k3
+  - q: "Name two search algorithms ToT uses to explore the tree."
+    a: "breadth-first search (BFS) and depth-first search (DFS)"
+    key: k5
+  - q: "What three tasks were used to evaluate ToT?"
+    a: "Game of 24, Creative Writing and Mini Crosswords"
+    key: k6

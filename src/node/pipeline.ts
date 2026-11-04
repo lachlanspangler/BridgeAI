@@ -80,6 +80,7 @@ export async function runPipeline(
   jobDir: string,
   onProgress: (p: Progress) => void = () => {},
   signal?: AbortSignal,
+  opts: { render?: boolean } = {},
 ): Promise<RunResult> {
   mkdirSync(jobDir, { recursive: true });
   const tmp = join(jobDir, 'tmp');
@@ -283,6 +284,20 @@ export async function runPipeline(
   write(jobDir, 'script.md', scriptMarkdown(script, timeline, src));
   write(jobDir, 'sourcemap.json', buildSourceMap(script, timeline, src, faith));
 
+  if (opts.render === false) {
+    rmSync(tmp, { recursive: true, force: true });
+    return {
+      jobDir,
+      video: '',
+      timeline,
+      script,
+      analysis,
+      faith,
+      durations: { target: settings.seconds, actual: timeline.duration, withinTolerance: Math.abs(timeline.duration - settings.seconds) <= settings.seconds * 0.1 },
+      timings,
+      engines: { analyze: analysis.engine, script: script.engine, tts: engines.tts.id },
+    };
+  }
   // 5. audio
   onProgress({ stage: 'audio', progress: 0, message: 'Mixing voice, music and sound effects' });
   const audioWav = join(tmp, 'mix.wav');

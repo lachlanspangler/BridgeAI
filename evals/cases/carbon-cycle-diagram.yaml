@@ -1,0 +1,40 @@
+id: carbon-cycle-diagram
+kind: images
+title: The carbon cycle (NASA Earth Observatory / U.S. DOE diagram)
+source:
+  files:
+    - evals/sources/images/carbon-cycle-diagram/carbon-cycle.jpg
+  note: "A public-domain illustrated diagram of the carbon cycle across atmosphere, land and ocean. Arrows are labelled with fluxes in GtC/y (gigatons of carbon per year); numbers in parentheses are stored carbon pools; red indicates carbon from human emissions. Pools: Atmosphere (800), Plant biomass (550), Soil (2300), Fossil pool (10,000), Surface ocean (1000), Deep ocean (37,000), Reactive sediments (6000). Fluxes: Photosynthesis 120 +3 into plants; Plant respiration 60 and Microbial respiration and decomposition 60 back to the atmosphere; Fossil fuels, cement, and land-use change 9 (red); Air-sea gas exchange 90 +2 into the ocean and 90 out; Phytoplankton photosynthesis and Respiration and decomposition in the surface ocean; Net ocean uptake 2; Net terrestrial uptake 3; Soil carbon. A central label reads 'Atmospheric Carbon Net Annual Increase 4'."
+licence: "Public domain (U.S. Government work, U.S. Department of Energy; via NASA Earth Observatory). Diagram adapted from U.S. DOE, Biological and Environmental Research Information System; Wikimedia Commons 'File:Carbon cycle.jpg'."
+key_points:
+  - id: k1
+    text: "Carbon continually moves between the atmosphere, land and ocean, and human emissions add extra carbon so the atmosphere gains a net 4 GtC per year."
+    any: [["carbon"], ["atmospher", "air"], ["human", "fossil", "emission", "increase"]]
+  - id: k2
+    text: "Fossil fuels, cement and land-use change release 9 GtC per year."
+    any: [["fossil", "cement", "land-use", "land use"], ["emission", "release", "burn", "human"]]
+  - id: k3
+    text: "Plants take up about 120 (+3) GtC/y by photosynthesis; plant respiration (60) and microbial respiration and decomposition (60) return carbon to the air."
+    any: [["photosynth"], ["respirat", "120", "decompos"]]
+  - id: k4
+    text: "The ocean exchanges about 90 GtC/y with the atmosphere in each direction (plus 2 extra uptake), giving a net ocean uptake of 2 GtC/y."
+    any: [["ocean", "sea"], ["90", "ninety", "uptake", "absorb", "exchange"]]
+  - id: k5
+    text: "Land ecosystems take up a net 3 GtC/y (net terrestrial uptake)."
+    any: [["terrestrial", "land"], ["uptake", "absorb", "take up", "store"]]
+  - id: k6
+    text: "The largest store is the deep ocean (37,000 GtC); others include the fossil pool (10,000), reactive sediments (6000), soil (2300), surface ocean (1000), atmosphere (800) and plant biomass (550)."
+    any: [["deep ocean", "37,000", "37000", "37 thousand", "thirty-seven thousand", "pool", "store", "reservoir"]]
+questions:
+  - q: "How much carbon per year do fossil fuels, cement and land-use change add, according to the diagram?"
+    a: "9 gigatons of carbon per year"
+    key: k2
+  - q: "What is the atmospheric carbon net annual increase shown?"
+    a: "4 GtC per year"
+    key: k1
+  - q: "What is the net ocean uptake of carbon per year?"
+    a: "2 GtC per year"
+    key: k4
+  - q: "Which carbon pool in the diagram is the largest?"
+    a: "the deep ocean (37,000 GtC)"
+    key: k6

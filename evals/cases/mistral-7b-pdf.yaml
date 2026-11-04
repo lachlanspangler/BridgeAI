@@ -1,0 +1,42 @@
+id: mistral-7b-pdf
+kind: pdf
+title: Mistral 7B
+source:
+  url: https://arxiv.org/abs/2310.06825
+  note: "PDF https://arxiv.org/pdf/2310.06825v1 (9 pages, 5+ figures). Downloaded at eval time; not stored."
+licence: "CC BY 4.0 (per arXiv abs page). Jiang et al., 'Mistral 7B', arXiv:2310.06825"
+key_points:
+  - id: k1
+    text: "Mistral 7B is a 7-billion-parameter language model that outperforms the best open 13B model (Llama 2 13B) on all evaluated benchmarks."
+    any: [["mistral"], ["7b", "7 billion", "seven billion"], ["llama", "13b", "13 billion", "outperform", "beat"]]
+  - id: k2
+    text: "It uses grouped-query attention (GQA) for faster inference and lower decoding memory, and sliding window attention (SWA) to handle long sequences at reduced cost."
+    any: [["grouped-query", "grouped query", "gqa", "sliding window", "swa"]]
+  - id: k3
+    text: "With sliding window attention each token attends to at most W tokens of the previous layer, but stacking layers lets information travel up to k x W tokens (about 131K tokens with W = 4096)."
+    any: [["window"], ["4096", "131", "layer"]]
+  - id: k4
+    text: "A rolling buffer cache of fixed size W stores keys/values at position i mod W, cutting cache memory 8x on 32k-token sequences without hurting quality."
+    any: [["rolling buffer", "cache"], ["8x", "eight times", "8 times", "fixed size", "overwrit"]]
+  - id: k5
+    text: "It also beats Llama 1 34B in reasoning, mathematics and code generation, and approaches Code-Llama 7B on code."
+    any: [["34b", "34 billion", "llama 1"], ["math", "code", "reasoning"]]
+  - id: k6
+    text: "Mistral 7B - Instruct, fine-tuned on public instruction datasets, surpasses Llama 2 13B - Chat on human and automated benchmarks."
+    any: [["instruct", "chat", "fine-tun"]]
+  - id: k7
+    text: "The models are released under the Apache 2.0 license."
+    any: [["apache", "open"]]
+questions:
+  - q: "Which larger open model does Mistral 7B outperform on all evaluated benchmarks?"
+    a: "Llama 2 13B"
+    key: k1
+  - q: "Name the two attention techniques Mistral 7B uses."
+    a: "grouped-query attention (GQA) and sliding window attention (SWA)"
+    key: k2
+  - q: "By how much does the rolling buffer cache reduce cache memory on 32k-token sequences?"
+    a: "8x"
+    key: k4
+  - q: "Under what license are the Mistral 7B models released?"
+    a: "Apache 2.0"
+    key: k7

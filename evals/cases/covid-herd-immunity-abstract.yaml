@@ -1,0 +1,38 @@
+id: covid-herd-immunity-abstract
+kind: text
+title: The disease-induced herd immunity level for Covid-19 is substantially lower than the classical herd immunity level
+source:
+  file: evals/sources/covid-herd-immunity-abstract.md
+licence: "arXiv metadata (title + abstract), CC0 1.0. Britton, Ball & Trapman, arXiv:2005.03085"
+key_points:
+  - id: k1
+    text: "Herd immunity reached through disease spread is substantially lower than the classical herd immunity level 1 - 1/R0."
+    any: [["herd immunity"], ["lower", "smaller", "less"]]
+  - id: k2
+    text: "In the illustrative model with R0 = 2.5, disease-induced herd immunity is 43% instead of the classical 60%."
+    any: [["43", "forty-three", "forty three"], ["60", "sixty"]]
+  - id: k3
+    text: "The reason: infection spreads more in high-contact groups, so disease-induced immunity is concentrated where it matters, unlike uniformly distributed immunity."
+    any: [["contact", "active", "social"]]
+  - id: k4
+    text: "The classical herd immunity level is h_C = 1 - 1/R0, with R0 for covid-19 estimated at 2.2 to 3.5."
+    any: [["r0", "r zero", "r nought", "r naught", "r-naught", "reproduction number", "1 - 1/", "one minus"]]
+  - id: k5
+    text: "The model is age-structured with mixing rates fitted to social activity studies and three activity levels (low, average, high)."
+    any: [["age-structured", "age structured", "age group", "ages"], ["activ", "social", "mixing"]]
+  - id: k6
+    text: "Consequently, a lower fraction of the population needs to be infected for herd immunity to appear."
+    any: [["fraction", "proportion", "fewer", "percent"], ["infect"]]
+questions:
+  - q: "In the illustration with R0 = 2.5, what disease-induced herd immunity level did the authors find?"
+    a: "43%"
+    key: k2
+  - q: "What is the classical herd immunity level for R0 = 2.5?"
+    a: "60%"
+    key: k2
+  - q: "Why is disease-induced immunity stronger than uniformly distributed immunity?"
+    a: "a greater proportion of people in high-contact groups get infected"
+    key: k3
+  - q: "What formula defines the classical herd immunity level?"
+    a: "1 - 1/R0"
+    key: k4

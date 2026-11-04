@@ -8,11 +8,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Proves every layer end to end before widening",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-002",
@@ -21,11 +23,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Every layer validates against one schema; the web app shares the types",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-003",
@@ -34,11 +38,13 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Rule: one render at a time; re-rendering after a script edit skips analysis",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-004",
@@ -60,11 +66,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Papers are the flagship input",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-006",
@@ -73,11 +81,13 @@
    "value": 5,
    "effort": 4,
    "confidence": 0.6,
-   "status": "open",
+   "status": "done",
    "why": "Real figures from the paper are the most trusted visual",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-007",
@@ -86,11 +96,13 @@
    "value": 4,
    "effort": 3,
    "confidence": 0.6,
-   "status": "open",
+   "status": "done",
    "why": "Image sets must work with zero keys",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-008",
@@ -99,11 +111,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "“Explain this repo in 60 s” is a killer use for new engineers",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-009",
@@ -112,11 +126,13 @@
    "value": 4,
    "effort": 1,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Most papers users want are on arXiv",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-010",
@@ -125,11 +141,13 @@
    "value": 3,
    "effort": 2,
    "confidence": 0.6,
-   "status": "open",
+   "status": "done",
    "why": "Blogs and docs pages; careful with robots/ToS",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-011",
@@ -151,11 +169,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Works instantly with no download; faithful by construction; deterministic tests",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-013",
@@ -164,11 +184,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Traceability: every idea maps back to where it came from",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-014",
@@ -177,11 +199,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "10-page papers are ~10k tokens",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-015",
@@ -190,11 +214,13 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "Stabilises a small model’s noisy rankings",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-016",
@@ -203,11 +229,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "The core promise: you click 20 s, you get 20 s",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-017",
@@ -216,11 +244,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "One idea per beat; visuals chosen from a fixed library the renderer can draw",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-018",
@@ -242,11 +272,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Word-count estimates drift; real audio is ground truth",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-020",
@@ -268,11 +300,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Cheap, exact, catches the most dangerous hallucinations",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-022",
@@ -281,11 +315,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "Zero unsupported claims is a stop criterion",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-023",
@@ -294,11 +330,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Trust: users can check every sentence",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-024",
@@ -307,11 +345,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Consistency is what makes it look designed",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-025",
@@ -320,11 +360,13 @@
    "value": 5,
    "effort": 4,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Every beat has motion",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-026",
@@ -333,10 +375,10 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Renderer regressions caught by CI",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
+   "updated": "2026-11-04",
    "notes": []
   },
   {
@@ -372,11 +414,13 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "Draws the eye to the part of the figure that matters",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-030",
@@ -398,11 +442,13 @@
    "value": 4,
    "effort": 3,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "Projects input",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-032",
@@ -450,11 +496,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "No samples, no licences, works offline",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-036",
@@ -463,11 +511,13 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Sound on transitions is in the brief",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-037",
@@ -476,11 +526,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Voice must always be clear",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-038",
@@ -502,11 +554,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Measured: whisper transcribed it verbatim",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-040",
@@ -515,11 +569,13 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "Never fail to produce audio",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-041",
@@ -541,11 +597,13 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Better voices for those who have keys",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-043",
@@ -567,11 +625,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "One command on any machine; structured output that never fails to parse",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-045",
@@ -580,11 +640,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Hard rule on disk",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-046",
@@ -593,11 +655,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Reuse LachedInAI’s ModelRouter idea",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-047",
@@ -619,11 +683,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Keys never leave the machine except to their provider",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-049",
@@ -632,11 +698,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "The brief asks for account linking",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-050",
@@ -645,11 +713,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Keys are sent only to their own host",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-051",
@@ -658,11 +728,13 @@
    "value": 3,
    "effort": 2,
    "confidence": 0.5,
-   "status": "open",
+   "status": "blocked",
    "why": "Real OAuth with free inference credits; blocked on a client id from the owner",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 needs a Hugging Face OAuth app client id from the owner"
+   ]
   },
   {
    "id": "I-052",
@@ -684,11 +756,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Hard rule",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-054",
@@ -697,11 +771,13 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "Human in the loop for teaching",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-055",
@@ -710,11 +786,13 @@
    "value": 5,
    "effort": 1,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Core promise made visible",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-056",
@@ -723,11 +801,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Output requirements",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-057",
@@ -749,11 +829,13 @@
    "value": 3,
    "effort": 2,
    "confidence": 0.7,
-   "status": "open",
+   "status": "done",
    "why": "Find old videos",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-059",
@@ -775,11 +857,13 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Stop criterion",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-061",
@@ -788,10 +872,10 @@
    "value": 5,
    "effort": 3,
    "confidence": 0.7,
-   "status": "open",
+   "status": "doing",
    "why": "Stop criterion",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
+   "updated": "2026-11-04",
    "notes": []
   },
   {
@@ -801,10 +885,10 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.7,
-   "status": "open",
+   "status": "doing",
    "why": "Same rule as LachedInAI",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
+   "updated": "2026-11-04",
    "notes": []
   },
   {
@@ -814,11 +898,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "One-command everything",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-064",
@@ -827,11 +913,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Self-healing checks",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-065",
@@ -840,11 +928,13 @@
    "value": 4,
    "effort": 1,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Disk rule",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-066",
@@ -892,11 +982,13 @@
    "value": 5,
    "effort": 2,
    "confidence": 0.9,
-   "status": "open",
+   "status": "done",
    "why": "Accessibility and silent viewing",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 built 2026-11-03 (see DIARY)"
+   ]
   },
   {
    "id": "I-070",
@@ -905,11 +997,13 @@
    "value": 4,
    "effort": 1,
    "confidence": 0.8,
-   "status": "open",
+   "status": "done",
    "why": "Colour is never the only signal",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 tests/core/design.test.ts: all text ≥ 4.5:1"
+   ]
   },
   {
    "id": "I-071",
@@ -944,11 +1038,13 @@
    "value": 4,
    "effort": 2,
    "confidence": 0.6,
-   "status": "open",
+   "status": "done",
    "why": "Same source, different audiences",
    "created": "2026-11-03",
-   "updated": "2026-11-03",
-   "notes": []
+   "updated": "2026-11-04",
+   "notes": [
+    "2026-11-04 level select in UI + prompt LEVEL_TEXT"
+   ]
   },
   {
    "id": "I-074",
@@ -1000,6 +1096,110 @@
    "why": "Contradicts local-first and free",
    "created": "2026-11-03",
    "updated": "2026-11-03",
+   "notes": []
+  },
+  {
+   "id": "I-078",
+   "title": "Two-pass script: draft → critique against EXPLAINER_CRAFT rules → rewrite",
+   "area": "script",
+   "value": 4,
+   "effort": 3,
+   "confidence": 0.7,
+   "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-079",
+   "title": "Self-consistency ranking: 3 samples, vote the top idea",
+   "area": "analysis",
+   "value": 3,
+   "effort": 2,
+   "confidence": 0.7,
+   "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-080",
+   "title": "Prefer the paper's own figure when an idea cites a segment near a figure caption",
+   "area": "visuals",
+   "value": 4,
+   "effort": 2,
+   "confidence": 0.7,
+   "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-081",
+   "title": "Model bake-off on EVALS: Qwen3.5-4B vs Gemma 4 E4B vs Qwen3.5-2B",
+   "area": "models",
+   "value": 4,
+   "effort": 3,
+   "confidence": 0.7,
+   "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-082",
+   "title": "sherpa-onnx-node Kokoro (34 MB native vs 408 MB node_modules)",
+   "area": "voice",
+   "value": 3,
+   "effort": 3,
+   "confidence": 0.7,
+   "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-083",
+   "title": "Live canvas preview of the script in the browser before rendering",
+   "area": "app",
+   "value": 4,
+   "effort": 3,
+   "confidence": 0.7,
+   "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-084",
+   "title": "Split render into parallel workers (chunks + concat) for 3–5 min videos",
+   "area": "pipeline",
+   "value": 3,
+   "effort": 3,
+   "confidence": 0.7,
+   "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "notes": []
+  },
+  {
+   "id": "I-085",
+   "title": "CVD (colour-blindness) simulation check on key frames",
+   "area": "accessibility",
+   "value": 3,
+   "effort": 2,
+   "confidence": 0.7,
+   "status": "open",
+   "why": "",
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
    "notes": []
   }
  ]

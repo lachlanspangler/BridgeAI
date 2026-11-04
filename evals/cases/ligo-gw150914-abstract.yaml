@@ -1,0 +1,41 @@
+id: ligo-gw150914-abstract
+kind: text
+title: Observation of Gravitational Waves from a Binary Black Hole Merger
+source:
+  file: evals/sources/ligo-gw150914-abstract.md
+licence: "arXiv metadata (title + abstract), CC0 1.0. LIGO Scientific Collaboration and Virgo Collaboration (Abbott et al.), arXiv:1602.03837"
+key_points:
+  - id: k1
+    text: "LIGO made the first direct detection of gravitational waves, which was also the first observation of a binary black hole merger."
+    any: [["gravitational wave", "gravitational-wave"], ["first", "detect", "observ"]]
+  - id: k2
+    text: "The signal matches general relativity's prediction for two black holes spiralling in, merging, and the resulting single black hole ringing down."
+    any: [["black hole"], ["merg", "inspiral", "collid", "relativity"]]
+  - id: k3
+    text: "The signal was seen simultaneously by LIGO's two detectors on September 14, 2015."
+    any: [["2015", "september", "two detectors", "both detectors"]]
+  - id: k4
+    text: "The initial black holes were about 36 and 29 solar masses; the final black hole was about 62 solar masses, with about 3 solar masses radiated as gravitational waves."
+    any: [["36", "29", "62", "thirty-six", "sixty-two"], ["solar mass", "sun"]]
+  - id: k5
+    text: "The detection is highly significant: signal-to-noise ratio 24, false alarm rate below 1 per 203,000 years (over 5.1 sigma)."
+    any: [["203", "5.1", "sigma", "signal-to-noise", "false alarm", "significan"]]
+  - id: k6
+    text: "The source is about 410 megaparsecs away (redshift about 0.09)."
+    any: [["410", "megaparsec", "mpc", "redshift"]]
+  - id: k7
+    text: "The observation demonstrates that binary stellar-mass black hole systems exist."
+    any: [["binary", "pair"], ["exist"]]
+questions:
+  - q: "What two 'firsts' does this observation represent?"
+    a: "first direct detection of gravitational waves and first observation of a binary black hole merger"
+    key: k1
+  - q: "On what date was the signal observed?"
+    a: "September 14, 2015"
+    key: k3
+  - q: "What was the mass of the final black hole, in solar masses?"
+    a: "about 62"
+    key: k4
+  - q: "Which theory's predicted waveform did the signal match?"
+    a: "general relativity"
+    key: k2

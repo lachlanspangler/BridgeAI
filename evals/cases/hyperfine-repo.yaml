@@ -1,0 +1,42 @@
+id: hyperfine-repo
+kind: project
+title: "hyperfine: a command-line benchmarking tool"
+source:
+  url: https://github.com/sharkdp/hyperfine
+  note: "Public GitHub repository (default branch master). README read 2026-11-03. Fetched at eval time; not stored."
+licence: "Dual-licensed MIT License and Apache License 2.0. Copyright (c) 2018-2022 David Peter and all hyperfine contributors."
+key_points:
+  - id: k1
+    text: "hyperfine is a command-line benchmarking tool that times shell commands over multiple runs with statistical analysis."
+    any: [["hyperfine"], ["benchmark"], ["command", "cli", "terminal"]]
+  - id: k2
+    text: "You pass one or more commands (e.g. hyperfine 'sleep 0.3'); it runs each at least 10 times by default and can compare several commands, with the first as the reference."
+    any: [["run", "compar"], ["10", "ten", "multiple", "several", "reference"]]
+  - id: k3
+    text: "Warmup runs (--warmup) handle warm caches, and --prepare commands run before each timing run, e.g. to clear disk caches for cold-cache benchmarks."
+    any: [["warmup", "warm-up", "warm up", "prepare", "cache"]]
+  - id: k4
+    text: "Parameterized benchmarks (--parameter-scan, --parameter-list) vary a value such as the number of threads across runs."
+    any: [["parameter", "thread", "scan"]]
+  - id: k5
+    text: "Statistical outlier detection flags interference from other programs and caching effects."
+    any: [["outlier", "interference", "statistic"]]
+  - id: k6
+    text: "Results can be exported to CSV, JSON, Markdown, AsciiDoc and other formats."
+    any: [["export", "csv", "json", "markdown"]]
+  - id: k7
+    text: "When commands run through a shell, hyperfine measures shell startup time and subtracts it from each measurement."
+    any: [["shell"], ["startup", "spawn", "subtract", "correct", "overhead"]]
+questions:
+  - q: "What kind of tool is hyperfine?"
+    a: "a command-line benchmarking tool"
+    key: k1
+  - q: "Which option runs a command before each benchmark run, for example to clear caches?"
+    a: "--prepare (-p)"
+    key: k3
+  - q: "Name two formats hyperfine can export results to."
+    a: "any two of CSV, JSON, Markdown, AsciiDoc (org-mode)"
+    key: k6
+  - q: "What does hyperfine do to account for shell startup time?"
+    a: "measures shell spawning time and subtracts it from each measurement"
+    key: k7

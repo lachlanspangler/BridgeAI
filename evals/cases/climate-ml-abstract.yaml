@@ -1,0 +1,32 @@
+id: climate-ml-abstract
+kind: text
+title: Tackling Climate Change with Machine Learning
+source:
+  file: evals/sources/climate-ml-abstract.md
+licence: "arXiv metadata (title + abstract), CC0 1.0. Rolnick et al., arXiv:1906.05433"
+key_points:
+  - id: k1
+    text: "Machine learning can be a powerful tool against climate change, both reducing greenhouse gas emissions and helping society adapt."
+    any: [["machine learning", "artificial intelligence"], ["climate"]]
+  - id: k2
+    text: "The paper identifies high-impact problems, from smart grids to disaster management, where ML can fill existing gaps."
+    any: [["grid", "disaster"]]
+  - id: k3
+    text: "The work should be done in collaboration with other fields."
+    any: [["collaborat", "other fields", "together with", "partner"]]
+  - id: k4
+    text: "The recommendations cover both research questions and business opportunities."
+    any: [["research"], ["business", "opportunit"]]
+  - id: k5
+    text: "The authors call on the machine learning community to join the global effort against climate change."
+    any: [["call on", "join", "invite", "urge"]]
+questions:
+  - q: "What are the two broad ways machine learning can help with climate change, according to the abstract?"
+    a: "reducing greenhouse gas emissions and helping society adapt"
+    key: k1
+  - q: "Name one example application area mentioned."
+    a: "smart grids (or disaster management)"
+    key: k2
+  - q: "Besides research questions, what else do the recommendations include?"
+    a: "business opportunities"
+    key: k4

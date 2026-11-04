@@ -1,0 +1,45 @@
+id: wiki-crispr
+kind: text
+title: CRISPR (Wikipedia lead section)
+source:
+  file: evals/sources/wiki-crispr.md
+  note: "Lead section of the English Wikipedia article 'CRISPR', revision 1376493355 (2026-09-24), plain-text extract with citations removed."
+licence: "CC BY-SA 4.0. Text from Wikipedia, 'CRISPR' (https://en.wikipedia.org/wiki/CRISPR), by Wikipedia contributors; see article history. Plain-text extract of the lead, citations removed."
+key_points:
+  - id: k1
+    text: "CRISPR is a family of DNA sequences in bacteria and archaea that acts as an antiviral defence: it stores fragments of past phage DNA to detect and destroy similar phages later."
+    any: [["crispr"], ["bacteri", "archaea", "prokaryot"], ["virus", "viral", "phage", "immun", "defen"]]
+  - id: k2
+    text: "Cas9 is an enzyme that uses CRISPR sequences as a guide to recognise and cut specific DNA strands; together they form CRISPR-Cas9, a gene-editing technology."
+    any: [["cas9", "cas 9", "cas-9"], ["edit", "guide", "cut"]]
+  - id: k3
+    text: "CRISPR provides a form of heritable, acquired immunity."
+    any: [["immun", "inherit", "heritable"]]
+  - id: k4
+    text: "CRISPR-Cas9 editing is used in basic research, biotechnology products and disease treatment."
+    any: [["research", "biotech", "disease", "treat", "therap"]]
+  - id: k5
+    text: "The CRISPR-Cas9 genome-editing technique was recognised by the 2020 Nobel Prize in Chemistry, awarded to Emmanuelle Charpentier and Jennifer Doudna."
+    any: [["nobel", "2020", "doudna", "charpentier"]]
+  - id: k6
+    text: "CRISPR is found in about 50% of sequenced bacterial genomes and nearly 90% of sequenced archaea."
+    any: [["50", "half", "fifty"], ["90", "ninety"]]
+  - id: k7
+    text: "CRISPR stands for clustered regularly interspaced short palindromic repeats."
+    any: [["clustered", "palindromic"]]
+questions:
+  - q: "In what kind of organisms is CRISPR naturally found?"
+    a: "prokaryotes such as bacteria and archaea"
+    key: k1
+  - q: "What enzyme uses CRISPR sequences as a guide to cut DNA?"
+    a: "Cas9"
+    key: k2
+  - q: "Who received the 2020 Nobel Prize in Chemistry for CRISPR-Cas9?"
+    a: "Emmanuelle Charpentier and Jennifer Doudna"
+    key: k5
+  - q: "Where do the sequences stored in CRISPR come from?"
+    a: "DNA fragments of bacteriophages that previously infected the organism or its ancestors"
+    key: k1
+  - q: "What does CRISPR stand for?"
+    a: "clustered regularly interspaced short palindromic repeats"
+    key: k7

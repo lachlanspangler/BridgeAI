@@ -1,0 +1,38 @@
+id: attention-abstract
+kind: text
+title: Attention Is All You Need
+source:
+  file: evals/sources/attention-abstract.txt
+licence: "arXiv metadata (title + abstract), CC0 1.0. Vaswani et al., arXiv:1706.03762"
+key_points:
+  - id: k1
+    text: "The Transformer is a new network architecture based solely on attention mechanisms, dispensing with recurrence and convolutions entirely."
+    any: [["attention"], ["transformer"]]
+  - id: k2
+    text: "It reaches 28.4 BLEU on WMT 2014 English-to-German, beating previous best results (including ensembles) by over 2 BLEU."
+    any: [["28.4", "28", "twenty-eight", "twenty eight"], ["bleu", "german"]]
+  - id: k3
+    text: "Transformers are more parallelizable and need significantly less time to train than the recurrent/convolutional models."
+    any: [["parallel", "faster", "less time", "train"]]
+  - id: k4
+    text: "On WMT 2014 English-to-French it sets a single-model state-of-the-art BLEU of 41.8 after 3.5 days of training on eight GPUs."
+    any: [["41.8", "41", "french"]]
+  - id: k5
+    text: "Earlier dominant sequence transduction models were complex recurrent or convolutional networks with an encoder and a decoder."
+    any: [["recurrent", "convolutional", "rnn", "recurrence"], ["encoder", "decoder"]]
+  - id: k6
+    text: "The Transformer generalizes to other tasks, such as English constituency parsing."
+    any: [["parsing", "constituency", "other tasks"]]
+questions:
+  - q: "What did the Transformer remove from earlier sequence models?"
+    a: "recurrence and convolutions"
+    key: k1
+  - q: "What BLEU score did the Transformer get on WMT 2014 English-to-German?"
+    a: "28.4"
+    key: k2
+  - q: "On the English-to-French task, how long and on how many GPUs was the model trained?"
+    a: "3.5 days on eight GPUs"
+    key: k4
+  - q: "Besides translation, which task was the Transformer applied to?"
+    a: "English constituency parsing"
+    key: k6

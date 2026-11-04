@@ -1,0 +1,35 @@
+id: tensorflow-abstract
+kind: text
+title: "TensorFlow: A system for large-scale machine learning"
+source:
+  file: evals/sources/tensorflow-abstract.md
+licence: "arXiv metadata (title + abstract), CC0 1.0. Abadi et al., arXiv:1605.08695"
+key_points:
+  - id: k1
+    text: "TensorFlow is a machine learning system for large-scale, heterogeneous environments that represents computation and state as dataflow graphs."
+    any: [["tensorflow"], ["dataflow", "data flow", "graph"]]
+  - id: k2
+    text: "It maps graph nodes across many machines in a cluster and across devices within a machine: multicore CPUs, GPUs and TPUs."
+    any: [["cpu", "gpu", "tpu", "tensor processing", "machines", "cluster"]]
+  - id: k3
+    text: "Unlike earlier parameter-server designs that build shared-state management into the system, TensorFlow lets developers experiment with new optimizations and training algorithms."
+    any: [["parameter server", "flexib", "experiment"]]
+  - id: k4
+    text: "It has particularly strong support for training and inference of deep neural networks."
+    any: [["neural", "deep learning"], ["train", "inference"]]
+  - id: k5
+    text: "Several Google services use it in production, and it was released as open source and is widely used in ML research."
+    any: [["open source", "open-source", "google", "production"]]
+questions:
+  - q: "What structure does TensorFlow use to represent computation and shared state?"
+    a: "dataflow graphs"
+    key: k1
+  - q: "What are Google's custom ASICs that TensorFlow can run on called?"
+    a: "Tensor Processing Units (TPUs)"
+    key: k2
+  - q: "Which earlier system design does TensorFlow contrast itself with regarding shared state?"
+    a: "parameter server designs"
+    key: k3
+  - q: "Was TensorFlow released as open source?"
+    a: "yes"
+    key: k5

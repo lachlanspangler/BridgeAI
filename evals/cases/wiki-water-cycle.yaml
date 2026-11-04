@@ -1,0 +1,42 @@
+id: wiki-water-cycle
+kind: text
+title: Water cycle (Wikipedia lead section)
+source:
+  file: evals/sources/wiki-water-cycle.md
+  note: "Lead section of the English Wikipedia article 'Water cycle', revision 1368240581 (2026-08-07), plain-text extract with citations removed."
+licence: "CC BY-SA 4.0. Text from Wikipedia, 'Water cycle' (https://en.wikipedia.org/wiki/Water_cycle), by Wikipedia contributors; see article history. Plain-text extract of the lead, citations removed."
+key_points:
+  - id: k1
+    text: "The water cycle is the continuous movement and change of form of water on, above and below Earth's surface between reservoirs."
+    any: [["water cycle", "hydrologic"], ["move", "continuous", "reservoir", "circulat"]]
+  - id: k2
+    text: "It is driven by processes such as evaporation, transpiration, condensation, precipitation, sublimation, infiltration, runoff and subsurface flow, with water changing between liquid, ice and vapour."
+    any: [["evaporat"], ["condens", "precipitat", "rain"]]
+  - id: k3
+    text: "Earth's total water mass stays fairly constant, but how it is split among ice, fresh water, salt water and atmospheric water varies with climate."
+    any: [["constant", "same amount"], ["ice", "fresh", "salt", "ocean"]]
+  - id: k4
+    text: "The ocean is the source of 86% of global evaporation."
+    any: [["86", "eighty-six", "eighty six"]]
+  - id: k5
+    text: "The cycle moves energy: evaporation absorbs heat (latent heat of vaporization) and condensation releases it, and water transfers heat from the tropics to the poles."
+    any: [["heat", "energy"]]
+  - id: k6
+    text: "Evaporation purifies water by leaving salts behind, and flowing water shapes the land through weathering, erosion and deposition."
+    any: [["purif", "salt", "erosion", "weathering"]]
+  - id: k7
+    text: "Human activity (deforestation, urbanization, groundwater extraction) and climate change are altering and intensifying the water cycle."
+    any: [["human", "climate change", "global warming", "deforestation", "urbani"]]
+questions:
+  - q: "What share of global evaporation comes from the ocean?"
+    a: "86%"
+    key: k4
+  - q: "Name two processes that move water between reservoirs."
+    a: "any two of evaporation, transpiration, condensation, precipitation, sublimation, infiltration, surface runoff, subsurface flow"
+    key: k2
+  - q: "What is the heat absorbed when liquid water evaporates called?"
+    a: "latent heat of vaporization"
+    key: k5
+  - q: "Does the total mass of water on Earth change much over time?"
+    a: "no, it remains fairly constant"
+    key: k3

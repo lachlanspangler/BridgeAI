@@ -1,0 +1,38 @@
+id: double-ml-abstract
+kind: text
+title: Double/Debiased Machine Learning for Treatment and Causal Parameters
+source:
+  file: evals/sources/double-ml-abstract.md
+licence: "arXiv metadata (title + abstract), CC0 1.0. Chernozhukov et al., arXiv:1608.00060"
+key_points:
+  - id: k1
+    text: "Double/debiased ML removes the regularization bias of naive ML plug-in estimates so causal parameters can be estimated reliably."
+    any: [["bias", "debias", "de-bias"], ["causal", "treatment effect"]]
+  - id: k2
+    text: "ML methods are built for prediction, which does not mean they give good estimates of causal parameters such as treatment effects or elasticities."
+    any: [["predict"], ["causal", "treatment", "elasticit"]]
+  - id: k3
+    text: "It builds an orthogonal score by combining a main and an auxiliary ML prediction, hence the name 'double ML'."
+    any: [["orthogonal", "auxiliary", "two models", "double"]]
+  - id: k4
+    text: "Cross-fitting (K-fold sample splitting) is used to avoid overfitting."
+    any: [["cross-fit", "cross fit", "sample split", "k-fold", "fold"]]
+  - id: k5
+    text: "The resulting estimator converges at the fast 1/root(n) rate, is approximately unbiased and normal, and yields valid confidence intervals."
+    any: [["confidence interval", "root", "normal", "unbiased"]]
+  - id: k6
+    text: "Many ML methods can be used: random forests, lasso, ridge, deep neural nets, boosted trees and hybrids."
+    any: [["random forest", "lasso", "ridge", "neural", "boosted"]]
+questions:
+  - q: "What kind of bias makes naive ML plug-in estimates of causal parameters behave poorly?"
+    a: "regularization bias"
+    key: k1
+  - q: "Why is the method called 'double' ML?"
+    a: "it relies on estimating both primary (main) and auxiliary predictive models"
+    key: k3
+  - q: "What do the authors call their K-fold sample-splitting technique?"
+    a: "cross-fitting"
+    key: k4
+  - q: "Name one example of a causal parameter mentioned."
+    a: "average treatment effect (or regression coefficients, average lifts, demand/supply elasticities)"
+    key: k2

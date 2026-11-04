@@ -1,0 +1,42 @@
+id: plate-tectonics-diagrams
+kind: images
+title: Tectonic plates and convergent boundaries (USGS diagrams)
+source:
+  files:
+    - evals/sources/images/plate-tectonics-diagrams/plates-map.png
+    - evals/sources/images/plate-tectonics-diagrams/oceanic-continental-convergence.gif
+    - evals/sources/images/plate-tectonics-diagrams/continental-continental-convergence.gif
+  note: "Three public-domain USGS images. (1) A world map of the major tectonic plates, each labelled by name (e.g. Pacific, North American, Eurasian, African, Antarctic, Indian, Australian, South American, Nazca, Cocos, Caribbean, Arabian, Filipino, Juan de Fuca, Scotia), with red arrows at boundaries showing the directions of relative plate motion; its official description says the lithosphere exists as separate plates floating on the fluid-like asthenosphere, and that the map shows 15 of the largest plates. (2) A cross-section titled 'Oceanic-continental convergence': oceanic crust meets continental crust, the oceanic lithosphere sinks beneath the continental lithosphere into the asthenosphere, with a trench at the boundary and a volcanic arc on the continent. (3) A cross-section titled 'Continental-continental convergence': two continental plates push together, forming a mountain range and a high plateau, with ancient oceanic crust sinking into the asthenosphere below."
+licence: "Public domain (U.S. Government work, USGS). Map: USGS, SVG by Scott Nash, Wikimedia Commons 'File:Plates tect2 en.svg'. Cross-sections: USGS 'This Dynamic Earth' / 'Understanding Plate Motions', Wikimedia Commons 'File:Oceanic-continental convergence Fig21oceancont.gif' and 'File:Continental-continental convergence Fig21contcont.gif'."
+key_points:
+  - id: k1
+    text: "Earth's outer shell (lithosphere) is broken into separate tectonic plates that move relative to one another; the map shows 15 of the largest, each named."
+    any: [["plate"], ["move", "motion", "tectonic", "drift"]]
+  - id: k2
+    text: "Where an oceanic plate meets a continental plate, the oceanic lithosphere sinks beneath the continent, creating a trench and a volcanic arc."
+    any: [["ocean"], ["trench", "volcan", "sink", "subduct", "beneath", "under"]]
+  - id: k3
+    text: "Where two continental plates converge, the collision builds a mountain range and a high plateau."
+    any: [["continental"], ["mountain", "plateau"]]
+  - id: k4
+    text: "The rigid lithosphere sits on top of the asthenosphere, a hotter, fluid-like layer beneath it."
+    any: [["asthenosphere", "lithosphere"]]
+  - id: k5
+    text: "The map names major plates such as the Pacific, North American, South American, Eurasian, African, Antarctic and Australian plates."
+    any: [["pacific", "eurasian", "north american", "african", "antarctic"]]
+  - id: k6
+    text: "Red arrows at plate boundaries show the directions in which neighbouring plates move apart or together."
+    any: [["arrow", "boundar", "apart", "together", "toward"]]
+questions:
+  - q: "What forms at the boundary where oceanic crust meets continental crust in the second diagram?"
+    a: "a trench (and a volcanic arc on the continent)"
+    key: k2
+  - q: "What landforms result from two continental plates converging?"
+    a: "a mountain range and a high plateau"
+    key: k3
+  - q: "Which layer lies beneath the lithosphere in the diagrams?"
+    a: "the asthenosphere"
+    key: k4
+  - q: "How many of the largest plates does the map show?"
+    a: "15"
+    key: k1

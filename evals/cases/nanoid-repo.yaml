@@ -1,0 +1,42 @@
+id: nanoid-repo
+kind: project
+title: "Nano ID: tiny, secure, URL-friendly unique string ID generator for JavaScript"
+source:
+  url: https://github.com/ai/nanoid
+  note: "Public GitHub repository (default branch main). README read 2026-11-03. Fetched at eval time; not stored."
+licence: "MIT License. Copyright 2017 Andrey Sitnik (ai/nanoid)."
+key_points:
+  - id: k1
+    text: "Nano ID is a tiny, secure, URL-friendly, unique string ID generator for JavaScript."
+    any: [["nano id", "nanoid"], ["id"], ["unique", "generat", "random"]]
+  - id: k2
+    text: "IDs are shorter than UUIDs: a larger alphabet (A-Za-z0-9_-) packs a similar number of random bits into 21 symbols instead of 36."
+    any: [["21", "twenty-one", "twenty one"], ["uuid", "36", "alphabet", "shorter"]]
+  - id: k3
+    text: "It is secure because it uses the crypto module in Node.js and the Web Crypto API in browsers (hardware random generator) instead of Math.random(), and uses an algorithm that keeps the symbol distribution uniform."
+    any: [["crypto", "math.random", "hardware random", "secure", "uniform"]]
+  - id: k4
+    text: "It is small (117 bytes minified and brotlied, no dependencies) and faster than crypto.randomUUID()."
+    any: [["117", "118", "bytes", "small", "tiny", "dependenc"], ["fast", "speed", "ops"]]
+  - id: k5
+    text: "Collision probability is similar to UUID v4 (126 vs 122 random bits)."
+    any: [["collision", "duplicat", "126", "122"]]
+  - id: k6
+    text: "Usage: call nanoid() for a default 21-character ID, pass a size like nanoid(10), or use customAlphabet for your own alphabet and length; npx nanoid works in a terminal."
+    any: [["nanoid()", "customalphabet", "custom alphabet", "size", "npx", "npm install"]]
+  - id: k7
+    text: "Nano ID has been ported to over 20 programming languages."
+    any: [["20", "twenty", "port", "languages"]]
+questions:
+  - q: "How many characters is a default Nano ID, compared with a UUID?"
+    a: "21 characters versus 36"
+    key: k2
+  - q: "What does Nano ID use instead of Math.random() to generate randomness?"
+    a: "the crypto module in Node.js / Web Crypto API in browsers (hardware random generator)"
+    key: k3
+  - q: "Which function lets you create IDs with your own alphabet and size?"
+    a: "customAlphabet"
+    key: k6
+  - q: "Which programming language is Nano ID written for?"
+    a: "JavaScript"
+    key: k1

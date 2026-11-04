@@ -1,0 +1,40 @@
+id: global-temperature-chart
+kind: images
+title: Global average temperature, 1880 to present (NASA GISS chart)
+source:
+  files:
+    - evals/sources/images/global-temperature-chart/global-temperature-anomaly.png
+  note: "A public-domain line chart titled 'Global Average Temperature'. The x-axis runs from 1880 to the early 2020s; the y-axis is 'Temperature vs baseline (°C)' from about -0.4 to 1.2. A black line with square markers shows the 'Annual mean' and a red line shows 'Five-year smoothing'; a few blue bars mark uncertainty. The official description says this is NASA GISS's land-ocean temperature index with base period 1951-1980, the blue bars being the annual uncertainty at a 95% confidence interval. Values sit mostly between about -0.5 and -0.1 °C before 1920, rise to around 0.1-0.2 °C near 1940, stay roughly flat near 0 °C through the 1950s-1970s, then climb steadily, passing 1.0 °C in the most recent years (the last annual point is about 1.17 °C)."
+licence: "Public domain (U.S. Government work, NASA). NASA Goddard Institute for Space Studies (GISTEMP), modified; Wikimedia Commons 'File:Global Temperature Anomaly.svg' (PNG rendition)."
+key_points:
+  - id: k1
+    text: "Global average temperature has risen since 1880, reaching more than 1 °C above the 1951-1980 baseline in recent years."
+    any: [["temperature", "warm"], ["rise", "rose", "increase", "risen", "warmer", "hotter", "climb"]]
+  - id: k2
+    text: "Most of the warming happened after about 1970-1980, with a steep, steady climb to the present."
+    any: [["1970", "1980", "seventies", "eighties", "recent decades", "since the"]]
+  - id: k3
+    text: "Values are anomalies relative to a 1951-1980 baseline, not absolute temperatures."
+    any: [["baseline", "anomal", "1951", "relative", "compared"]]
+  - id: k4
+    text: "Around 1880-1920 temperatures were roughly 0.2-0.5 °C below the baseline, the coolest part of the record."
+    any: [["below", "cool", "colder", "negative", "minus"]]
+  - id: k5
+    text: "The chart shows both the annual mean (black) and a five-year smoothed trend (red)."
+    any: [["five-year", "five year", "smooth"]]
+  - id: k6
+    text: "A bump peaked around 1940, followed by a roughly flat period near the baseline until the 1970s."
+    any: [["1940", "forties", "flat", "plateau", "level"]]
+questions:
+  - q: "Roughly how far above the baseline is the most recent annual value on the chart?"
+    a: "about 1.2 °C (more than 1 °C)"
+    key: k1
+  - q: "What baseline period are the temperature values measured against?"
+    a: "1951-1980"
+    key: k3
+  - q: "What does the red line on the chart represent?"
+    a: "five-year smoothing of the annual mean"
+    key: k5
+  - q: "In roughly which period did the steepest, sustained warming begin?"
+    a: "around the 1970s-1980s"
+    key: k2

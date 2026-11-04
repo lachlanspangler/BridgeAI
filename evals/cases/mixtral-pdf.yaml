@@ -1,0 +1,42 @@
+id: mixtral-pdf
+kind: pdf
+title: Mixtral of Experts
+source:
+  url: https://arxiv.org/abs/2401.04088
+  note: "PDF https://arxiv.org/pdf/2401.04088v1 (13 pages, with figures). Downloaded at eval time; not stored."
+licence: "CC BY 4.0 (per arXiv abs page). Jiang et al., 'Mixtral of Experts', arXiv:2401.04088"
+key_points:
+  - id: k1
+    text: "Mixtral 8x7B is a sparse mixture-of-experts language model: each layer has 8 feedforward experts and a router picks 2 of them for every token."
+    any: [["mixtral", "mixture of experts", "mixture-of-experts", "moe"], ["expert"]]
+  - id: k2
+    text: "Each token has access to 47B parameters but only 13B are active during inference, increasing capacity while keeping cost and latency low."
+    any: [["47", "forty-seven", "forty seven"], ["13", "thirteen", "active"]]
+  - id: k3
+    text: "Mixtral outperforms or matches Llama 2 70B and GPT-3.5 across evaluated benchmarks, vastly outperforming Llama 2 70B on mathematics, code and multilingual tasks."
+    any: [["llama", "gpt-3.5", "gpt 3.5", "70b"], ["math", "code", "multilingual", "outperform", "match"]]
+  - id: k4
+    text: "The output of the MoE layer is the weighted sum of the two selected experts' outputs, with weights from a softmax over the top-2 router logits."
+    any: [["weight", "softmax", "gating", "gate", "router"], ["sum", "combin", "top"]]
+  - id: k5
+    text: "Mixtral was trained with a 32k-token context and can retrieve information from anywhere in that context window."
+    any: [["32k", "32,000", "32 thousand", "32000", "thirty-two thousand"]]
+  - id: k6
+    text: "Mixtral 8x7B - Instruct, fine-tuned with supervised fine-tuning and Direct Preference Optimization, surpasses GPT-3.5 Turbo, Claude-2.1, Gemini Pro and Llama 2 70B - chat on human benchmarks."
+    any: [["instruct", "chat", "dpo", "preference"]]
+  - id: k7
+    text: "Base and instruct models are released under the Apache 2.0 license."
+    any: [["apache", "open weights", "open-weight"]]
+questions:
+  - q: "How many experts does each Mixtral layer have, and how many are used per token?"
+    a: "8 experts, 2 used per token"
+    key: k1
+  - q: "How many parameters does each token have access to, and how many are active during inference?"
+    a: "47B total, 13B active"
+    key: k2
+  - q: "Which two models does Mixtral match or outperform across benchmarks?"
+    a: "Llama 2 70B and GPT-3.5"
+    key: k3
+  - q: "What context size was Mixtral trained with?"
+    a: "32k tokens"
+    key: k5

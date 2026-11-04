@@ -1,0 +1,42 @@
+id: vllm-pagedattention-pdf
+kind: pdf
+title: Efficient Memory Management for Large Language Model Serving with PagedAttention
+source:
+  url: https://arxiv.org/abs/2309.06180
+  note: "PDF https://arxiv.org/pdf/2309.06180v1 (16 pages, SOSP 2023, many figures). Downloaded at eval time; not stored."
+licence: "CC BY 4.0 (per arXiv abs page). Kwon et al., arXiv:2309.06180"
+key_points:
+  - id: k1
+    text: "PagedAttention, inspired by OS virtual memory and paging, stores the KV cache in non-contiguous fixed-size blocks; vLLM built on it serves LLMs with near-zero KV cache waste."
+    any: [["paged", "paging", "virtual memory"], ["kv cache", "key-value", "key value", "memory"]]
+  - id: k2
+    text: "vLLM improves LLM serving throughput by 2-4x at the same latency compared with state-of-the-art systems such as FasterTransformer and Orca."
+    any: [["2-4", "2 to 4", "two to four", "2x", "4x", "throughput"]]
+  - id: k3
+    text: "High-throughput serving needs large batches, but each request's KV cache is huge and grows and shrinks dynamically, so poor management wastes memory and limits batch size."
+    any: [["batch"], ["kv cache", "memory"]]
+  - id: k4
+    text: "Existing systems store each request's KV cache contiguously, suffering internal and external fragmentation; only 20.4%-38.2% of their KV cache memory holds actual token states."
+    any: [["fragment", "contiguous", "20.4", "38.2", "waste"]]
+  - id: k5
+    text: "Block-level management enables KV cache sharing within and across requests (e.g. parallel sampling, beam search) using copy-on-write, with up to 55% memory savings in beam search."
+    any: [["shar"], ["copy-on-write", "copy on write", "beam", "parallel sampling", "55"]]
+  - id: k6
+    text: "Gains are larger for longer sequences, larger models and more complex decoding algorithms."
+    any: [["longer", "larger", "complex"]]
+  - id: k7
+    text: "For a 13B model on a 40GB A100 GPU, about 65% of memory holds model weights and close to 30% holds the KV cache."
+    any: [["65", "sixty-five"], ["30", "thirty"]]
+questions:
+  - q: "Which operating-system technique inspired PagedAttention?"
+    a: "virtual memory with paging"
+    key: k1
+  - q: "By how much does vLLM improve throughput over prior systems?"
+    a: "2-4x"
+    key: k2
+  - q: "What fraction of KV cache memory actually stores token states in existing systems?"
+    a: "only 20.4%-38.2%"
+    key: k4
+  - q: "Which OS mechanism does vLLM use to share KV blocks between sequences?"
+    a: "copy-on-write"
+    key: k5
