@@ -59,3 +59,13 @@ describe('text', () => {
     expect(coverage('cats chase mice', 'the transformer uses attention')).toBe(0);
   });
 });
+
+describe('number ranges', () => {
+  it('reads "1951-1980" as two years, not 1951 and -1980', async () => {
+    const { numbers } = await import('../../src/core/text/text.ts');
+    expect(numbers('base period 1951-1980, and -0.5 °C')).toEqual(
+      expect.arrayContaining(['1951', '1980', '-0.5']),
+    );
+    expect(numbers('base period 1951-1980')).not.toContain('-1980');
+  });
+});

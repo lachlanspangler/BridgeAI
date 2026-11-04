@@ -92,7 +92,9 @@ function numberSpokenWords(n: string): number {
 /** Numbers as written in text: 28.4, 3,000, 2×, 41%, 1e-4, 3.5B. Returns normalised canonical strings. */
 export function numbers(text: string): string[] {
   const m =
-    text.match(/(?<![A-Za-z])[-−]?\d[\d,]*(?:\.\d+)?(?:e-?\d+)?\s?(?:%|×|x\b|k\b|K\b|M\b|B\b)?/g) ?? [];
+    text.match(
+      /(?<![A-Za-z])(?:(?<!\d)[-−])?\d[\d,]*(?:\.\d+)?(?:e-?\d+)?\s?(?:%|×|x\b|k\b|K\b|M\b|B\b)?/g,
+    ) ?? [];
   return m.map(normNumber).filter((x) => x !== '');
 }
 

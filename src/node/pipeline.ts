@@ -349,7 +349,16 @@ export async function runPipeline(
       );
       if (carrier && !carrier.ideas.includes('core')) carrier.ideas = [...carrier.ideas, 'core'];
     }
-    if (def && (coverage(def.text, said) < 0.5 || nameMissing)) {
+    // one beat must say the definition (spread across beats, a later length-fit drop can lose it); that beat is core
+    const best = def
+      ? script.beats
+          .filter((b) => b.role !== 'takeaway')
+          .map((b) => ({ b, c: coverage(def.text, b.narration) }))
+          .sort((x, y) => y.c - x.c)[0]
+      : undefined;
+    if (def && best && best.c >= 0.5 && !nameMissing && !best.b.ideas.includes('core'))
+      best.b.ideas = [...best.b.ideas, 'core'];
+    if (def && (!best || best.c < 0.5 || nameMissing)) {
       const text = thirdPerson(trimSentence(def.text, Math.max(28, budget.wordsPerBeat.max + 6)));
       const nb: Beat = {
         id: 'bd',
