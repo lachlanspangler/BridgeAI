@@ -87,6 +87,7 @@ function Watch({ job }: { job: Job }) {
           ref={video}
           controls
           preload="metadata"
+          poster={api.file(job.id, 'thumb.png')}
           src={api.file(job.id, 'video.mp4')}
           onTimeUpdate={(e) => setNow(e.currentTarget.currentTime)}
           data-testid="video"

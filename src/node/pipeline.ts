@@ -24,7 +24,7 @@ import type {
 import { composeExtractive, scriptWords, trimSentence } from '../core/script/extractive.ts';
 import { wordCount } from '../core/text/text.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
-import { renderVideo } from './render/render.ts';
+import { renderStill, renderVideo } from './render/render.ts';
 import type { Clip, TtsEngine } from './tts/types.ts';
 import { buildSourceMap, scriptMarkdown } from './outputs.ts';
 
@@ -347,6 +347,17 @@ export async function runPipeline(
         onProgress({ stage: 'render', progress: f / total, message: `Drawing frames (${f}/${total})` }),
     });
   });
+  // a poster frame for the player and the library (mid second beat: past the title, visuals in)
+  try {
+    const b = timeline.beats[1] ?? timeline.beats[0]!;
+    const png = await renderStill(timeline, Math.min(b.end - 0.2, b.start + 1.8), jobDir, src.assets, {
+      burnCaptions: false,
+      origin: src.origin,
+    });
+    writeFileSync(join(jobDir, 'thumb.png'), png);
+  } catch {
+    /* a missing poster is cosmetic */
+  }
   // temp renders never linger (disk rule)
   rmSync(tmp, { recursive: true, force: true });
   const result: RunResult = {

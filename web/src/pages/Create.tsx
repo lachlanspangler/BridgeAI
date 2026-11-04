@@ -243,7 +243,9 @@ function Review({
   const [loadingIdeas, setLoadingIdeas] = useState(false);
   const [dropped, setDropped] = useState<Set<string>>(new Set());
   const [pinned, setPinned] = useState<Set<string>>(new Set());
-  const [budget, setBudget] = useState<{ describe: string; ideas: { max: number } } | null>(null);
+  const [budget, setBudget] = useState<{ describe: string; ideas: { min: number; max: number } } | null>(
+    null,
+  );
   const [err, setErr] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const engines = useMemo(() => {
@@ -313,7 +315,7 @@ function Review({
   }
 
   const s = src.source;
-  const fits = budget?.ideas.max ?? 1;
+  const fits = budget?.ideas.min ?? 1;
   const kept = analysis ? analysis.ideas.filter((i) => !dropped.has(i.id)) : [];
   return (
     <section className="review">
