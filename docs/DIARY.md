@@ -78,3 +78,23 @@ parts. `git init` (no remote). Pinned the public npm registry in `.npmrc`. Launc
 - Evals: understanding is scored only on questions about the key points that fit the chosen length.
 
 **Next:** finish EVALS (running), 5-minute render, design-critic and learner reviews on fresh samples, then a final eval run on the final code.
+
+## 2026-11-04 08:40: Three review rounds, and moving decisions out of the model
+**Did:**
+- 5-minute video works: 285.5 s for a 300 s target, 0 unsupported. Parallel worker rendering (4 workers): 143 s to render 5 minutes.
+- Three rounds of fresh design-critic and learner reviews on new samples. Grades and fixes are in `docs/reviews/2026-11-04-*.md`.
+- Attention went D → D+ → C. Carbon went D− → C− → C−. The library went B− → B. The learner now rates the paper and project videos memorability 4 and says Nano ID's fast / safe / compact / portable structure "works".
+- New `tokens` scene: word chips with weighted attention arcs.
+- OCR word boxes now point image zooms at the narrated label.
+- Large set of post-processing upgrades (see the review docs).
+
+**Learned:**
+- The renderer outran the planner. A 4B model rarely asks for the good scenes and writes sentence-as-visual by default, so the biggest wins came from deterministic post-processing: number → big-number upgrade, clause-based screen text, a takeaway gate, figure matching on distinctive terms. That makes the system more model-agnostic too.
+- Every content rewrite (expand, tighten, refill, fallback takeaway) needs both the faith checks *and* the no-repeat check, or it either invents or echoes. The pipeline now runs the no-repeat pass last.
+- Count-up animations are a faithfulness bug in disguise: a still caught mid-count shows a number the source never said.
+- Something outside this project rewrites `~/.claude/rules/amazon-builder-context-do-not-delete.md` every few minutes (mtime changes, same size). I never touch it; noted for the owner.
+
+**Decided:**
+- Stopped iterating at C/C+ on the free path and froze the code for the final eval run. The rest of the gap to A is script quality from a small local model. The BYOK path uses the same prompts and gate with a frontier model, and it can't be rendered here without keys.
+
+**Next:** final EVALS, samples into docs/media, STATUS, shut down, clean tree.
