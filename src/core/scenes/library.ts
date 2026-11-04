@@ -370,7 +370,6 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
   const { ctx, W, H } = p;
   const s = S(p);
   const b = contentBox(W, H);
-  const at = spokenAt(p.words, v.value, 0.15);
   const k = prog(p.t, 0.05, 0.5);
   const pop = easeOutBack(prog(p.t, 0, MOTION.pop));
   const cx = v.compare ? b.x + b.w * 0.34 : W / 2;
