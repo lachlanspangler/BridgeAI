@@ -18,6 +18,8 @@ export interface FrameOptions {
   origin?: string;
   /** Engine label for the end card. */
   engine?: string;
+  /** Kicker for the source tag ("Paper", "Project"). */
+  kicker?: string;
 }
 
 const EXIT = 0.28;
@@ -48,6 +50,7 @@ export function drawFrame(ctx: Ctx, tl: Timeline, t: number, assets: Map<string,
   }
   if (t >= last.end) endCard(ctx, tl, t - last.end, theme, opts);
   else chrome(ctx, tl, t, theme);
+  if (tl.beats[0] && tl.beats[0].beat.visual.type !== 'title') sourceTag(ctx, tl, t, theme, opts);
   if (opts.burnCaptions && t < last.end) captions(ctx, tl, t, theme, s);
   ctx.restore();
 }
@@ -163,6 +166,15 @@ function captions(ctx: Ctx, tl: Timeline, t: number, theme: Theme, s: number): v
     x += widths[i]! + space;
   });
   ctx.restore();
+}
+
+/** When the hook isn't a title card: a pill naming the source for the first seconds (no logo intro, rule 7). */
+function sourceTag(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameOptions): void {
+  const k = prog(t, 0.05, 0.4) * (1 - prog(t, 2.8, 0.4));
+  if (k <= 0) return;
+  const s = tl.height / 1080;
+  const label = `${opts.kicker ?? 'Explained'} · ${tl.title}`.slice(0, 64);
+  pill(ctx, label, tl.width / 2, tl.height * SAFE.top + 4 * s, TYPE.kicker * 0.85 * s, theme.tone.primary, theme.onTone.primary, easeOutCubic(k));
 }
 
 function endCard(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameOptions): void {

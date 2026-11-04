@@ -10,8 +10,9 @@ import { basename, join, resolve } from 'node:path';
 import { RenderSettings } from '../core/schema.ts';
 import { ingestText } from '../core/ingest/text.ts';
 import { runPipeline, type Progress } from '../node/pipeline.ts';
-import { KokoroTts } from '../node/tts/kokoro.ts';
-import { SystemTts } from '../node/tts/system.ts';
+import { pickEngines } from '../node/select.ts';
+import { loadConfig, saveConfig } from '../node/config.ts';
+import { existsSync } from 'node:fs';
 import { paths } from '../node/paths.ts';
 
 function flag(args: string[], k: string, d?: string): string | undefined {
@@ -26,12 +27,12 @@ async function make(args: string[]): Promise<void> {
   const text = input === '-' ? readFileSync(0, 'utf8') : readFileSync(input, 'utf8');
   const src = ingestText(text, input === '-' ? 'pasted text' : basename(input));
   const settings = RenderSettings.parse({ seconds, voice: flag(args, 'voice', 'af_heart'), seed: Number(flag(args, 'seed', '7')) });
-  const kokoro = new KokoroTts();
-  const tts = (await kokoro.available()) ? kokoro : new SystemTts();
+  const { engines, label } = await pickEngines({ llm: flag(args, 'engine', 'auto')!, tts: flag(args, 'tts', 'auto')!, log: (e) => console.log(`         · ${e.stage}: ${e.message}${e.ms ? ` (${(e.ms / 1000).toFixed(1)}s)` : ''}`) });
+  console.log(`engine   ${label} · voice ${engines.tts.id}`);
   const id = `${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}-${seconds}s`;
   const jobDir = join(paths.jobs(), id);
   let last = '';
-  const res = await runPipeline(src, settings, { tts }, jobDir, (p: Progress) => {
+  const res = await runPipeline(src, settings, engines, jobDir, (p: Progress) => {
     const line = `${p.stage.padEnd(8)} ${p.message}`;
     if (line !== last && (p.stage !== 'render' || p.progress === 0 || p.progress >= 1 || Math.round(p.progress * 100) % 25 === 0)) {
       process.stdout.write(`${line}\n`);
@@ -49,11 +50,27 @@ async function make(args: string[]): Promise<void> {
   console.log(`  timings: ${Object.entries(res.timings).map(([k, v]) => `${k} ${(v / 1000).toFixed(1)}s`).join(' · ')}`);
 }
 
+async function models(args: string[]): Promise<void> {
+  const [sub, p] = args;
+  if (sub === 'link') {
+    if (!p || !existsSync(p) || !p.endsWith('.gguf')) throw new Error('usage: bridge models link <file.gguf>');
+    const c = loadConfig();
+    c.llm = { path: resolve(p) };
+    saveConfig(c);
+    console.log(`✓ linked ${resolve(p)} (no copy, no download)`);
+    return;
+  }
+  const { findLocalLlm } = await import('../node/models/catalog.ts');
+  console.log(JSON.stringify({ llm: findLocalLlm() }, null, 2));
+}
+
 async function main(): Promise<void> {
   const [cmd, ...rest] = process.argv.slice(2);
   switch (cmd) {
     case 'make':
       return make(rest);
+    case 'models':
+      return models(rest);
     default:
       console.log('usage: bridge make <file> [--len 20] | doctor | models | keys');
   }

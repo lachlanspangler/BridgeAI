@@ -1,0 +1,10 @@
+import { getLlama, LlamaChatSession, QwenChatWrapper } from 'node-llama-cpp';
+import { analysisSchema } from '../../src/core/llm/schemas.ts';
+const llama = await getLlama();
+const model = await llama.loadModel({ modelPath: process.env.HOME + '/Library/Application Support/LachedInAI/models/Qwen3.5-4B-Q4_K_M.gguf' });
+const ctx = await model.createContext({ contextSize: 8192 });
+const seq = ctx.getSequence();
+const session = new LlamaChatSession({ contextSequence: seq, systemPrompt: 'Answer in JSON.', chatWrapper: new QwenChatWrapper({ thoughts: 'discourage' }) });
+const grammar = await llama.createGrammarForJsonSchema(analysisSchema(['s1','s2'], [], 2) as never);
+const out = await session.prompt('Text [s1]: Cats sleep 16 hours a day. [s2]: Dogs bark. List ideas.', { grammar, maxTokens: 500 });
+console.log(JSON.stringify(out.slice(0,80)), session.chatWrapper.wrapperName);

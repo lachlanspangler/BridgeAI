@@ -12,21 +12,38 @@ import { clampWords, cleanForSpeech, contentWords, sentenceCase, wordCount } fro
 const LEADINS =
   /^(in this (paper|work|article|post|project),?\s*|here,?\s*|overall,?\s*|in summary,?\s*|to summarize,?\s*|finally,?\s*|moreover,?\s*|furthermore,?\s*|additionally,?\s*|in addition,?\s*|specifically,?\s*|notably,?\s*)/i;
 
+const VERB =
+  /\b(is|are|was|were|be|has|have|had|can|could|will|would|does|do|did|makes?|made|lets?|uses?|used|achiev\w*|establish\w*|shows?|showed|propos\w*|improv\w*|reduc\w*|outperform\w*|enabl\w*|allows?|requir\w*|provid\w*|generaliz\w*|connect\w*|introduc\w*|present\w*|finds?|found|runs?|takes?|learns?|trains?|predicts?|leads?|builds?|works?|relies|rel(y|ies) on|depends?|replac\w*|combin\w*|turns?|gives?|creates?|helps?|supports?|keeps?|scales?|beats?|cuts?|needs?|means?|dispens\w*|based)\b/i;
+const PREP_LEAD = /^(on|in|for|with|at|by|using|after|from|across|under|over|during|to|via|when|while|as)\b/i;
+
 /** Make a source sentence speakable and shorter without changing what it claims. */
-export function trimSentence(s: string, maxWords: number): string {
+export function trimSentence(s: string, maxWords: number, terms: string[] = []): string {
   let t = cleanForSpeech(s).replace(LEADINS, '');
   t = t.replace(/\s*\([^)]{0,80}\)/g, ''); // parentheticals
   t = sentenceCase(t);
   if (wordCount(t) <= maxWords) return ensurePeriod(t);
-  // cut at the last clause boundary that keeps us under the limit
+  // choose the best contiguous run of clauses: must contain a verb, fit the budget, cover key terms
   const parts = t.split(/(?<=[,;:])\s+|\s+(?=which |while |whereas |including |such as )/);
-  let acc = '';
-  for (const p of parts) {
-    const next = acc ? `${acc} ${p}` : p;
-    if (wordCount(next) > maxWords) break;
-    acc = next;
+  const low = terms.map((x) => x.toLowerCase());
+  let best = '';
+  let bestScore = -Infinity;
+  for (let i = 0; i < parts.length; i++) {
+    for (let j = i; j < parts.length; j++) {
+      const run = parts.slice(i, j + 1).join(' ').replace(/[,;:]$/, '');
+      const n = wordCount(run);
+      if (n > maxWords) break;
+      if (n < Math.min(5, maxWords)) continue;
+      const hasVerb = VERB.test(run);
+      const startsWithPrep = PREP_LEAD.test(run);
+      const hits = low.filter((x) => run.toLowerCase().includes(x)).length;
+      const score = (hasVerb ? 10 : 0) - (startsWithPrep && j === i ? 4 : 0) + hits * 2 + n * 0.15 - (i > 0 ? 0.5 : 0);
+      if (score > bestScore) {
+        bestScore = score;
+        best = run;
+      }
+    }
   }
-  if (acc && wordCount(acc) >= Math.min(6, maxWords)) return ensurePeriod(acc.replace(/[,;:]$/, ''));
+  if (best && VERB.test(best)) return ensurePeriod(sentenceCase(best.replace(/^(and|but|so|which|while)\s+/i, '')));
   return ensurePeriod(clampWords(t, maxWords).replace(/…$/, ''));
 }
 
@@ -95,7 +112,7 @@ export function composeExtractive(src: Source, analysis: Analysis, budget: Budge
   for (const idea of ideas) {
     if (beats.length - 1 >= maxIdeaBeats || remaining < budget.wordsPerBeat.min) break;
     const cap = Math.min(budget.wordsPerBeat.max, remaining);
-    const narration = trimSentence(idea.statement, cap);
+    const narration = trimSentence(idea.statement, cap, idea.terms);
     const n = wordCount(narration);
     if (n < 4) continue;
     remaining -= n;
@@ -112,11 +129,12 @@ export function composeExtractive(src: Source, analysis: Analysis, budget: Budge
   // takeaway: the top idea again, shorter, as the single thing to remember
   const top = analysis.ideas[0];
   if (top) {
-    const said = trimSentence(top.statement, Math.max(6, takeawayWords));
+    let said = trimSentence(top.statement, Math.max(6, takeawayWords), top.terms);
+    if (beats.some((b) => b.narration === said)) said = trimSentence(top.statement, Math.max(5, Math.min(takeawayWords, wordCount(said) - 3)), top.terms);
     beats.push({
       id: `b${beats.length + 1}`,
       role: 'takeaway',
-      narration: beats.length > 2 ? said : `Remember this: ${said.charAt(0).toLowerCase()}${said.slice(1)}`,
+      narration: said,
       visual: { type: 'takeaway', text: headline(top.statement, top.terms, budget.maxScreenWords), highlight: top.terms.slice(0, 1) },
       claims: [{ text: said, support: top.evidence.map((e) => e.segmentId), kind: 'fact' }],
       ideas: [top.id],

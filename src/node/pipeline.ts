@@ -210,6 +210,7 @@ export async function runPipeline(
       assets: src.assets,
       origin: src.origin,
       engine: analysis.engine,
+      kicker: src.kind === 'pdf' ? 'Paper' : src.kind === 'project' ? 'Project' : src.kind === 'images' ? 'Images' : 'Explained',
       signal,
       onProgress: (f, total) => onProgress({ stage: 'render', progress: f / total, message: `Drawing frames (${f}/${total})` }),
     });

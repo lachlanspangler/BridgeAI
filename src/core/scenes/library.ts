@@ -25,6 +25,7 @@ import {
   type Ctx,
   type Img,
 } from './kit.ts';
+import { drawIcon, iconFor, ICONS } from './icons.ts';
 
 export interface SceneProps {
   ctx: Ctx;
@@ -201,21 +202,52 @@ function orbiters(p: SceneProps, cx: number, cy: number, r: number): void {
   });
 }
 
+/** A glowing icon disc: tone-filled circle, icon stroked on, a slow orbit ring. */
+function iconDisc(p: SceneProps, name: string, cx: number, cy: number, r: number, tone: string, enterAt = 0): void {
+  const { ctx } = p;
+  const e = easeOutBack(prog(p.t, enterAt, MOTION.pop + 0.1));
+  if (e <= 0) return;
+  ctx.save();
+  const g = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r * 1.6);
+  g.addColorStop(0, withAlpha(tone, 0.35 * clamp01(e)));
+  g.addColorStop(1, withAlpha(tone, 0));
+  ctx.fillStyle = g;
+  ctx.fillRect(cx - r * 1.7, cy - r * 1.7, r * 3.4, r * 3.4);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * e, 0, Math.PI * 2);
+  ctx.fillStyle = withAlpha(tone, 0.18);
+  ctx.fill();
+  ctx.lineWidth = r * 0.04;
+  ctx.strokeStyle = tone;
+  ctx.stroke();
+  // orbit ring with a dot
+  const a = p.t * 0.9;
+  ctx.strokeStyle = withAlpha(tone, 0.35);
+  ctx.lineWidth = r * 0.02;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.22 * e, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = tone;
+  ctx.beginPath();
+  ctx.arc(cx + Math.cos(a) * r * 1.22 * e, cy + Math.sin(a) * r * 1.22 * e, r * 0.07, 0, Math.PI * 2);
+  ctx.fill();
+  drawIcon(ctx, name, cx, cy + Math.sin(p.t * 1.6) * r * 0.03, r * 1.05, tone, prog(p.t, enterAt + 0.1, 0.5));
+  ctx.restore();
+}
+
 function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): void {
-  const { ctx, W, H } = p;
+  const { W, H } = p;
   const s = S(p);
   const b = contentBox(W, H);
-  // accent bar grows on the left
-  const e = easeOutCubic(prog(p.t, 0, MOTION.enter));
-  ctx.fillStyle = p.theme.tone.primary;
-  roundRect(ctx, b.x, b.y + b.h * 0.18, 14 * s, b.h * 0.64 * e, 7 * s);
-  ctx.fill();
-  richText(p, v.text, v.highlight, { x: b.x + 60 * s, y: b.y, w: b.w - 80 * s, h: b.h }, {
+  const icon = v.icon && v.icon in ICONS ? v.icon : iconFor(`${v.highlight.join(' ')} ${v.text}`);
+  const r = Math.min(b.h * 0.3, 210 * s);
+  iconDisc(p, icon, b.x + r * 1.35, b.y + b.h / 2, r, p.theme.tone.primary, 0);
+  richText(p, v.text, v.highlight, { x: b.x + r * 3.1, y: b.y, w: b.w - r * 3.1, h: b.h }, {
     maxPx: TYPE.headline * s,
     minPx: TYPE.body * s,
     maxLines: 4,
     weight: 700,
-    enterAt: 0.05,
+    enterAt: 0.12,
   });
 }
 
@@ -238,7 +270,7 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
   const s = S(p);
   const b = contentBox(W, H);
   const at = spokenAt(p.words, v.value, 0.15);
-  const k = prog(p.t, Math.min(at - 0.3, 0.6), 0.9);
+  const k = prog(p.t, Math.max(0.05, Math.min(at - 0.5, 0.4)), 0.75);
   const pop = easeOutBack(prog(p.t, 0, MOTION.pop));
   const cx = v.compare ? b.x + b.w * 0.34 : W / 2;
   const cy = b.y + b.h * 0.5;

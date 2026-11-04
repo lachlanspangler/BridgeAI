@@ -21,6 +21,7 @@ export interface Candidate {
 
 const CUE_STRONG =
   /\b(we (propose|present|introduce|show|find|demonstrate|develop)|this (paper|work|project|library|tool) (proposes|presents|introduces|shows|is|lets|provides)|our (main |key )?(contribution|result|finding|approach|method|model)s?|in this (paper|work)|achiev(es|ed|ing)|outperform|state[- ]of[- ]the[- ]art|for the first time|key (idea|insight)|we conclude|the main)/i;
+const CUE_CORE = /\b(we (propose|introduce|present)|this (paper|work) (proposes|introduces|presents)|is a (new|novel)|main (idea|contribution))\b/i;
 const CUE_WEAK = /\b(significant(ly)?|improv(e|es|ed|ement)|reduc(e|es|ed|tion)|faster|better|novel|simple|enables?|allows?|so that|because)\b/i;
 const CUE_BAD =
   /\b(acknowledg|copyright|licen[cs]e|arxiv|preprint|correspond(ing|ence)|e-?mail|https?:|doi|table \d|figure \d|appendix|et al\b|ibid|section \d|see \w+ \d)/i;
@@ -101,7 +102,8 @@ export function scoreCandidates(src: Source, cands: Candidate[]): Candidate[] {
     if (c.kind === 'title') prior *= 0.2; // titles are used for the hook, rarely as an idea
     if (SECTION_GOOD.test(c.section)) prior *= 1.25;
     if (SECTION_BAD.test(c.section)) prior *= 0.25;
-    if (CUE_STRONG.test(c.text)) prior *= 1.7;
+    if (CUE_STRONG.test(c.text)) prior *= 1.6;
+    if (CUE_CORE.test(c.text)) prior *= 1.6;
     if (CUE_WEAK.test(c.text)) prior *= 1.15;
     if (CUE_BAD.test(c.text)) prior *= 0.3;
     if (numbers(c.text).length) prior *= 1.2;
