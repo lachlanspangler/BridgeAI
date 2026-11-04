@@ -234,6 +234,8 @@ export function garbled(t: string): boolean {
   )
     return true;
   if (/(^|\s)[a-z][A-Z](?=[\s.,;]|$)/.test(t)) return true;
+  // a README's table of contents or a heading list ("Table of Contents; Install; API; …") is not a sentence
+  if (/\btable of contents\b/i.test(t) || (t.match(/;/g) ?? []).length >= 3) return true;
   // digits and spaces are normal prose: compare letters with symbols only
   const letters = (t.match(/[A-Za-z]/g) ?? []).length;
   const symbols = (t.match(/[^A-Za-z\d\s]/g) ?? []).length;
