@@ -35,7 +35,45 @@ export async function encodeRange(j: PartJob, onFrame: (n: number) => void = () 
   const { width: W, height: H, fps } = j.tl;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d') as unknown as Ctx;
-  const p = spawn(ff.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(fps), '-i', '-', '-c:v', 'libx264', '-preset', j.preset, '-crf', String(j.crf), '-tune', 'animation', '-pix_fmt', 'yuv420p', '-g', String(fps * 2), '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', j.out], { stdio: ['pipe', 'ignore', 'pipe'] });
+  const p = spawn(
+    ff.ffmpeg,
+    [
+      '-hide_banner',
+      '-loglevel',
+      'error',
+      '-y',
+      '-f',
+      'rawvideo',
+      '-pix_fmt',
+      'rgba',
+      '-s',
+      `${W}x${H}`,
+      '-r',
+      String(fps),
+      '-i',
+      '-',
+      '-c:v',
+      'libx264',
+      '-preset',
+      j.preset,
+      '-crf',
+      String(j.crf),
+      '-tune',
+      'animation',
+      '-pix_fmt',
+      'yuv420p',
+      '-g',
+      String(fps * 2),
+      '-colorspace',
+      'bt709',
+      '-color_primaries',
+      'bt709',
+      '-color_trc',
+      'bt709',
+      j.out,
+    ],
+    { stdio: ['pipe', 'ignore', 'pipe'] },
+  );
   let err = '';
   p.stderr.on('data', (d: Buffer) => (err = (err + d.toString()).slice(-2000)));
   const closed = new Promise<number>((r, x) => (p.on('error', x), p.on('close', (c) => r(c ?? -1))));
@@ -57,7 +95,14 @@ export function workerCount(totalFrames: number): number {
 }
 
 /** Render all parts in parallel worker threads; returns the part files in order. */
-export async function renderParts(base: Omit<PartJob, 'from' | 'to' | 'out'>, total: number, n: number, tmp: string, onProgress: (done: number) => void, signal?: AbortSignal): Promise<string[]> {
+export async function renderParts(
+  base: Omit<PartJob, 'from' | 'to' | 'out'>,
+  total: number,
+  n: number,
+  tmp: string,
+  onProgress: (done: number) => void,
+  signal?: AbortSignal,
+): Promise<string[]> {
   const size = Math.ceil(total / n);
   const done = new Array<number>(n).fill(0);
   const outs: string[] = [];
@@ -67,7 +112,9 @@ export async function renderParts(base: Omit<PartJob, 'from' | 'to' | 'out'>, to
     const out = join(tmp, `part-${String(k).padStart(2, '0')}.mp4`);
     outs.push(out);
     return new Promise<void>((resolve, reject) => {
-      const w = new Worker(new URL(import.meta.url), { workerData: { ...base, from, to, out } satisfies PartJob, execArgv: ['--import', 'tsx'] });
+      const w = new Worker(new URL('./worker-boot.mjs', import.meta.url), {
+        workerData: { ...base, from, to, out, __entry: import.meta.url },
+      });
       const stop = () => void w.terminate();
       signal?.addEventListener('abort', stop);
       w.on('message', (m: { frames?: number; done?: boolean; error?: string }) => {

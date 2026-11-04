@@ -44,8 +44,13 @@ async function make(args: string[]): Promise<void> {
   let src;
   if (input === '-') src = ingestText(readFileSync(0, 'utf8'), 'pasted text');
   else if (/^https?:\/\//.test(input)) src = await ingestInput({ url: input }, srcDir);
-  else if (statSync(input).isDirectory()) src = await ingestInput({ files: readTree(input), text: flag(args, 'note') }, srcDir);
-  else src = await ingestInput({ files: [{ name: basename(input), data: readFileSync(input) }], text: flag(args, 'note') }, srcDir);
+  else if (statSync(input).isDirectory())
+    src = await ingestInput({ files: readTree(input), text: flag(args, 'note') }, srcDir);
+  else
+    src = await ingestInput(
+      { files: [{ name: basename(input), data: readFileSync(input) }], text: flag(args, 'note') },
+      srcDir,
+    );
   src = { ...src, assets: src.assets.map((a) => ({ ...a, path: resolve(srcDir, a.path) })) };
   console.log(
     `source   ${src.kind} · "${src.title}" · ${src.stats.words} words · ${src.segments.length} segments · ${src.assets.length} figures${src.warnings.length ? ` · ${src.warnings.join('; ')}` : ''}`,
@@ -97,13 +102,16 @@ async function make(args: string[]): Promise<void> {
 /** Re-voice and re-render a finished job from its saved script (no model calls): for iterating on visuals/audio. */
 async function rerender(args: string[]): Promise<void> {
   const job = args[0];
-  if (!job || !existsSync(join(job, 'script.json'))) throw new Error('usage: bridge rerender <jobDir> [--out dir]');
+  if (!job || !existsSync(join(job, 'script.json')))
+    throw new Error('usage: bridge rerender <jobDir> [--out dir]');
   const read = <T>(f: string) => JSON.parse(readFileSync(join(job, f), 'utf8')) as T;
   const src = read<import('../core/schema.ts').Source>('source.json');
   const saved = read<import('../core/schema.ts').Script>('script.json');
   const analysis = read<import('../core/schema.ts').Analysis>('analysis.json');
   const faith = read<{ verdicts: { claim: string; verdict: string; by: string }[] }>('faith.json');
-  const ok = new Set(faith.verdicts.filter((v) => v.verdict === 'supported' && v.by === 'judge').map((v) => v.claim));
+  const ok = new Set(
+    faith.verdicts.filter((v) => v.verdict === 'supported' && v.by === 'judge').map((v) => v.claim),
+  );
   const { engines } = await pickEngines({ llm: 'extractive', tts: 'auto' });
   engines.analyze = async () => analysis;
   engines.script = async () => saved;
@@ -115,7 +123,9 @@ async function rerender(args: string[]): Promise<void> {
   const outDir = resolve(flag(args, 'out', 'artifacts/videos')!);
   mkdirSync(outDir, { recursive: true });
   copyFileSync(res.video, join(outDir, `${id}.mp4`));
-  console.log(`✓ ${join(outDir, `${id}.mp4`)} · ${res.durations.actual.toFixed(1)} s · unsupported ${res.faith.unsupported}`);
+  console.log(
+    `✓ ${join(outDir, `${id}.mp4`)} · ${res.durations.actual.toFixed(1)} s · unsupported ${res.faith.unsupported}`,
+  );
 }
 
 async function models(args: string[]): Promise<void> {

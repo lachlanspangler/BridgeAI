@@ -21,7 +21,7 @@ import type {
   Source,
   Timeline,
 } from '../core/schema.ts';
-import { composeExtractive, scriptWords, trimSentence } from '../core/script/extractive.ts';
+import { composeExtractive, scriptWords, sourceBeat, trimSentence } from '../core/script/extractive.ts';
 import { contentWords, stem, wordCount } from '../core/text/text.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
 import { renderStill, renderVideo } from './render/render.ts';
@@ -153,6 +153,32 @@ export async function runPipeline(
     script = g.script;
     return g.report;
   });
+  // 3a. refill: if the gate left the script thin, add beats in the source's own words for ideas not yet covered
+  if (script.beats.length < budget.beats.min || scriptWords(script) < budget.words * 0.6) {
+    const covered = new Set(script.beats.flatMap((b) => b.claims.flatMap((c) => c.support)));
+    for (const idea of analysis.ideas.slice(0, Math.max(budget.ideas.max + 2, 3))) {
+      if (scriptWords(script) >= budget.words * 0.85 || script.beats.length >= budget.beats.max) break;
+      if (idea.evidence.every((e) => covered.has(e.segmentId)) && script.beats.length >= budget.beats.min)
+        continue;
+      const nb = sourceBeat(idea, src, budget, `b${script.beats.length + 1}`);
+      if (!nb || script.beats.some((b) => b.narration === nb.narration) || !checkBeat(nb, src).ok) continue;
+      const t = script.beats.findIndex((b) => b.role === 'takeaway');
+      const pos = t < 0 ? script.beats.length : Math.max(1, t);
+      script = {
+        ...script,
+        beats: [...script.beats.slice(0, pos), nb, ...script.beats.slice(pos)].map((b, i) => ({
+          ...b,
+          id: `b${i + 1}`,
+        })),
+      };
+      idea.evidence.forEach((e) => covered.add(e.segmentId));
+      faith.actions.push({
+        beatId: `b${pos + 1}`,
+        action: 'rewritten',
+        reason: "refill: added in the source's own words after the gate dropped beats",
+      });
+    }
+  }
   // 3b. length fit by content: add a sourced detail to a beat (re-checked by the same gate rules)
   const seg = new Map(src.segments.map((x) => [x.id, x.text]));
   const expandBeat = async (i: number, target: number): Promise<boolean> => {

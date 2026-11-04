@@ -155,7 +155,7 @@ ${evidence.map((s) => renderSegment(s, 160)).join('\n')}
 ${codeSegs.length ? `\nCODE SEGMENTS:\n${codeSegs.map((s) => renderSegment(s, 120)).join('\n')}` : ''}${tree ? `\nPROJECT TREE [${tree.id}]:\n${tree.text.slice(0, 900)}` : ''}${figs.length ? `\nFIGURES:\n${figs.map((a) => `[${a.id}] ${a.caption ?? 'image'}`).join('\n')}` : ''}
 
 WRITE A ${b.seconds}-SECOND VIDEO SCRIPT for ${LEVEL_TEXT[ctx.level]}.
-LENGTH: about ${b.words} spoken words in total (${b.wordsPerSecond} words per second). Each beat's narration: ${b.wordsPerBeat.min}–${b.wordsPerBeat.max} words. Count them.
+LENGTH: about ${b.words} spoken words in total (${b.wordsPerSecond} words per second). Each beat's narration: ${Math.round((b.wordsPerBeat.min + b.wordsPerBeat.max) / 2)}–${b.wordsPerBeat.max} words (count them; short beats make the video too short).
 SHAPE: ${shape}
 RULES:
 1. Hook (first beat): start with the most surprising or useful FACT FROM THE EVIDENCE (it is fact-checked like every other beat), a sharp question, or the result first. No "hi", no "in this video", no "today". Visual: the one that SHOWS the hook fact (compare, bigNumber, flow…); use "title" only if nothing else fits.
@@ -177,7 +177,7 @@ EXAMPLE of one good beat (different source):
 export function judgePrompt(claim: string, support: string, context?: string): Prompt {
   return {
     system: SYSTEM_JUDGE,
-    user: `SOURCE EXCERPT:\n"""\n${support.slice(0, 3500)}\n"""\n\n${context && context !== claim ? `The claim comes from this narration line: "${context}"\n` : ''}CLAIM: "${claim}"\n\nIs every fact in the claim supported by the excerpt? Paraphrase, simpler words and rounding are fine; so is everyday wording for the same idea ("loops" for recurrence). Added numbers, names, comparisons or causes that the excerpt does not state are not. Answer "supported" or "not_supported".`,
+    user: `SOURCE EXCERPT:\n"""\n${support.slice(0, 3500)}\n"""\n\n${context && context !== claim ? `The claim comes from this narration line: "${context}"\n` : ''}CLAIM: "${claim}"\n\nIs every fact in the claim supported by the excerpt? Paraphrase, simpler words, rounding, and a plain general description of a specific fact in the excerpt are fine; so is everyday wording for the same idea ("loops" for recurrence). Added numbers, names, comparisons or causes that the excerpt does not state are not. Answer "supported" or "not_supported".`,
   };
 }
 
@@ -227,7 +227,7 @@ ${evidence.map((s) => renderSegment(s, 200)).join('\n')}
 ${codeSegs.length ? `\nCODE SEGMENTS:\n${codeSegs.map((s) => renderSegment(s, 120)).join('\n')}` : ''}${figs.length ? `\nFIGURES:\n${figs.map((a) => `[${a.id}] ${a.caption ?? 'image'}`).join('\n')}` : ''}
 
 WRITE EXACTLY ${nBeats} BEATS that teach this idea: ${nBeats >= 3 ? 'state it plainly → show the evidence (a number, figure, diagram or code) → an example or what it means for the viewer' : 'state it → show the evidence'}.
-Each beat's narration: ${b.wordsPerBeat.min}–${b.wordsPerBeat.max} words. ${isFirst ? '' : 'Start with a short transition from the previous beat. '}Use role "idea" for the first beat, then "evidence" or "example".
+Each beat's narration: ${Math.round((b.wordsPerBeat.min + b.wordsPerBeat.max) / 2)}–${b.wordsPerBeat.max} words (count them; short beats make the video too short). ${isFirst ? '' : 'Start with a short transition from the previous beat. '}Use role "idea" for the first beat, then "evidence" or "example".
 RULES: one idea per beat; short sentences; talk to the viewer; ONLY facts in EVIDENCE; copy numbers exactly; every beat lists its claims with supporting [segment ids]; keywords = 1–3 words from the narration; vary the visuals and pick the one that SHOWS the fact. Do not write a hook or a takeaway.
 
 ${VISUAL_GUIDE}`,

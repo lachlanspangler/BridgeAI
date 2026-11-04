@@ -19,14 +19,36 @@ describe.skipIf(!findFfmpeg())('parallel render', () => {
     writeFileSync(wav, encodeWav([new Float32Array(Math.ceil(small.duration * 44100))], 44100));
     process.env.BRIDGE_RENDER_WORKERS = '2';
     try {
-      await renderVideo(small, { out: join(dir, 'v.mp4'), audioWav: wav, jobDir: dir, assets: [], burnCaptions: true, preset: 'ultrafast' });
+      await renderVideo(small, {
+        out: join(dir, 'v.mp4'),
+        audioWav: wav,
+        jobDir: dir,
+        assets: [],
+        burnCaptions: true,
+        preset: 'ultrafast',
+      });
     } finally {
       delete process.env.BRIDGE_RENDER_WORKERS;
     }
     expect(Math.abs(probeDuration(join(dir, 'v.mp4')) - small.duration)).toBeLessThan(0.3);
     const ff = findFfmpeg()!;
     if (ff.ffprobe) {
-      const r = spawnSync(ff.ffprobe, ['-v', 'error', '-count_frames', '-select_streams', 'v', '-show_entries', 'stream=nb_read_frames', '-of', 'csv=p=0', join(dir, 'v.mp4')], { encoding: 'utf8' });
+      const r = spawnSync(
+        ff.ffprobe,
+        [
+          '-v',
+          'error',
+          '-count_frames',
+          '-select_streams',
+          'v',
+          '-show_entries',
+          'stream=nb_read_frames',
+          '-of',
+          'csv=p=0',
+          join(dir, 'v.mp4'),
+        ],
+        { encoding: 'utf8' },
+      );
       expect(Math.abs(Number(r.stdout.trim()) - Math.ceil(small.duration * 12))).toBeLessThanOrEqual(2);
     }
   }, 120_000);

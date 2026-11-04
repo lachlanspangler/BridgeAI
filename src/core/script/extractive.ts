@@ -123,6 +123,22 @@ function ideaVisual(idea: Idea, src: Source, budget: Budget): Visual {
   };
 }
 
+/** One faithful beat for an idea, in the source's own words (its verbatim evidence quote, trimmed). */
+export function sourceBeat(idea: Idea, src: Source, budget: Budget, id: string): Beat | null {
+  const quote = idea.evidence.find((e) => e.quote)?.quote ?? idea.statement;
+  const narration = trimSentence(quote, budget.wordsPerBeat.max + 2, idea.terms);
+  if (wordCount(narration) < 4) return null;
+  return {
+    id,
+    role: 'evidence',
+    narration,
+    visual: ideaVisual({ ...idea, statement: quote }, src, budget),
+    claims: [{ text: narration, support: idea.evidence.map((e) => e.segmentId), kind: 'fact' }],
+    ideas: [idea.id],
+    keywords: idea.terms.slice(0, 3),
+  };
+}
+
 export function composeExtractive(src: Source, analysis: Analysis, budget: Budget): Script {
   const beats: Beat[] = [hookBeat(src, budget)];
   const hookWords = wordCount(beats[0]!.narration);
