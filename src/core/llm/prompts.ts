@@ -119,7 +119,7 @@ const VISUAL_GUIDE = `Visual types (pick the one that SHOWS the idea; vary them;
 - statement: one short line on screen (3–7 words) that makes sense alone, with 1–2 highlighted key words. Use sparingly; prefer a visual that shows the fact.
 - bigNumber: one important number from the source, huge. value = the number exactly as in the source; label ≤ 7 words; compareValue/compareLabel = a second number from the source to compare with, else "".
 - bullets: 2–4 short items (≤ 5 words each) that build one by one.
-- bars: a bar chart of 2–6 numbers that ALL appear in the source (e.g. scores of models). highlight the main one.
+- bars: a bar chart of 2–6 numbers that ALL appear in the source, where the bars measure the SAME thing (e.g. scores of models); label each bar with its name; highlight the main one.
 - flow: 2–5 boxes with arrows, ONLY for steps that happen in order (a process, pipeline, architecture). For things that happen in parallel or a list of kinds, use bullets. node labels ≤ 3 words.
 - compare: two sides (old vs new, before vs after) with ≤ 3 short points each; winner if the source says which is better.
 - quote: a short exact quote from the source that the narration is saying right now.

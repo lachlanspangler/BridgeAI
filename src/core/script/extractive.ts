@@ -48,8 +48,17 @@ export function trimSentence(s: string, maxWords: number, terms: string[] = []):
     }
   }
   if (best && VERB.test(best))
-    return ensurePeriod(sentenceCase(best.replace(/^(and|but|so|which|while)\s+/i, '')));
-  return ensurePeriod(clampWords(t, maxWords).replace(/…$/, ''));
+    return ensurePeriod(tidyEnd(sentenceCase(best.replace(/^(and|but|so|which|while)\s+/i, ''))));
+  return ensurePeriod(tidyEnd(clampWords(t, maxWords).replace(/…$/, '')));
+}
+
+/** Never end on a dangling word ("…with different", "…and", "…much"): cut back to the last content word. */
+export function tidyEnd(t: string): string {
+  const DANGLE =
+    /\s+(and|or|but|the|a|an|of|to|with|by|for|in|on|at|from|than|as|that|which|is|are|was|were|be|more|much|less|different|very|its|their|our|this|these)[,;:]?$/i;
+  let out = t.replace(/[,;:\s]+$/, '');
+  for (let i = 0; i < 6 && DANGLE.test(out); i++) out = out.replace(DANGLE, '').replace(/[,;:\s]+$/, '');
+  return out;
 }
 
 const ensurePeriod = (s: string): string => (/[.!?]$/.test(s) ? s : `${s}.`);

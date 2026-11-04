@@ -15,7 +15,7 @@ import {
 } from '../schema.ts';
 import { contentWords, normNumber, numbers, stem, wordCount } from '../text/text.ts';
 import { IDEA_KINDS } from './schemas.ts';
-import { trimSentence } from '../script/extractive.ts';
+import { tidyEnd, trimSentence } from '../script/extractive.ts';
 
 const normQ = (s: string) =>
   s
@@ -145,7 +145,10 @@ interface RawBeat {
 
 const s = (x: unknown): string => (typeof x === 'string' ? x.trim() : '');
 const sa = (x: unknown): string[] => (Array.isArray(x) ? x.map(s).filter(Boolean) : []);
-const clampW = (t: string, n: number): string => t.split(/\s+/).slice(0, n).join(' ');
+const clampW = (t: string, n: number): string => {
+  const ws = t.split(/\s+/);
+  return ws.length <= n ? t : tidyEnd(ws.slice(0, n).join(' '));
+};
 const TONES: Tone[] = ['primary', 'secondary', 'accent', 'positive', 'neutral'];
 
 function sourceHasNumber(src: Source, value: string): boolean {
@@ -321,6 +324,9 @@ export function toVisual(
         const said = narration.match(/\bfig(?:ure)?\.?\s*(\d+)/i)?.[1];
         const has = (a.caption ?? '').match(/^fig(?:ure)?\.?\s*(\d+)/i)?.[1];
         if (said && has && said !== has) return fallback;
+        // a paper figure must be about what is being said (else it's decoration the viewer can't decode)
+        if (src.kind === 'pdf' && !said && coverageOf(narration, `${a.caption ?? ''} ${a.ocr ?? ''}`) < 0.15)
+          return fallback;
         return Visual.parse({
           type: 'figure',
           assetId: a.id,

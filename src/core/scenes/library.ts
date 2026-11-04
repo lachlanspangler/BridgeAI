@@ -355,7 +355,8 @@ export function countUp(value: string, k: number): string {
   const target = Number(raw);
   if (!Number.isFinite(target)) return value;
   const decimals = (raw.split('.')[1] ?? '').length;
-  const cur = target * easeOutCubic(k);
+  // start at 55% so a still caught mid-count never shows a misleadingly small number
+  const cur = target * (0.55 + 0.45 * easeOutCubic(k));
   let str = cur.toFixed(decimals);
   if (m[2]!.includes(','))
     str = Number(str).toLocaleString('en-US', {
@@ -370,7 +371,7 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
   const s = S(p);
   const b = contentBox(W, H);
   const at = spokenAt(p.words, v.value, 0.15);
-  const k = prog(p.t, Math.max(0.05, Math.min(at - 0.5, 0.4)), 0.75);
+  const k = prog(p.t, 0.05, 0.5);
   const pop = easeOutBack(prog(p.t, 0, MOTION.pop));
   const cx = v.compare ? b.x + b.w * 0.34 : W / 2;
   const cy = b.y + b.h * 0.5;
@@ -840,7 +841,10 @@ function code(p: SceneProps, v: Extract<Visual, { type: 'code' }>): void {
   }
   // typing: characters per second scaled so typing ends by 60% of the narration
   const total = lines.reduce((n, l) => n + l.length + 1, 0);
-  const typeEnd = Math.max(0.8, p.voice.start + (p.voice.end - p.voice.start) * 0.6);
+  const typeEnd = Math.min(
+    Math.max(0.8, p.voice.start + (p.voice.end - p.voice.start) * 0.45),
+    Math.max(0.8, p.dur - 1.2),
+  );
   const shown = Math.floor(total * clamp01(p.t / typeEnd));
   let budget = shown;
   ctx.font = font(px, 500, 'mono');

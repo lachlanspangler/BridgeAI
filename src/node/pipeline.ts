@@ -209,7 +209,11 @@ export async function runPipeline(
           const o = bag(k.narration);
           let n = 0;
           for (const w of mine) if (o.has(w)) n++;
-          return n / Math.max(1, Math.min(mine.size, o.size)) > 0.6;
+          const r = n / Math.max(1, Math.min(mine.size, o.size));
+          // the same headline number said again ("28.4" three times) counts as a repeat at lower overlap
+          const sig = (t: string) => new Set((t.match(/\d+(?:\.\d+)?/g) ?? []).filter((x) => x.length >= 2));
+          const shared = [...sig(b.narration)].some((x) => sig(k.narration).has(x));
+          return r > 0.6 || (shared && r > 0.35);
         });
       if (dup)
         faith.actions.push({ beatId: `x-dup-${b.id}`, action: 'dropped', reason: 'repeats an earlier beat' });
@@ -241,6 +245,16 @@ export async function runPipeline(
         .filter((w) => !said.has(w)),
     );
     if (fresh.size < 2) return false;
+    // …and must not turn into a restatement of another beat (an expanded beat 2 that repeats the hook)
+    const mineBag = new Set(contentWords(text).map(stem));
+    const echoes = script.beats.some((o, j) => {
+      if (j === i) return false;
+      const ob = new Set(contentWords(o.narration).map(stem));
+      let n = 0;
+      for (const w of mineBag) if (ob.has(w)) n++;
+      return n / Math.max(1, Math.min(mineBag.size, ob.size)) > 0.6;
+    });
+    if (echoes) return false;
     const cand: Beat = { ...b, narration: text, claims: [{ text, support, kind: 'fact' }] };
     const c = checkBeat(cand, src);
     let ok = c.ok;
