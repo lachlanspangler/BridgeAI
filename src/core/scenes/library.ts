@@ -643,7 +643,7 @@ function flow(p: SceneProps, v: Extract<Visual, { type: 'flow' }>): void {
     const cIdx = r % 2 === 1 ? cols - 1 - (i % cols) : i % cols; // snake layout for 2 rows
     const x = b.x + cellW * cIdx + cellW / 2;
     const y = top + cellH * r + cellH / 2;
-    const evenAt = p.voice.start + (i / n) * span * 0.85;
+    const evenAt = p.voice.start + (i / n) * span * 0.5;
     const at = Math.min(evenAt, spokenAt(p.words, node.label.split(/\s+/)[0] ?? '', evenAt));
     pos.set(node.id, { x, y, at: i === 0 ? Math.min(at, 0.1) : at - 0.1 });
   });

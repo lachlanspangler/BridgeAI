@@ -286,3 +286,52 @@ describe('visual repairs', () => {
     expect(s.beats.some((x) => x.visual.type === 'figure')).toBe(true);
   });
 });
+
+describe('round-3 visual upgrades', () => {
+  it('a statement whose narration states a source number becomes a labelled big number', () => {
+    const v = toVisual(
+      { type: 'statement', text: 'It wins', highlight: [] },
+      src,
+      'It reaches 28.4 BLEU on English to German.',
+      [],
+    );
+    expect(v).toMatchObject({ type: 'bigNumber', value: '28.4', label: 'BLEU' });
+  });
+  it('tokens must be a real phrase from the source', () => {
+    expect(
+      toVisual(
+        { type: 'tokens', title: '', words: ['query', 'key', 'value'], focus: 0, weights: [] },
+        src,
+        'n',
+        [],
+      ).type,
+    ).toBe('statement');
+    expect(
+      toVisual(
+        { type: 'tokens', title: '', words: ['based', 'solely', 'on', 'attention'], focus: 3, weights: [] },
+        src,
+        'n',
+        [],
+      ).type,
+    ).toBe('tokens');
+  });
+  it('focusFor points at the OCR words the narration names', async () => {
+    const { focusFor } = await import('../../src/core/llm/parse.ts');
+    const words = [
+      { t: 'Fossil', b: [0.6, 0.1, 0.1, 0.03] as [number, number, number, number] },
+      { t: 'fuels', b: [0.71, 0.1, 0.08, 0.03] as [number, number, number, number] },
+      { t: 'Ocean', b: [0.2, 0.8, 0.1, 0.03] as [number, number, number, number] },
+    ];
+    const f = focusFor('Fossil fuels add nine gigatons.', words)!;
+    expect(f[0]).toBeGreaterThan(0.45);
+    expect(f[1]).toBeLessThan(0.2);
+    expect(focusFor('Nothing matches here.', words)).toBeUndefined();
+  });
+  it('screen text is whole clauses with no dangling end', async () => {
+    const { screenPhrase, numberLabel } = await import('../../src/core/script/extractive.ts');
+    expect(
+      screenPhrase('Nano ID is faster than crypto.randomUUID and uuid/v4 in every single benchmark.', 7),
+    ).toBe('Nano ID is faster than crypto.randomUUID');
+    expect(numberLabel('ported to over 20 programming languages', '20')).toBe('programming languages');
+  });
+});

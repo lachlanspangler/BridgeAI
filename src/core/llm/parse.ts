@@ -15,7 +15,7 @@ import {
 } from '../schema.ts';
 import { contentWords, normNumber, numbers, stem, wordCount } from '../text/text.ts';
 import { IDEA_KINDS } from './schemas.ts';
-import { tidyEnd, trimSentence } from '../script/extractive.ts';
+import { numberLabel, screenPhrase, tidyEnd, trimSentence } from '../script/extractive.ts';
 
 const normQ = (s: string) =>
   s
@@ -180,13 +180,23 @@ export function toVisual(
           subtitle: s(v.subtitle) || undefined,
         });
       case 'statement': {
+        // a number the source states belongs on a big number, not in a sentence (design review r3)
+        const num = (narration.match(/(?<![A-Za-z\d.])\d[\d,]*(?:\.\d+)?(?![\d.]*[A-Za-z])/g) ?? []).find(
+          (x) => x.replace(/,/g, '').length >= 2 && sourceHasNumber(src, x),
+        );
+        const nlabel = num ? numberLabel(narration, num) : null;
+        if (num && nlabel)
+          return Visual.parse({ type: 'bigNumber', value: num, label: nlabel, subject: shortTitle(src) });
         const text = s(v.text);
         // a statement must say something on its own (≥ 3 words); else show the narration's key clause
-        const shown = wordCount(text) >= 3 ? text : trimSentence(narration, 9).replace(/[.!?]$/, '');
+        const shown = screenPhrase(wordCount(text) >= 3 ? text : narration, 7);
+        const hl = sa(v.highlight)
+          .filter((h) => shown.toLowerCase().includes(h.toLowerCase()))
+          .slice(0, 2);
         return Visual.parse({
           type: 'statement',
-          text: clampW(shown, 9),
-          highlight: sa(v.highlight).slice(0, 2),
+          text: shown,
+          highlight: hl.length ? hl : autoHighlight(shown, src),
         });
       }
       case 'bigNumber': {
@@ -200,7 +210,8 @@ export function toVisual(
           type: 'bigNumber',
           value: value.replace(/\s*%$/, '%'),
           unit: s(v.unit) || undefined,
-          label: clampW(s(v.label), 8),
+          // label = what the number counts, in the narration's own words (never words the voice doesn't say)
+          label: numberLabel(narration, value) ?? screenPhrase(s(v.label) || narration, 4),
           subject: src.title.split(/[:—–]/)[0]!.split(/\s+/).slice(0, 3).join(' '),
           compare:
             cv && sourceHasNumber(src, cv)
@@ -357,6 +368,10 @@ export function toVisual(
         const words = sa(v.words)
           .slice(0, 8)
           .map((w) => w.split(/\s+/)[0]!.slice(0, 16));
+        // chips must be a real phrase (contiguous in the source), not a list of jargon
+        const phrase = words.join(' ').toLowerCase();
+        if (!src.segments.some((x) => x.text.toLowerCase().replace(/\s+/g, ' ').includes(phrase)))
+          return fallback;
         if (words.length < 3) return fallback;
         const focus = Math.max(0, Math.min(words.length - 1, typeof v.focus === 'number' ? v.focus : 0));
         const weights = (Array.isArray(v.weights) ? v.weights : [])
@@ -544,4 +559,60 @@ function coverageOf(a: string, b: string): number {
   let n = 0;
   for (const w of A) if (B.has(w)) n++;
   return n / A.size;
+}
+
+const shortTitle = (src: Source): string => src.title.split(/[:—–]/)[0]!.split(/\s+/).slice(0, 3).join(' ');
+
+/** The most distinctive word of a line (a name, a number, or the longest content word the source uses). */
+export function autoHighlight(text: string, src: Source): string[] {
+  const words = text
+    .split(/\s+/)
+    .map((w) => w.replace(/[^A-Za-z0-9.%-]/g, ''))
+    .filter(Boolean);
+  const all = src.segments.map((x) => x.text.toLowerCase()).join(' ');
+  const named = words.find(
+    (w) => /^[A-Z][A-Za-z0-9-]{2,}$/.test(w) && words.indexOf(w) > 0 && all.includes(w.toLowerCase()),
+  );
+  if (named) return [named];
+  const num = words.find((w) => /\d/.test(w));
+  if (num) return [num];
+  const content = words.filter(
+    (w) =>
+      w.length > 4 &&
+      !/^(which|their|there|these|those|about|because|between)$/i.test(w) &&
+      all.includes(w.toLowerCase()),
+  );
+  const best = content.sort((a, b) => b.length - a.length)[0];
+  return best ? [best] : [];
+}
+
+/**
+ * Point at what is being said: the OCR words of an image that the narration names, as a padded box (normalised).
+ * Needs ≥ 2 matching words, or one distinctive word (≥ 5 letters); matches are clustered around the first hit.
+ */
+export function focusFor(
+  narration: string,
+  words: { t: string; b: [number, number, number, number] }[],
+): [number, number, number, number] | undefined {
+  const said = new Set(contentWords(narration).map(stem));
+  const nums = new Set(narration.match(/\d+(?:\.\d+)?/g) ?? []);
+  const hits = words.filter((w) => {
+    const clean = w.t.replace(/[^A-Za-z0-9.]/g, '');
+    return nums.has(clean) || (clean.length > 2 && said.has(stem(clean.toLowerCase())));
+  });
+  if (!hits.length || (hits.length < 2 && hits[0]!.t.replace(/[^A-Za-z]/g, '').length < 5)) return undefined;
+  const a = hits[0]!.b;
+  const near = hits.filter((w) => Math.abs(w.b[0] - a[0]) < 0.3 && Math.abs(w.b[1] - a[1]) < 0.3);
+  const x0 = Math.min(...near.map((w) => w.b[0]));
+  const y0 = Math.min(...near.map((w) => w.b[1]));
+  const x1 = Math.max(...near.map((w) => w.b[0] + w.b[2]));
+  const y1 = Math.max(...near.map((w) => w.b[1] + w.b[3]));
+  const pad = 0.06;
+  const w = Math.max(0.22, x1 - x0 + pad * 2);
+  const h = Math.max(0.18, y1 - y0 + pad * 2);
+  const cx = (x0 + x1) / 2;
+  const cy = (y0 + y1) / 2;
+  const fx = Math.max(0, Math.min(1 - w, cx - w / 2));
+  const fy = Math.max(0, Math.min(1 - h, cy - h / 2));
+  return [fx, fy, Math.min(1, w), Math.min(1, h)];
 }

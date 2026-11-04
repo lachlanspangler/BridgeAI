@@ -10,7 +10,7 @@ import { analyzeExtractive } from '../core/analyze/extractive.ts';
 import { toSrt, toVtt } from '../core/captions/captions.ts';
 import { checkBeat, checkScript } from '../core/faith/check.ts';
 import { gate, judgeKey, markVerified } from '../core/faith/gate.ts';
-import { ensureFigure } from '../core/llm/parse.ts';
+import { autoHighlight, ensureFigure, focusFor } from '../core/llm/parse.ts';
 import { repairCitations } from '../core/faith/repair.ts';
 import { encodeWav, mix, speechBounds } from '../core/audio/mix.ts';
 import type {
@@ -22,7 +22,14 @@ import type {
   Source,
   Timeline,
 } from '../core/schema.ts';
-import { composeExtractive, scriptWords, sourceBeat, trimSentence, VERB } from '../core/script/extractive.ts';
+import {
+  composeExtractive,
+  screenPhrase,
+  scriptWords,
+  sourceBeat,
+  trimSentence,
+  VERB,
+} from '../core/script/extractive.ts';
 import { contentWords, stem, wordCount } from '../core/text/text.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
 import { renderStill, renderVideo } from './render/render.ts';
@@ -200,6 +207,14 @@ export async function runPipeline(
   {
     const beats = [...script.beats];
     ensureFigure(beats, src);
+    // and point at the labelled part the narration names (OCR word boxes)
+    beats.forEach((b, i) => {
+      if (b.visual.type !== 'figure' || b.visual.focus) return;
+      const vis = b.visual;
+      const a = src.assets.find((x) => x.id === vis.assetId);
+      const f = a?.words ? focusFor(b.narration, a.words) : undefined;
+      if (f) beats[i] = { ...b, visual: { ...vis, focus: f } };
+    });
     script = { ...script, beats };
   }
   // 3b. length fit by content: add a sourced detail to a beat (re-checked by the same gate rules)
@@ -304,6 +319,61 @@ export async function runPipeline(
     script = { ...script, beats: keep.map((b, i) => ({ ...b, id: `b${i + 1}` })) };
   };
   dedupe();
+  // 3d. the takeaway must be a sentence that says something new-ish (not a label, not the hook again) and
+  //     carry one focal word (design review r3); candidates come from the ranked ideas and pass the same checks
+  {
+    const ti = script.beats.findIndex((b) => b.role === 'takeaway');
+    if (ti >= 0) {
+      const bag = (t: string) => new Set(contentWords(t).map(stem));
+      const sim = (a: string, b: string) => {
+        const A = bag(a);
+        const B = bag(b);
+        let n = 0;
+        for (const w of A) if (B.has(w)) n++;
+        return n / Math.max(1, Math.min(A.size, B.size));
+      };
+      const others = script.beats.filter((_, j) => j !== ti);
+      const ok = (t: string) => VERB.test(t) && others.every((o) => sim(t, o.narration) <= 0.6);
+      let take = script.beats[ti]!;
+      if (!ok(take.narration)) {
+        for (const idea of analysis.ideas.slice(0, 5)) {
+          const text = trimSentence(idea.statement, 14, idea.terms);
+          if (!ok(text)) continue;
+          const cand: Beat = {
+            ...take,
+            narration: text,
+            claims: [{ text, support: idea.evidence.map((e) => e.segmentId), kind: 'fact' }],
+            visual: { type: 'takeaway', text: screenPhrase(text, 12), highlight: [] },
+          };
+          const c = checkBeat(cand, src);
+          let pass = c.ok;
+          if (
+            !pass &&
+            engines.judge &&
+            c.verdicts.every((v) => v.verdict !== 'unsupported' || v.by === 'overlap')
+          )
+            pass = await engines.judge(
+              text,
+              idea.evidence.map((e) => seg.get(e.segmentId) ?? '').join('\n'),
+              signal,
+              text,
+            );
+          if (pass) {
+            take = cand;
+            faith.actions.push({
+              beatId: take.id,
+              action: 'rewritten',
+              reason: 'takeaway replaced: it repeated another beat or was not a sentence (re-checked)',
+            });
+            break;
+          }
+        }
+      }
+      if (take.visual.type === 'takeaway' && !take.visual.highlight.length)
+        take = { ...take, visual: { ...take.visual, highlight: autoHighlight(take.visual.text, src) } };
+      script.beats[ti] = take;
+    }
+  }
   write(jobDir, 'faith.json', faith);
 
   // 4. voice + fit to length (±10%)

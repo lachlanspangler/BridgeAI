@@ -49,24 +49,49 @@ export function imageSize(d: Uint8Array): { w: number; h: number } | null {
   return null;
 }
 
-export async function ocr(png: Buffer): Promise<string> {
-  if (process.env.BRIDGE_OCR === 'off') return '';
+export interface OcrResult {
+  text: string;
+  words: { t: string; b: [number, number, number, number] }[];
+}
+
+export async function ocr(png: Buffer, w = 1, h = 1): Promise<OcrResult> {
+  const empty = { text: '', words: [] };
+  if (process.env.BRIDGE_OCR === 'off') return empty;
   try {
     const { createWorker } = await import('tesseract.js');
     const dir = join(paths.models(), 'tesseract');
     mkdirSync(dir, { recursive: true });
     const worker = await createWorker('eng', 1, { cachePath: dir, logger: () => {} });
     try {
-      const r = await worker.recognize(png);
-      return r.data.text
-        .replace(/[ \t]+/g, ' ')
-        .replace(/\n{2,}/g, '\n')
-        .trim();
+      const r = await worker.recognize(png, {}, { text: true, blocks: true });
+      type W = { text: string; confidence: number; bbox: { x0: number; y0: number; x1: number; y1: number } };
+      const blocks =
+        (r.data as unknown as { blocks?: { paragraphs: { lines: { words: W[] }[] }[] }[] }).blocks ?? [];
+      const words = blocks
+        .flatMap((bl) => bl.paragraphs.flatMap((pa) => pa.lines.flatMap((li) => li.words)))
+        .filter((x) => x.confidence > 55 && /[A-Za-z0-9]{2,}/.test(x.text))
+        .slice(0, 400)
+        .map((x) => ({
+          t: x.text,
+          b: [x.bbox.x0 / w, x.bbox.y0 / h, (x.bbox.x1 - x.bbox.x0) / w, (x.bbox.y1 - x.bbox.y0) / h] as [
+            number,
+            number,
+            number,
+            number,
+          ],
+        }));
+      return {
+        text: r.data.text
+          .replace(/[ \t]+/g, ' ')
+          .replace(/\n{2,}/g, '\n')
+          .trim(),
+        words,
+      };
     } finally {
       await worker.terminate();
     }
   } catch {
-    return '';
+    return empty;
   }
 }
 
@@ -115,7 +140,7 @@ export async function ingestImages(files: InputFile[], dir: string, notes?: stri
     const aid = `a${assets.length + 1}`;
     const rel = join('assets', `${aid}.png`);
     writeFileSync(join(dir, rel), png);
-    const text = await ocr(png);
+    const { text, words } = await ocr(png, w, h);
     const caption = prettyName(f.name);
     assets.push({
       id: aid,
@@ -125,6 +150,7 @@ export async function ingestImages(files: InputFile[], dir: string, notes?: stri
       height: h,
       caption,
       ocr: text || undefined,
+      words: words.length ? words : undefined,
       loc: { file: f.name },
     });
     segs.push({

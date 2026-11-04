@@ -55,7 +55,7 @@ export function trimSentence(s: string, maxWords: number, terms: string[] = []):
 /** Never end on a dangling word ("…with different", "…and", "…much"): cut back to the last content word. */
 export function tidyEnd(t: string): string {
   const DANGLE =
-    /\s+(and|or|but|the|a|an|of|to|with|by|for|in|on|at|from|than|as|that|which|is|are|was|were|be|more|much|less|different|very|its|their|our|this|these)[,;:]?$/i;
+    /\s+(and|or|but|the|a|an|of|to|with|by|for|in|on|at|from|than|as|that|which|is|are|was|were|be|more|much|less|different|very|its|their|our|this|these|can|could|will|would|should|may|might|must|over|under|about|into|not|also|so|it|they|we|you|just|only)[,;:]?$/i;
   let out = t.replace(/[,;:\s]+$/, '');
   for (let i = 0; i < 6 && DANGLE.test(out); i++) out = out.replace(DANGLE, '').replace(/[,;:\s]+$/, '');
   return out;
@@ -228,3 +228,37 @@ export const scriptWords = (s: Script): number => s.beats.reduce((n, b) => n + w
 
 /** Distinct content words, used to sanity check on-screen text. */
 export const distinctTerms = (s: string): number => new Set(contentWords(s)).size;
+
+/**
+ * On-screen text from whole clauses, never a word-count cut: the first sentence/clause that fits n words and
+ * still says something (has a verb or a number), tidied so it never ends on a dangling word.
+ */
+export function screenPhrase(text: string, n: number): string {
+  const t = cleanForSpeech(text).replace(/[.!?]$/, '');
+  if (wordCount(t) <= n) return tidyEnd(t);
+  const parts = t.split(/(?<=[.!?])\s+/);
+  for (const sen of parts)
+    if (wordCount(sen) <= n && wordCount(sen) >= 2) return tidyEnd(sen.replace(/[.!?]$/, ''));
+  const clauses = t.split(/[,;:—]\s+|\s+(?=(?:which|while|because|so that|making|but)\s)/);
+  const good = clauses.find((c) => wordCount(c) <= n && wordCount(c) >= 2 && (VERB.test(c) || /\d/.test(c)));
+  if (good) return tidyEnd(good);
+  const first = clauses.find((c) => wordCount(c) <= n && wordCount(c) >= 2);
+  return tidyEnd(first ?? t.split(/\s+/).slice(0, n).join(' '));
+}
+
+/** What a number counts, from the narration: "126 random bits versus 122" → "random bits". */
+export function numberLabel(narration: string, value: string): string | null {
+  const v = value.replace(/[^\d.]/g, '');
+  if (!v) return null;
+  const re = new RegExp(
+    `${v.replace('.', '\\.')}\\s*(?:%|x|×)?\\s+([A-Za-z][A-Za-z-]*(?:\\s+[A-Za-z][A-Za-z-]*){0,3})`,
+  );
+  const m = narration.match(re);
+  if (!m) return null;
+  const ws = m[1]!.split(/\s+/);
+  const stop = ws.findIndex((w) =>
+    /^(versus|vs|than|and|or|but|on|in|after|for|to|with|while|which|that|by|is|are|was|were|just)$/i.test(w),
+  );
+  const label = (stop < 0 ? ws : ws.slice(0, stop)).join(' ');
+  return label.length >= 3 ? label : null;
+}

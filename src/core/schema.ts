@@ -59,6 +59,10 @@ export const Asset = z.object({
   caption: z.string().optional(),
   /** Text found in the image by OCR. */
   ocr: z.string().optional(),
+  /** OCR word boxes, normalised 0..1 [x, y, w, h], so a beat can point at the label it is talking about. */
+  words: z
+    .array(z.object({ t: z.string(), b: z.tuple([z.number(), z.number(), z.number(), z.number()]) }))
+    .optional(),
   loc: Locator.default({}),
 });
 export type Asset = z.infer<typeof Asset>;
