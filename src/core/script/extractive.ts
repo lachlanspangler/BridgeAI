@@ -6,8 +6,15 @@
  */
 import type { Budget } from '../budget.ts';
 import type { Analysis, Beat, Idea, Script, Source, Visual } from '../schema.ts';
-import { analyzeExtractive, rawNumbers } from '../analyze/extractive.ts';
-import { clampWords, cleanForSpeech, contentWords, sentenceCase, wordCount } from '../text/text.ts';
+import { analyzeExtractive, garbled, rawNumbers } from '../analyze/extractive.ts';
+import {
+  clampWords,
+  cleanForSpeech,
+  sentences,
+  contentWords,
+  sentenceCase,
+  wordCount,
+} from '../text/text.ts';
 
 const LEADINS =
   /^(in this (paper|work|article|post|project),?\s*|here,?\s*|overall,?\s*|in summary,?\s*|to summarize,?\s*|finally,?\s*|moreover,?\s*|furthermore,?\s*|additionally,?\s*|in addition,?\s*|specifically,?\s*|notably,?\s*)/i;
@@ -21,7 +28,7 @@ export function trimSentence(s: string, maxWords: number, terms: string[] = []):
   let t = cleanForSpeech(s).replace(LEADINS, '');
   t = t.replace(/\s*\([^)]{0,80}\)/g, ''); // parentheticals
   t = sentenceCase(t);
-  if (wordCount(t) <= maxWords) return ensurePeriod(t);
+  if (wordCount(t) <= maxWords) return ensurePeriod(tidyEnd(t));
   // choose the best contiguous run of clauses: must contain a verb, fit the budget, cover key terms
   const parts = t.split(/(?<=[,;:])\s+|\s+(?=which |while |whereas |including |such as )/);
   const low = terms.map((x) => x.toLowerCase());
@@ -55,7 +62,7 @@ export function trimSentence(s: string, maxWords: number, terms: string[] = []):
 /** Never end on a dangling word ("…with different", "…and", "…much"): cut back to the last content word. */
 export function tidyEnd(t: string): string {
   const DANGLE =
-    /\s+(and|or|but|the|a|an|of|to|with|by|for|in|on|at|from|than|as|that|which|is|are|was|were|be|more|much|less|different|very|its|their|our|this|these|can|could|will|would|should|may|might|must|over|under|about|into|not|also|so|it|they|we|you|just|only)[,;:]?$/i;
+    /\s+(and|or|but|the|a|an|of|to|with|by|for|in|on|at|from|than|as|that|which|is|are|was|were|be|more|much|less|different|very|its|their|our|this|these|can|could|will|would|should|may|might|must|over|under|about|into|not|also|so|it|they|we|you|just|only|between|across|through|among|via|per|like|such|eg|etc|including)[,;:]?$/i;
   let out = t.replace(/[,;:\s]+$/, '');
   for (let i = 0; i < 6 && DANGLE.test(out); i++) out = out.replace(DANGLE, '').replace(/[,;:\s]+$/, '');
   return out;
@@ -261,4 +268,22 @@ export function numberLabel(narration: string, value: string): string | null {
   );
   const label = (stop < 0 ? ws : ws.slice(0, stop)).join(' ');
   return label.length >= 3 ? label : null;
+}
+
+/**
+ * The source's own "what is it" sentence: the first sentence of the abstract / README lead / note that defines
+ * or introduces the subject ("X is a…", "We introduce X…", "This package contains…"). Faithful by construction.
+ */
+export function whatIsIt(src: Source): { text: string; segmentId: string } | null {
+  const lead = src.segments.filter((s) => s.kind === 'abstract' || s.kind === 'paragraph').slice(0, 4);
+  const DEF =
+    /\b(is an?|are an?|is the|refers to|we (introduce|propose|present)|this (package|library|tool|project|paper) (contains|provides|is|lets|helps|introduces)|(contains|provides) (various|a|an))\b/i;
+  for (const seg of lead) {
+    for (const sen of sentences(seg.text)) {
+      const t = cleanForSpeech(sen);
+      if (wordCount(t) >= 6 && wordCount(t) <= 45 && DEF.test(t) && !garbled(t))
+        return { text: t, segmentId: seg.id };
+    }
+  }
+  return null;
 }

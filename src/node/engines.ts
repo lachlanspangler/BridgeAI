@@ -57,14 +57,26 @@ function blend(analysis: Analysis, src: Source): Analysis {
   const seg = new Map<string, number>();
   for (const c of scored) seg.set(c.segmentId, Math.max(seg.get(c.segmentId) ?? 0, c.score));
   const max = Math.max(1e-9, ...seg.values());
-  const leadIds = new Set(src.segments.filter((x) => x.kind === 'paragraph' || x.kind === 'abstract').slice(0, 3).map((x) => x.id));
+  const leadIds = new Set(
+    src.segments
+      .filter((x) => x.kind === 'paragraph' || x.kind === 'abstract')
+      .slice(0, 3)
+      .map((x) => x.id),
+  );
   const ideas = analysis.ideas
     .map((i) => {
       const prior = Math.max(0, ...i.evidence.map((e) => (seg.get(e.segmentId) ?? 0) / max));
       // projects: what the project IS lives in the README's opening paragraphs, not in one API example
       const lead = src.kind === 'project' && i.evidence.some((e) => leadIds.has(e.segmentId)) ? 0.25 : 0;
-      const codeOnly = src.kind === 'project' && i.evidence.every((e) => src.segments.find((x) => x.id === e.segmentId)?.kind === 'code') ? -0.15 : 0;
-      return { ...i, importance: Math.round((0.75 * i.importance + 0.25 * prior + lead + codeOnly) * 1000) / 1000 };
+      const codeOnly =
+        src.kind === 'project' &&
+        i.evidence.every((e) => src.segments.find((x) => x.id === e.segmentId)?.kind === 'code')
+          ? -0.15
+          : 0;
+      return {
+        ...i,
+        importance: Math.round((0.75 * i.importance + 0.25 * prior + lead + codeOnly) * 1000) / 1000,
+      };
     })
     .sort((a, b) => b.importance - a.importance)
     .map((i, k) => ({ ...i, id: `i${k + 1}` }));

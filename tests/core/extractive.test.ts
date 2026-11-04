@@ -67,3 +67,10 @@ describe('garbled text filter', () => {
     expect(garbled('The Transformer is based solely on attention mechanisms.')).toBe(false);
   });
 });
+
+describe('whatIsIt', () => {
+  it("finds the source's own definition sentence", async () => {
+    const { whatIsIt } = await import('../../src/core/script/extractive.ts');
+    expect(whatIsIt(attention())!.text).toMatch(/We propose a new simple network architecture, the Transformer/);
+  });
+});

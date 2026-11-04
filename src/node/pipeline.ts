@@ -29,8 +29,10 @@ import {
   sourceBeat,
   trimSentence,
   VERB,
+  thirdPerson,
+  whatIsIt,
 } from '../core/script/extractive.ts';
-import { contentWords, stem, wordCount } from '../core/text/text.ts';
+import { contentWords, coverage, stem, wordCount } from '../core/text/text.ts';
 import { buildTimeline, type VoiceClip } from '../core/timeline/timeline.ts';
 import { renderStill, renderVideo } from './render/render.ts';
 import type { Clip, TtsEngine } from './tts/types.ts';
@@ -332,6 +334,51 @@ export async function runPipeline(
     script = { ...script, beats: keep.map((b, i) => ({ ...b, id: `b${i + 1}` })) };
   };
   dedupe();
+  // 3c''. the video always says what the subject IS, in the source's own words (the definition sentence)
+  {
+    const def = whatIsIt(src);
+    const said = script.beats.map((b) => b.narration).join(' ');
+    if (def && coverage(def.text, said) < 0.5) {
+      const text = thirdPerson(trimSentence(def.text, budget.wordsPerBeat.max + 6));
+      const nb: Beat = {
+        id: 'bd',
+        role: 'idea',
+        narration: text,
+        visual: { type: 'statement', text: screenPhrase(text, 7), highlight: [] },
+        claims: [{ text, support: [def.segmentId], kind: 'fact' }],
+        ideas: [],
+        keywords: [],
+      };
+      if (VERB.test(text) && checkBeat(nb, src).ok) {
+        const pos = script.beats[0]?.role === 'hook' ? 1 : 0;
+        script = {
+          ...script,
+          beats: [...script.beats.slice(0, pos), nb, ...script.beats.slice(pos)].map((b, i) => ({
+            ...b,
+            id: `b${i + 1}`,
+          })),
+        };
+        faith.actions.push({
+          beatId: `b${pos + 1}`,
+          action: 'rewritten',
+          reason: "added the source's own definition of its subject",
+        });
+        if (scriptWords(script) > budget.words * 1.15) {
+          const weakest = script.beats
+            .map((b, i) => ({ b, i }))
+            .filter(({ b, i }) => i > pos && b.role !== 'takeaway')
+            .pop();
+          if (weakest)
+            script = {
+              ...script,
+              beats: script.beats
+                .filter((_, i) => i !== weakest.i)
+                .map((b, i) => ({ ...b, id: `b${i + 1}` })),
+            };
+        }
+      }
+    }
+  }
   // 3c'. the single most important idea is ALWAYS in the video (k1 at every length); short videos also end on it
   const top = analysis.ideas[0];
   if (top) {
@@ -446,6 +493,23 @@ export async function runPipeline(
       if (take.visual.type === 'takeaway' && !take.visual.highlight.length)
         take = { ...take, visual: { ...take.visual, highlight: autoHighlight(take.visual.text, src) } };
       script.beats[ti] = take;
+      // still a restatement and nothing better passed: keep the takeaway, drop the beat it repeats
+      if (!others.every((o) => sim(take.narration, o.narration) <= 0.6)) {
+        const dupI = script.beats.findIndex(
+          (o, j) => j !== ti && o.role !== 'hook' && sim(take.narration, o.narration) > 0.6,
+        );
+        if (dupI >= 0 && script.beats.length > 3) {
+          faith.actions.push({
+            beatId: `x-dup-${script.beats[dupI]!.id}`,
+            action: 'dropped',
+            reason: 'the takeaway says the same thing',
+          });
+          script = {
+            ...script,
+            beats: script.beats.filter((_, j) => j !== dupI).map((b, i) => ({ ...b, id: `b${i + 1}` })),
+          };
+        }
+      }
     }
   }
   write(jobDir, 'faith.json', faith);
