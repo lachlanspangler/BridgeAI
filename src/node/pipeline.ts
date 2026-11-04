@@ -154,47 +154,59 @@ export async function runPipeline(
     script = g.script;
     return g.report;
   });
-  // 3b. pre-voice length fit: a script far under budget gets sourced details added (each re-checked)
-  if (engines.expand && scriptWords(script) < budget.words * 0.85) {
-    const seg = new Map(src.segments.map((x) => [x.id, x.text]));
-    const order = script.beats
+  // 3b. length fit by content: add a sourced detail to a beat (re-checked by the same gate rules)
+  const seg = new Map(src.segments.map((x) => [x.id, x.text]));
+  const expandBeat = async (i: number, target: number): Promise<boolean> => {
+    if (!engines.expand) return false;
+    const b = script.beats[i]!;
+    const support = [...new Set(b.claims.flatMap((c) => c.support))];
+    if (!support.length) return false;
+    const evidence = support.map((id) => seg.get(id) ?? '').join('\n');
+    const text = await engines.expand(b, target, evidence, signal);
+    if (!text) return false;
+    // it must add something new, not restate the beat ("by over 2 BLEU … by more than 2 points")
+    const said = new Set(script.beats.flatMap((x) => contentWords(x.narration).map(stem)));
+    const fresh = new Set(
+      contentWords(text)
+        .map(stem)
+        .filter((w) => !said.has(w)),
+    );
+    if (fresh.size < 2) return false;
+    const cand: Beat = { ...b, narration: text, claims: [{ text, support, kind: 'fact' }] };
+    const c = checkBeat(cand, src);
+    let ok = c.ok;
+    if (!ok && engines.judge && c.verdicts.every((v) => v.verdict !== 'unsupported' || v.by === 'overlap'))
+      ok = await engines.judge(text, evidence, signal);
+    if (!ok) return false;
+    script.beats[i] = cand;
+    faith.actions.push({
+      beatId: b.id,
+      action: 'rewritten',
+      reason: 'expanded with a sourced detail (re-checked)',
+    });
+    faith.verdicts.push({ beatId: b.id, claim: text, verdict: 'supported', by: c.ok ? 'overlap' : 'judge' });
+    return true;
+  };
+  const expandable = () =>
+    script.beats
       .map((b, i) => ({ b, i }))
-      .filter(({ b }) => b.role !== 'hook' && b.role !== 'takeaway')
-      .sort((a, b) => wordCount(a.b.narration) - wordCount(b.b.narration));
+      .filter(
+        ({ b }) =>
+          b.role !== 'hook' && b.role !== 'takeaway' && wordCount(b.narration) < budget.wordsPerBeat.max + 4,
+      )
+      .sort((x, y) => wordCount(x.b.narration) - wordCount(y.b.narration));
+  if (engines.expand && scriptWords(script) < budget.words * 0.9) {
+    const order = expandable();
     for (const { b, i } of order) {
       const deficit = budget.words - scriptWords(script);
-      if (deficit < budget.words * 0.08) break;
-      const support = [...new Set(b.claims.flatMap((c) => c.support))];
-      if (!support.length) continue;
-      const target = Math.min(
-        budget.wordsPerBeat.max + 4,
-        wordCount(b.narration) + Math.ceil(deficit / Math.max(1, order.length)) + 4,
+      if (deficit < budget.words * 0.06) break;
+      await expandBeat(
+        i,
+        Math.min(
+          budget.wordsPerBeat.max + 4,
+          wordCount(b.narration) + Math.ceil(deficit / Math.max(1, order.length)) + 4,
+        ),
       );
-      const text = await engines.expand(b, target, support.map((id) => seg.get(id) ?? '').join('\n'), signal);
-      if (!text) continue;
-      // the expansion must add something new, not restate the beat ("by over 2 BLEU … by more than 2 points")
-      const said = new Set(script.beats.flatMap((x) => contentWords(x.narration).map(stem)));
-      const fresh = new Set(contentWords(text).map(stem).filter((w) => !said.has(w)));
-      if (fresh.size < 2) continue;
-      const cand: Beat = { ...b, narration: text, claims: [{ text, support, kind: 'fact' }] };
-      const c = checkBeat(cand, src);
-      let ok = c.ok;
-      if (!ok && engines.judge && c.verdicts.every((v) => v.verdict !== 'unsupported' || v.by === 'overlap'))
-        ok = await engines.judge(text, support.map((id) => seg.get(id) ?? '').join('\n'), signal);
-      if (ok) {
-        script.beats[i] = cand;
-        faith.actions.push({
-          beatId: b.id,
-          action: 'rewritten',
-          reason: 'expanded with a sourced detail (re-checked)',
-        });
-        faith.verdicts.push({
-          beatId: b.id,
-          claim: text,
-          verdict: 'supported',
-          by: c.ok ? 'overlap' : 'judge',
-        });
-      }
     }
     onProgress({
       stage: 'faith',
@@ -234,7 +246,7 @@ export async function runPipeline(
       await synth(i);
     }
     const target = settings.seconds;
-    for (let attempt = 0; attempt < 5; attempt++) {
+    for (let attempt = 0; attempt < 8; attempt++) {
       timeline = buildTimeline(script, voiceClips(), budget, tlOpts);
       const d = timeline.duration;
       if (d <= target * 1.08 && d >= target * 0.92) break;
@@ -271,7 +283,18 @@ export async function runPipeline(
         }
         break;
       } else {
-        // too short: add breathing room (≤ 0.8 s per beat), then slow the voice slightly
+        // too short: first add sourced content to the shortest beat (and re-voice it), then breathing room, then slow down
+        const short = expandable()[0];
+        if (
+          short &&
+          (await expandBeat(
+            short.i,
+            wordCount(short.b.narration) + Math.ceil(((target - d) * budget.wordsPerSecond) / 2) + 3,
+          ))
+        ) {
+          await synth(short.i);
+          continue;
+        }
         const missing = target - d;
         const per = Math.min(0.8, missing / Math.max(1, script.beats.length));
         timeline = buildTimeline(script, voiceClips(), budget, { ...tlOpts, extraHold: per });

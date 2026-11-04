@@ -117,4 +117,36 @@ describe('gate', () => {
     const action = g.report.actions.find((a) => a.beatId === naps.id)!;
     expect(action.action).toBe('kept'); // today: 'dropped' (stale pre-renumber id b2)
   });
+  it('the fallback takeaway (built from a model-written idea statement) is checked before it replaces a failed takeaway', () => {
+    const script: Script = {
+      schema: 'bridge.script/1',
+      title: 'Sleep study',
+      targetSeconds: 20,
+      engine: 'test',
+      beats: [
+        beat({
+          id: 'b1',
+          narration: 'Sleep improves memory in adults.',
+          claims: [{ text: 'Sleep improves memory in adults.', support: ['s2'], kind: 'fact' }],
+        }),
+        beat({
+          id: 'b2',
+          role: 'takeaway',
+          narration: 'Sleep cures 80% of memory loss.',
+          visual: { type: 'takeaway', text: 'Sleep cures memory loss', highlight: [] },
+          claims: [{ text: 'Sleep cures 80% of memory loss.', support: ['s2'], kind: 'fact' }],
+        }),
+      ],
+    };
+    // what pipeline.ts builds from analysis.ideas[0].statement (LLM-written for AI engines)
+    const fallback = beat({
+      id: 'bx',
+      role: 'takeaway',
+      narration: 'The trial enrolled 900 adults.',
+      visual: { type: 'takeaway', text: 'The trial enrolled 900 adults', highlight: [] },
+      claims: [{ text: 'The trial enrolled 900 adults.', support: ['s3'], kind: 'fact' }],
+    });
+    const g = gate(script, checkScript(script, src), new Map(), fallback);
+    for (const b of g.script.beats) expect(checkBeat(b, src).ok, b.narration).toBe(true);
+  });
 });
