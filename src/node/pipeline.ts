@@ -165,7 +165,7 @@ export async function runPipeline(
   // 3a. refill: if the gate left the script thin, add beats in the source's own words for ideas not yet covered
   if (script.beats.length < budget.beats.min || scriptWords(script) < budget.words * 0.6) {
     const covered = new Set(script.beats.flatMap((b) => b.claims.flatMap((c) => c.support)));
-    for (const idea of analysis.ideas.slice(0, Math.max(budget.ideas.max + 2, 3))) {
+    for (const idea of analysis.ideas.slice(0, Math.max(budget.ideas.max + 5, 6))) {
       if (scriptWords(script) >= budget.words * 0.85 || script.beats.length >= budget.beats.max) break;
       if (idea.evidence.every((e) => covered.has(e.segmentId)) && script.beats.length >= budget.beats.min)
         continue;
@@ -185,7 +185,16 @@ export async function runPipeline(
             highlight: nb.keywords.slice(0, 2),
           },
         };
-      if (!nb || script.beats.some((b) => b.narration === nb.narration) || !checkBeat(nb, src).ok) continue;
+      const echo = (t: string) => {
+        const A = new Set(contentWords(t).map(stem));
+        return script.beats.some((b) => {
+          const B = new Set(contentWords(b.narration).map(stem));
+          let n = 0;
+          for (const w of A) if (B.has(w)) n++;
+          return n / Math.max(1, Math.min(A.size, B.size)) > 0.5;
+        });
+      };
+      if (!nb || echo(nb.narration) || !checkBeat(nb, src).ok) continue;
       const t = script.beats.findIndex((b) => b.role === 'takeaway');
       const pos = t < 0 ? script.beats.length : Math.max(1, t);
       script = {

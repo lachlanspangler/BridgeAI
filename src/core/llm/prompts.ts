@@ -160,7 +160,7 @@ WRITE A ${b.seconds}-SECOND VIDEO SCRIPT for ${LEVEL_TEXT[ctx.level]}.
 LENGTH: about ${b.words} spoken words in total (${b.wordsPerSecond} words per second). Each beat's narration: ${Math.round((b.wordsPerBeat.min + b.wordsPerBeat.max) / 2)}–${b.wordsPerBeat.max} words (count them; short beats make the video too short).
 SHAPE: ${shape}
 RULES:
-1. Hook (first beat): start with the most surprising or useful FACT FROM THE EVIDENCE (it is fact-checked like every other beat), a sharp question, or the result first. No "hi", no "in this video", no "today". Visual: the one that SHOWS the hook fact (compare, bigNumber, flow…); use "title" only if nothing else fits.
+1. Hook (first beat): name the subject in plain words (what the source is about) and start with the most surprising or useful FACT FROM THE EVIDENCE (it is fact-checked like every other beat), a sharp question, or the result first. No "hi", no "in this video", no "today". Visual: the one that SHOWS the hook fact (compare, bigNumber, flow…); use "title" only if nothing else fits.
 2. One idea per beat. Short sentences (≤ 15 words). Active voice. Talk to the viewer ("you").
 3. Use ONLY facts in EVIDENCE. Copy numbers exactly (you may round to 2 significant figures). Never invent numbers, names, comparisons or causes. No hype or absolutes the source doesn't use ("ever", "always", "every time", "revolutionary").
 4. Every beat has claims: the facts it says, each with the [segment ids] that support them. Use kind "framing" only for a sentence with no facts (like "Here's the trick."). Mark an analogy as kind "analogy".
