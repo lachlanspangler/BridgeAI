@@ -146,3 +146,13 @@ describe('trim and person edge cases', () => {
     expect(garbled('When it rains, it pours.')).toBe(false);
   });
 });
+
+describe('final wording guards', () => {
+  it('sentence-initial "Our" becomes the authors\' and numbers are normal prose', async () => {
+    const { thirdPerson } = await import('../../src/core/script/extractive.ts');
+    const { garbled } = await import('../../src/core/analyze/extractive.ts');
+    expect(thirdPerson('Our model sets a new record.')).toBe("The authors' model sets a new record.");
+    expect(garbled('Measurements use a 1951-1980 baseline.')).toBe(false);
+    expect(garbled('A signal swept from 35 to 250 Hz with strain of 10^-21.')).toBe(false);
+  });
+});

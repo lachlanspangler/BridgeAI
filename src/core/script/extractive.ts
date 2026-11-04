@@ -153,7 +153,7 @@ export function thirdPerson(t: string): string {
       named = true;
       return first ? (w === 'We' ? 'The authors' : 'the authors') : w === 'We' ? 'They' : 'they';
     })
-    .replace(/^Our\b/, (m) => (named ? 'Their' : m))
+    .replace(/^Our\b/, () => (named ? 'Their' : "The authors'"))
     .replace(/\bour\b/g, (m) => (named ? 'their' : m)) // "our universe" stays when no author "we" is in the line
     .replace(/\bus\b/g, (m) => (named ? 'them' : m));
 }
@@ -162,7 +162,7 @@ export function thirdPerson(t: string): string {
 export function sourceBeat(idea: Idea, src: Source, budget: Budget, id: string): Beat | null {
   const quote = idea.evidence.find((e) => e.quote)?.quote ?? idea.statement;
   const narration = thirdPerson(trimSentence(quote, budget.wordsPerBeat.max + 2, idea.terms));
-  if (wordCount(narration) < 4 || !VERB.test(narration)) return null; // a real sentence, not a fragment
+  if (wordCount(narration) < 4 || !VERB.test(narration) || garbled(narration)) return null; // a real sentence
   return {
     id,
     role: 'evidence',

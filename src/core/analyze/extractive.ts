@@ -234,8 +234,10 @@ export function garbled(t: string): boolean {
   )
     return true;
   if (/(^|\s)[a-z][A-Z](?=[\s.,;]|$)/.test(t)) return true;
+  // digits and spaces are normal prose: compare letters with symbols only
   const letters = (t.match(/[A-Za-z]/g) ?? []).length;
-  if (letters / t.length < 0.6) return true; // mostly symbols/math
-  const short = ws.filter((w) => w.replace(/[^A-Za-z]/g, '').length <= 1).length;
+  const symbols = (t.match(/[^A-Za-z\d\s]/g) ?? []).length;
+  if (letters / Math.max(1, letters + symbols) < 0.8) return true; // mostly symbols/math
+  const short = ws.filter((w) => w.replace(/[^A-Za-z]/g, '').length <= 1 && !/\d/.test(w)).length;
   return short / ws.length > 0.35; // "z , ..., z" fragments
 }

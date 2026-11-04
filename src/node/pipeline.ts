@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { budgetFor, type Budget } from '../core/budget.ts';
-import { analyzeExtractive } from '../core/analyze/extractive.ts';
+import { analyzeExtractive, garbled } from '../core/analyze/extractive.ts';
 import { toSrt, toVtt } from '../core/captions/captions.ts';
 import { checkBeat, checkScript } from '../core/faith/check.ts';
 import { gate, judgeKey, markVerified } from '../core/faith/gate.ts';
@@ -560,6 +560,18 @@ export async function runPipeline(
         numberWords(b.narration).includes(String(n))
       );
     };
+    // a line that reads as a diagram label or spliced chart text is never voiced
+    const clean = script.beats.filter((b) => b.visual.type === 'title' || !garbled(b.narration));
+    if (clean.length >= 2 && clean.length < script.beats.length) {
+      for (const b of script.beats)
+        if (!clean.includes(b))
+          faith.actions.push({
+            beatId: `x-garbled-${b.id}`,
+            action: 'dropped',
+            reason: 'not a real sentence',
+          });
+      script = { ...script, beats: clean };
+    }
     let beats = script.beats.map((b) =>
       b.visual.type === 'bigNumber' && !said(b, b.visual.value)
         ? { ...b, visual: { type: 'statement' as const, text: screenPhrase(b.narration, 7), highlight: [] } }
@@ -592,7 +604,7 @@ export async function runPipeline(
   script = {
     ...script,
     beats: script.beats.map((b) =>
-      b.visual.type !== 'quote' && /\b(we|our|us)\b/.test(b.narration)
+      b.visual.type !== 'quote' && /\b(we|We|our|Our|us)\b/.test(b.narration)
         ? {
             ...b,
             narration: thirdPerson(b.narration),
