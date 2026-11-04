@@ -103,8 +103,23 @@ export function captionCues(beats: TimedBeat[], maxChars = 32, maxWords = 5): Cu
   const cues: Cue[] = [];
   for (const b of beats) {
     let cur: WordTiming[] = [];
+    const first = cues.length;
     const flush = () => {
       if (!cur.length) return;
+      // a lone word ("8x.") joins the previous cue of the same beat if it still fits on one line
+      const prev = cues.length > first ? cues[cues.length - 1] : undefined;
+      if (
+        cur.length === 1 &&
+        prev &&
+        !/[.!?]$/.test(prev.text) &&
+        `${prev.text} ${cur[0]!.word}`.length <= maxChars + 4 &&
+        prev.text.split(' ').length < maxWords + 1
+      ) {
+        prev.text = `${prev.text} ${cur[0]!.word}`;
+        prev.end = round3(b.start + cur[0]!.end);
+        cur = [];
+        return;
+      }
       cues.push({
         start: round3(b.start + cur[0]!.start),
         end: round3(b.start + cur[cur.length - 1]!.end),

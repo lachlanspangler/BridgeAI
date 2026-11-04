@@ -117,7 +117,23 @@ function richText(
   const fit = fitFont(ctx, text, box.w, opts.maxLines, opts.maxPx, opts.minPx, opts.weight, fam);
   ctx.font = font(fit.px, opts.weight, fam);
   const lh = fit.px * 1.14;
-  const ws = layoutWords(ctx, text, box.w, lh, highlights);
+  // centred text: balanced lines (no lone last word), found by shrinking the width while the line count holds
+  let wrapW = box.w;
+  if (opts.align === 'center') {
+    const lines = (w: number) => (layoutWords(ctx, text, w, lh, []).at(-1)?.line ?? 0) + 1;
+    const n = lines(box.w);
+    if (n > 1) {
+      let lo = box.w * 0.4;
+      let hi = box.w;
+      for (let i = 0; i < 12; i++) {
+        const mid = (lo + hi) / 2;
+        if (lines(mid) > n) lo = mid;
+        else hi = mid;
+      }
+      wrapW = hi;
+    }
+  }
+  const ws = layoutWords(ctx, text, wrapW, lh, highlights);
   const widths = lineWidths(ws);
   const nLines = (ws[ws.length - 1]?.line ?? 0) + 1;
   const top = box.y + (box.h - nLines * lh) / 2;
@@ -197,7 +213,7 @@ function title(p: SceneProps, v: Extract<Visual, { type: 'title' }>): void {
     },
   );
   // animated underline bar in three tones
-  const u = easeInOutCubic(prog(p.t, 0.35, 0.7));
+  const u = easeInOutCubic(prog(p.t, 0.65, 0.6)); // starts once the title has landed (no '|||' slivers)
   const uw = W * 0.28 * u;
   const tones = [p.theme.tone.accent, p.theme.tone.secondary, p.theme.tone.primary];
   tones.forEach((c, i) => {
@@ -283,7 +299,25 @@ function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): vo
   const { W, H } = p;
   const s = S(p);
   const b = contentBox(W, H);
-  const icon = v.icon && v.icon in ICONS ? v.icon : iconFor(`${v.highlight.join(' ')} ${v.text}`);
+  const icon = v.icon && v.icon in ICONS ? v.icon : iconFor(`${v.highlight.join(' ')} ${v.text}`, true);
+  if (!icon) {
+    // no icon that clearly fits: big centred words beat a generic lightbulb
+    richText(
+      p,
+      v.text,
+      v.highlight,
+      { x: b.x + b.w * 0.06, y: b.y, w: b.w * 0.88, h: b.h },
+      {
+        maxPx: TYPE.headline * 1.1 * s,
+        minPx: TYPE.body * s,
+        maxLines: 3,
+        weight: 700,
+        align: 'center',
+        enterAt: 0.08,
+      },
+    );
+    return;
+  }
   const layout = (p.variant ?? 0) % 3;
   const tone = [p.theme.tone.primary, p.theme.tone.secondary, p.theme.tone.positive][layout]!;
   const text = {
@@ -394,25 +428,29 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
     const a = Math.abs(Number(normNumber(v.value)) || 0);
     const c = Math.abs(Number(normNumber(v.compare.value)) || 0);
     const max = Math.max(a, c) || 1;
-    const bx = b.x + b.w * 0.7;
-    const bw = 110 * s;
-    const base = b.y + b.h * 0.82;
+    const bx = b.x + b.w * 0.66;
+    const bw = 130 * s;
+    const base = b.y + b.h * 0.8;
     const hMax = b.h * 0.6;
     const g = easeOutCubic(prog(p.t, 0.5, 0.9));
     [
-      { val: c, label: v.compare.label, color: p.theme.tone.neutral, x: bx },
-      { val: a, label: v.unit || 'this', color: p.theme.tone.accent, x: bx + bw * 1.6 },
+      { val: c, shown: v.compare.value, label: v.compare.label, color: p.theme.tone.neutral, x: bx },
+      { val: a, shown: v.value, label: v.label, color: p.theme.tone.accent, x: bx + bw * 1.7 },
     ].forEach((bar) => {
-      const h = (bar.val / max) * hMax * g;
+      // keep tiny bars visible (≥ 6 px) and always print the value above them
+      const h = Math.max(6 * s, (bar.val / max) * hMax) * g;
       ctx.fillStyle = bar.color;
       roundRect(ctx, bar.x, base - h, bw, h, 12 * s);
       ctx.fill();
-      ctx.font = font(TYPE.small * 0.8 * s, 600, 'sans');
-      ctx.fillStyle = p.theme.muted;
       ctx.textAlign = 'center';
-      wrap(ctx, bar.label, bw * 1.5).forEach((l, i) =>
-        ctx.fillText(l, bar.x + bw / 2, base + 40 * s + i * 36 * s),
-      );
+      ctx.font = font(44 * s, 700, 'display');
+      ctx.fillStyle = p.theme.ink;
+      if (g > 0.05) ctx.fillText(bar.shown, bar.x + bw / 2, base - h - 16 * s);
+      ctx.font = font(36 * s, 600, 'sans');
+      ctx.fillStyle = p.theme.muted;
+      wrap(ctx, bar.label, bw * 1.7)
+        .slice(0, 2)
+        .forEach((l, i) => ctx.fillText(l, bar.x + bw / 2, base + 46 * s + i * 40 * s));
     });
   }
 }
@@ -531,7 +569,7 @@ function bars(p: SceneProps, v: Extract<Visual, { type: 'bars' }>): void {
         x + bw / 2,
         base - h * g - 18 * s,
       );
-    ctx.font = font(TYPE.small * 0.75 * s, 600, 'sans');
+    ctx.font = font(36 * s, 600, 'sans');
     ctx.fillStyle = p.theme.muted;
     wrap(ctx, bar.label, gapW * 0.95)
       .slice(0, 2)
@@ -599,7 +637,7 @@ function flow(p: SceneProps, v: Extract<Visual, { type: 'flow' }>): void {
       6 * s,
     );
     if (e.label && k > 0.6) {
-      ctx.font = font(30 * s, 600, 'sans');
+      ctx.font = font(36 * s, 600, 'sans');
       ctx.fillStyle = p.theme.muted;
       ctx.textAlign = 'center';
       ctx.fillText(e.label, (a.x + c.x) / 2, (a.y + c.y) / 2 - 22 * s);
@@ -635,7 +673,7 @@ function compare(p: SceneProps, v: Extract<Visual, { type: 'compare' }>): void {
   const full = contentBox(W, H);
   // cards sized to their content and centred (no big empty panels)
   const rows = Math.max(1, v.left.points.length, v.right.points.length);
-  const ch = Math.max(full.h * 0.55, Math.min(full.h, (230 + rows * 120) * s));
+  const ch = Math.max(full.h * 0.35, Math.min(full.h, (200 + rows * 110) * s));
   const b = { ...full, y: full.y + (full.h - ch) / 2, h: ch };
   const cw = b.w * 0.46;
   const sides = [
@@ -644,14 +682,7 @@ function compare(p: SceneProps, v: Extract<Visual, { type: 'compare' }>): void {
       side: v.right,
       x: b.x + b.w - cw,
       tone: 'primary' as const,
-      at: Math.max(
-        0.25,
-        spokenAt(
-          p.words,
-          v.right.label.split(/\s+/)[0] ?? '',
-          p.voice.start + (p.voice.end - p.voice.start) * 0.45,
-        ) - 0.2,
-      ),
+      at: Math.min(0.6, Math.max(0.25, spokenAt(p.words, v.right.label.split(/\s+/)[0] ?? '', 0.6) - 0.2)),
     },
   ];
   sides.forEach(({ side, x, tone, at }, si) => {
@@ -699,12 +730,15 @@ function compare(p: SceneProps, v: Extract<Visual, { type: 'compare' }>): void {
   ctx.save();
   ctx.translate(W / 2, b.y + b.h / 2);
   ctx.scale(ve, ve);
-  ctx.fillStyle = p.theme.tone.accent;
+  ctx.fillStyle = '#2A2F4A';
   ctx.beginPath();
   ctx.arc(0, 0, 54 * s, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = p.theme.panelEdge;
+  ctx.lineWidth = 3 * s;
+  ctx.stroke();
   ctx.font = font(44 * s, 800, 'sans');
-  ctx.fillStyle = p.theme.onTone.accent;
+  ctx.fillStyle = p.theme.ink;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('vs', 0, 2 * s);
@@ -855,19 +889,19 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
   const s = S(p);
   const b = contentBox(W, H);
   const img = p.assets.get(v.assetId);
-  const capH = v.caption ? 110 * s : 0;
-  const maxW = b.w * 0.92;
-  const maxH = b.h - capH;
   const e = easeOutCubic(prog(p.t, 0, MOTION.enter));
   if (!img) {
     statement(p, { type: 'statement', text: v.caption ?? 'Figure', highlight: [] });
     return;
   }
-  const scale = Math.min(maxW / img.width, maxH / img.height);
+  // the whole figure, never cropped, never blown up past 2× its pixels (blur)
+  const maxW = b.w * 0.9;
+  const maxH = b.h - 20 * s;
+  const scale = Math.min(maxW / img.width, maxH / img.height, (2 * H) / 1080);
   const w = img.width * scale;
   const h = img.height * scale;
   const x = W / 2 - w / 2;
-  const y = b.y + (maxH - h) / 2;
+  const y = b.y + (b.h - h) / 2;
   ctx.save();
   ctx.globalAlpha = e;
   ctx.translate(0, (1 - e) * 40 * s);
@@ -876,12 +910,10 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
   ctx.save();
   roundRect(ctx, x, y, w, h, 10 * s);
   ctx.clip();
-  // Ken Burns: slow zoom toward the focus region (or centre)
-  // no focus given: a slow tour (zoom in on the top half, then glide to the bottom half) so long beats keep moving
   const k = easeInOutCubic(prog(p.t, 0.4, Math.max(1.5, p.dur - 0.6)));
-  const wide = img.width / img.height > 1.6;
-  const f = v.focus ?? (wide ? [lerp(0.05, 0.6, k), 0.1, 0.35, 0.8] : [0.2, lerp(0.15, 0.55, k), 0.6, 0.3]);
-  const z = v.focus ? lerp(1, 1.35, k) : lerp(1, wide ? 1.28 : 1.22, Math.min(1, k * 2.5));
+  // with a focus region: zoom toward it (≤ 1.35×); without one: a barely-there centred drift (1.04×), no pan
+  const f = v.focus ?? [0.25, 0.25, 0.5, 0.5];
+  const z = v.focus ? lerp(1, 1.35, k) : lerp(1, 1.04, k);
   const fx = x + (f[0] + f[2] / 2) * w;
   const fy = y + (f[1] + f[3] / 2) * h;
   ctx.translate(fx, fy);
@@ -889,23 +921,57 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
   ctx.translate(-fx, -fy);
   ctx.drawImage(img.image, x, y, w, h);
   if (v.focus) {
+    // dim everything but the focus (rule 19), then outline it
     const he = easeInOutCubic(prog(p.t, 0.8, 0.5));
+    ctx.fillStyle = `rgba(10,10,30,${0.65 * he})`;
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    roundRect(ctx, x + f[0] * w, y + f[1] * h, f[2] * w, f[3] * h, 12 * s);
+    ctx.fill('evenodd');
     ctx.strokeStyle = withAlpha(p.theme.tone.accent, he);
-    ctx.lineWidth = (8 * s) / z;
+    ctx.lineWidth = (6 * s) / z;
     roundRect(ctx, x + f[0] * w, y + f[1] * h, f[2] * w, f[3] * h, 12 * s);
     ctx.stroke();
   }
   ctx.restore();
+  // source tag on the card's edge ("Figure 2"), not a second line of text competing with the captions
+  const tag = (v.caption ?? '').match(/^(fig(ure)?\.?\s*\d+)/i)?.[1];
+  if (tag) {
+    ctx.font = font(30 * s, 700, 'sans');
+    const tw = ctx.measureText(tag).width + 28 * s;
+    roundRect(ctx, x - 24 * s, y - 24 * s - 46 * s, tw, 40 * s, 20 * s);
+    ctx.fillStyle = p.theme.tone.primary;
+    ctx.fill();
+    ctx.fillStyle = p.theme.onTone.primary;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tag, x - 24 * s + 14 * s, y - 24 * s - 26 * s);
+  }
   ctx.restore();
-  if (v.caption) {
-    ctx.save();
-    ctx.globalAlpha = easeOutCubic(prog(p.t, 0.4, 0.5));
-    const cf = fitFont(ctx, v.caption, b.w, 1, TYPE.body * s, TYPE.caption * s, 700, 'display');
-    ctx.font = font(cf.px, 700, 'display');
-    ctx.fillStyle = p.theme.ink;
-    ctx.textAlign = 'center';
-    ctx.fillText(cf.lines[0] ?? '', W / 2, b.y + b.h - 20 * s);
-    ctx.restore();
+  // a second build: the beat's number pops onto the card when it is said ("8×")
+  const num = p.words.map((wd) => wd.word.replace(/[^\d.,×x%]/g, '')).find((wd) => /\d/.test(wd));
+  if (num) {
+    const at = spokenAt(p.words, num, p.voice.start + (p.voice.end - p.voice.start) * 0.5);
+    const pe = easeOutBack(prog(p.t, at - 0.1, MOTION.pop));
+    if (pe > 0) {
+      ctx.save();
+      const bx = x + w + 24 * s - 40 * s;
+      const by = y - 24 * s + 10 * s;
+      ctx.translate(bx, by);
+      ctx.scale(pe, pe);
+      ctx.font = font(96 * s, 700, 'display');
+      const nw = ctx.measureText(num).width + 60 * s;
+      roundRect(ctx, -nw, -10 * s, nw, 130 * s, 28 * s);
+      ctx.fillStyle = p.theme.tone.accent;
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 30 * s;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = p.theme.onTone.accent;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(num, -nw / 2, 56 * s);
+      ctx.restore();
+    }
   }
 }
 
@@ -1034,7 +1100,103 @@ export function drawVisual(p: SceneProps, v: Visual): void {
       return tree(p, v);
     case 'takeaway':
       return takeaway(p, v);
+    case 'tokens':
+      return tokens(p, v);
   }
+}
+
+/**
+ * Words that attend to each other: a row of word chips; curved links fan out from the focus word, thickness
+ * = link strength, drawn as the narration goes. The picture of attention, dependency, "which word looks at which".
+ */
+function tokens(p: SceneProps, v: Extract<Visual, { type: 'tokens' }>): void {
+  const { ctx, W, H } = p;
+  const s = S(p);
+  const b = contentBox(W, H);
+  let top = b.y;
+  if (v.title) {
+    ctx.save();
+    ctx.globalAlpha = easeOutCubic(prog(p.t, 0, MOTION.enter));
+    const tf = fitFont(ctx, v.title, b.w, 1, TYPE.title * s, TYPE.body * s, 700, 'display');
+    ctx.font = font(tf.px, 700, 'display');
+    ctx.fillStyle = p.theme.ink;
+    ctx.textAlign = 'center';
+    ctx.fillText(tf.lines[0] ?? '', W / 2, b.y + tf.px);
+    ctx.restore();
+    top += tf.px * 1.6;
+  }
+  const n = v.words.length;
+  const px = Math.min(56 * s, (b.w / n) * 0.28);
+  ctx.font = font(px, 700, 'sans');
+  const widths = v.words.map((w) => ctx.measureText(w).width + px * 1.1);
+  const gap = Math.min(40 * s, (b.w - widths.reduce((a, c) => a + c, 0)) / Math.max(1, n - 1));
+  const rowW = widths.reduce((a, c) => a + c, 0) + gap * (n - 1);
+  const cy = top + (b.y + b.h - top) * 0.72;
+  const chipH = px * 1.9;
+  let x = W / 2 - rowW / 2;
+  const centres = widths.map((w) => {
+    const c = x + w / 2;
+    x += w + gap;
+    return c;
+  });
+  const focus = Math.min(v.focus, n - 1);
+  const weights = v.words.map(
+    (_, i) => v.weights[i] ?? (i === focus ? 0 : Math.max(0.15, 1 - Math.abs(i - focus) / n)),
+  );
+  // links (behind the chips), drawn in order of strength once the chips are in
+  const order = weights
+    .map((w, i) => ({ w, i }))
+    .filter((o) => o.i !== focus)
+    .sort((a, c) => c.w - a.w);
+  order.forEach((o, k) => {
+    const start = 0.6 + k * 0.18;
+    const e = easeInOutCubic(prog(p.t, start, 0.6));
+    if (e <= 0) return;
+    const x1 = centres[focus]!;
+    const x2 = centres[o.i]!;
+    const lift = Math.min(b.h * 0.55, 80 * s + Math.abs(x2 - x1) * 0.45);
+    ctx.save();
+    ctx.strokeStyle = withAlpha(o.w > 0.6 ? p.theme.tone.accent : p.theme.tone.primary, 0.35 + 0.6 * o.w);
+    ctx.lineWidth = (3 + 14 * o.w) * s;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    // draw a partial quadratic curve by sampling
+    const steps = 40;
+    for (let j = 0; j <= Math.round(steps * e); j++) {
+      const u = j / steps;
+      const qx = (1 - u) * (1 - u) * x1 + 2 * (1 - u) * u * ((x1 + x2) / 2) + u * u * x2;
+      const qy =
+        (1 - u) * (1 - u) * (cy - chipH / 2) +
+        2 * (1 - u) * u * (cy - chipH / 2 - lift) +
+        u * u * (cy - chipH / 2);
+      if (j === 0) ctx.moveTo(qx, qy);
+      else ctx.lineTo(qx, qy);
+    }
+    ctx.stroke();
+    ctx.restore();
+  });
+  // chips
+  v.words.forEach((w, i) => {
+    const e = easeOutBack(prog(p.t, 0.05 + i * 0.06, MOTION.pop));
+    if (e <= 0) return;
+    const isF = i === focus;
+    const tone = isF ? p.theme.tone.accent : p.theme.tone.primary;
+    ctx.save();
+    ctx.translate(centres[i]!, cy);
+    ctx.scale(e, e);
+    roundRect(ctx, -widths[i]! / 2, -chipH / 2, widths[i]!, chipH, chipH / 2);
+    ctx.fillStyle = isF ? tone : withAlpha(tone, 0.18);
+    ctx.fill();
+    ctx.strokeStyle = tone;
+    ctx.lineWidth = 3 * s;
+    ctx.stroke();
+    ctx.font = font(px, 700, 'sans');
+    ctx.fillStyle = isF ? p.theme.onTone.accent : p.theme.ink;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(w, 0, 2 * s);
+    ctx.restore();
+  });
 }
 
 /** Ease helper for scene progress, exported for the frame compositor. */

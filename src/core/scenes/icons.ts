@@ -382,9 +382,11 @@ const RULES: [RegExp, keyof typeof ICONS][] = [
   [/\b(config|setting|engine|system|tool)\w*/i, 'gear'],
 ];
 
-export function iconFor(text: string): keyof typeof ICONS {
+export function iconFor(text: string): keyof typeof ICONS;
+export function iconFor(text: string, strict: true): keyof typeof ICONS | null;
+export function iconFor(text: string, strict = false): keyof typeof ICONS | null {
   for (const [re, icon] of RULES) if (re.test(text)) return icon;
-  return 'bulb';
+  return strict ? null : 'bulb';
 }
 
 export function drawIcon(

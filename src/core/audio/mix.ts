@@ -91,7 +91,7 @@ export function mix(input: MixInput): MixResult {
   const target = input.targetLufs ?? -14;
   const lufs0 = integratedLufs(master);
   if (Number.isFinite(lufs0)) scale(master, dbToGain(target - lufs0));
-  limit(master, dbToGain(-2));
+  limit(master, dbToGain(-2.6)); // AAC adds ~1 dB of inter-sample overshoot: aim for ≤ −1.5 dBTP after encode
   const lufs = integratedLufs(master);
   return { master, lufs, peakDb: 20 * Math.log10(peak(master) || 1e-9), duckDb };
 }

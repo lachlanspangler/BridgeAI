@@ -104,7 +104,7 @@ function ideaVisual(idea: Idea, src: Source, budget: Budget): Visual {
     return {
       type: 'figure',
       assetId: fig.id,
-      caption: headline(idea.statement, idea.terms, budget.maxScreenWords),
+      caption: fig.caption ? fig.caption.split(/\s+/).slice(0, 12).join(' ') : undefined,
     };
   const nums = rawNumbers(idea.statement).filter((x) => /\d/.test(x) && !/^\d$/.test(x));
   if (nums.length && (idea.kind === 'number' || idea.kind === 'result')) {

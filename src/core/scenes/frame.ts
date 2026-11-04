@@ -152,27 +152,24 @@ function chrome(ctx: Ctx, tl: Timeline, t: number, theme: Theme): void {
   const fade = easeOutCubic(prog(t, 0.1, 0.5));
   ctx.save();
   ctx.globalAlpha = fade;
-  tl.beats.forEach((b, i) => {
-    const a = x0 + ((x1 - x0) * b.start) / total;
-    const c = x0 + ((x1 - x0) * b.end) / total - 6 * s;
+  // one quiet progress bar: segmented by chapter in long videos, continuous otherwise (colour carries no meaning here)
+  const ch = chapters(tl);
+  const segs = ch.length
+    ? ch.map((c, i) => ({ start: i === 0 ? 0 : c.start, end: ch[i + 1]?.start ?? total }))
+    : [{ start: 0, end: total }];
+  for (const g of segs) {
+    const a = x0 + ((x1 - x0) * g.start) / total;
+    const c = x0 + ((x1 - x0) * g.end) / total - (segs.length > 1 ? 8 * s : 0);
     ctx.fillStyle = withAlpha(theme.ink, 0.14);
-    roundRect(ctx, a, y, c - a, 8 * s, 4 * s);
+    roundRect(ctx, a, y, c - a, 6 * s, 3 * s);
     ctx.fill();
-    const k = clamp01((t - b.start) / (b.end - b.start));
+    const k = clamp01((t - g.start) / (g.end - g.start));
     if (k > 0) {
-      ctx.fillStyle = theme.tone[BEAT_TONES[i % BEAT_TONES.length]!];
-      roundRect(ctx, a, y, (c - a) * k, 8 * s, 4 * s);
+      ctx.fillStyle = withAlpha(theme.ink, 0.8);
+      roundRect(ctx, a, y, (c - a) * k, 6 * s, 3 * s);
       ctx.fill();
     }
-  });
-  ctx.font = font(24 * s, 700, 'sans');
-  ctx.fillStyle = theme.faint;
-  ctx.textAlign = 'left';
-  ctx.fillText('BRIDGE', x0, y + 48 * s);
-  ctx.textAlign = 'right';
-  const f = fitFont(ctx, tl.title, W * 0.5, 1, 24 * s, 18 * s, 600, 'sans');
-  ctx.font = font(f.px, 600, 'sans');
-  ctx.fillText(f.lines[0] ?? '', x1, y + 48 * s);
+  }
   ctx.restore();
 }
 
@@ -206,23 +203,32 @@ function captions(ctx: Ctx, tl: Timeline, t: number, theme: Theme, s: number): v
     const wt = said[i];
     const active = wt ? t >= wt.start && t < wt.end + 0.05 : false;
     const past = wt ? t >= wt.end : false;
-    ctx.fillStyle = active
-      ? theme.caption.active
-      : past
-        ? theme.caption.ink
-        : withAlpha(theme.caption.ink, 0.72);
+    // yellow is reserved for the beat's focal element; the spoken word is full white with an underline
+    ctx.fillStyle = active || past ? theme.caption.ink : withAlpha(theme.caption.ink, 0.6);
     ctx.fillText(w, x, y + h / 2 + px * 0.36);
+    if (active) ctx.fillRect(x, y + h / 2 + px * 0.5, widths[i]!, 3 * s);
     x += widths[i]! + space;
   });
   ctx.restore();
 }
 
-/** Chapters for long videos (≥ 150 s): each "idea" beat starts a part; show "Part n of N" briefly. */
-export function chapters(tl: Timeline): { start: number; n: number; of: number }[] {
+/** Chapters for long videos (≥ 150 s): each "idea" beat starts one; named from its first keyword or words. */
+export function chapters(tl: Timeline): { start: number; n: number; of: number; name: string }[] {
   if (tl.duration < 150) return [];
   const starts = tl.beats.filter((b) => b.beat.role === 'idea');
   if (starts.length < 3) return [];
-  return starts.map((b, i) => ({ start: b.start, n: i + 1, of: starts.length }));
+  const nameOf = (b: (typeof starts)[number]) => {
+    const v = b.beat.visual as { title?: string; heading?: string };
+    const raw =
+      v.title ?? v.heading ?? b.beat.keywords[0] ?? b.beat.narration.split(/\s+/).slice(0, 3).join(' ');
+    const t = raw
+      .replace(/[.,;:!?]+$/, '')
+      .split(/\s+/)
+      .slice(0, 4)
+      .join(' ');
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  };
+  return starts.map((b, i) => ({ start: b.start, n: i + 1, of: starts.length, name: nameOf(b) }));
 }
 
 function chapterChip(ctx: Ctx, tl: Timeline, t: number, theme: Theme): void {
@@ -230,12 +236,13 @@ function chapterChip(ctx: Ctx, tl: Timeline, t: number, theme: Theme): void {
   if (!ch) return;
   const s = tl.height / 1080;
   const k = easeOutCubic(prog(t, ch.start + 0.1, 0.35)) * (1 - prog(t, ch.start + 2.2, 0.4));
+  // below the progress bar, named: "2 · Multi-head attention"
   pill(
     ctx,
-    `Part ${ch.n} of ${ch.of}`,
+    `${ch.n} · ${ch.name}`,
     tl.width / 2,
-    72 * s,
-    TYPE.kicker * 0.85 * s,
+    92 * s,
+    32 * s,
     theme.tone.secondary,
     theme.onTone.secondary,
     k,
@@ -247,17 +254,26 @@ function sourceTag(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameO
   const k = prog(t, 0.05, 0.4) * (1 - prog(t, 2.8, 0.4));
   if (k <= 0) return;
   const s = tl.height / 1080;
-  const label = `${opts.kicker ?? 'Explained'} · ${tl.title}`.slice(0, 64);
+  const kind = opts.kicker && opts.kicker !== 'Images' ? `${opts.kicker} · ` : '';
   pill(
     ctx,
-    label,
+    `${kind}${tl.title}`.slice(0, 64),
     tl.width / 2,
-    tl.height * SAFE.top + 4 * s,
-    TYPE.kicker * 0.85 * s,
+    92 * s,
+    32 * s,
     theme.tone.primary,
     theme.onTone.primary,
     easeOutCubic(k),
   );
+}
+
+/** "https://arxiv.org/abs/2310.06825" → "arXiv 2310.06825"; GitHub → "github.com/owner/repo". */
+export function prettyOrigin(o: string): string {
+  const ax = o.match(/arxiv\.org\/(?:abs|pdf)\/([\w.]+?)(?:v\d+)?(?:\.pdf)?$/i);
+  if (ax) return `arXiv ${ax[1]}`;
+  const gh = o.match(/github\.com\/([\w.-]+\/[\w.-]+)/i);
+  if (gh) return `github.com/${gh[1]}`;
+  return o.replace(/^https?:\/\//, '').slice(0, 60);
 }
 
 function endCard(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameOptions): void {
@@ -267,28 +283,38 @@ function endCard(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameOpt
   const e = easeOutCubic(prog(t, 0, 0.5));
   ctx.save();
   ctx.globalAlpha = e;
-  const f = fitFont(ctx, tl.title, W * 0.8, 2, TYPE.title * s, TYPE.body * s, 700, 'display');
-  ctx.font = font(f.px, 700, 'display');
-  ctx.fillStyle = theme.ink;
   ctx.textAlign = 'center';
-  f.lines.forEach((l, i) => ctx.fillText(l, W / 2, H * 0.4 + i * f.px * 1.15));
-  const pe = easeOutBack(prog(t, 0.15, 0.4));
+  // the takeaway again (what to remember), then the title and the source
+  const last = tl.beats[tl.beats.length - 1]?.beat;
+  const take = last?.visual.type === 'takeaway' ? last.visual.text : '';
+  let y = H * 0.3;
   pill(
     ctx,
     'Made with Bridge',
     W / 2,
-    H * 0.4 - f.px * 1.1,
-    TYPE.kicker * s,
-    theme.tone.accent,
-    theme.onTone.accent,
-    clamp01(pe),
+    y,
+    30 * s,
+    theme.tone.primary,
+    theme.onTone.primary,
+    clamp01(easeOutBack(prog(t, 0.15, 0.4))),
   );
-  ctx.font = font(TYPE.small * 0.85 * s, 600, 'sans');
+  y += 90 * s;
+  if (take) {
+    const tf = fitFont(ctx, take, W * 0.8, 2, 64 * s, 44 * s, 700, 'display');
+    ctx.font = font(tf.px, 700, 'display');
+    ctx.fillStyle = theme.ink;
+    tf.lines.forEach((l, i) => ctx.fillText(l, W / 2, y + i * tf.px * 1.15));
+    y += tf.lines.length * tf.px * 1.15 + 50 * s;
+  }
+  const f = fitFont(ctx, tl.title, W * 0.8, 1, 44 * s, 34 * s, 600, 'sans');
+  ctx.font = font(f.px, 600, 'sans');
   ctx.fillStyle = theme.muted;
-  const below = H * 0.4 + f.lines.length * f.px * 1.15 + 40 * s;
-  if (opts.origin) ctx.fillText(`Source: ${opts.origin}`, W / 2, below);
-  ctx.font = font(TYPE.small * 0.7 * s, 500, 'sans');
-  ctx.fillStyle = theme.faint;
-  ctx.fillText('Every claim is traced to the source: see the source map.', W / 2, below + 56 * s);
+  ctx.fillText(f.lines[0] ?? '', W / 2, y);
+  y += 56 * s;
+  ctx.font = font(34 * s, 600, 'sans');
+  if (opts.origin) ctx.fillText(`Source: ${prettyOrigin(opts.origin)}`, W / 2, y);
+  ctx.font = font(32 * s, 500, 'sans');
+  ctx.fillStyle = theme.muted;
+  ctx.fillText('Every claim is traced to the source: see the source map.', W / 2, y + 56 * s);
   ctx.restore();
 }

@@ -218,6 +218,16 @@ export const Visual = z.discriminatedUnion('type', [
     lines: z.array(z.string()).min(1).max(14),
     focus: z.array(z.string()).default([]),
   }),
+  z.object({
+    type: z.literal('tokens'),
+    title: z.string().optional(),
+    /** A short phrase as word chips (3–8 words). */
+    words: z.array(z.string()).min(2).max(8),
+    /** Index of the word that "looks at" the others. */
+    focus: z.number().int().min(0).default(0),
+    /** Link strength from the focus word to each word (0..1), same length as words. */
+    weights: z.array(z.number().min(0).max(1)).default([]),
+  }),
   z.object({ type: z.literal('takeaway'), text: z.string(), highlight: z.array(z.string()).default([]) }),
 ]);
 export type Visual = z.infer<typeof Visual>;

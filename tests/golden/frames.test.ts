@@ -113,6 +113,22 @@ const visuals: [string, Visual, string][] = [
     'The server lives in server.ts.',
   ],
   [
+    'tokens',
+    {
+      type: 'tokens',
+      title: 'Who does "it" refer to?',
+      words: ['The', 'animal', 'was', 'tired', 'so', 'it', 'slept'],
+      focus: 5,
+      weights: [0.1, 0.9, 0.1, 0.4, 0.1, 0, 0.3],
+    },
+    'It looks back at the animal.',
+  ],
+  [
+    'figure',
+    { type: 'figure', assetId: 'a1', caption: 'Figure 1: The pipeline' },
+    'Figure one shows the pipeline, 8 times faster.',
+  ],
+  [
     'takeaway',
     { type: 'takeaway', text: 'Attention is all you need', highlight: ['Attention'] },
     'Attention is all you need.',
@@ -171,7 +187,20 @@ describe('golden frames', () => {
   const tl = timeline();
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d') as unknown as Ctx;
-  const assets = new Map<string, Img>();
+  // a synthetic black-on-white "paper figure"
+  const fig = createCanvas(600, 300);
+  const fc = fig.getContext('2d');
+  fc.fillStyle = '#fff';
+  fc.fillRect(0, 0, 600, 300);
+  fc.fillStyle = '#4a90d9';
+  fc.fillRect(40, 100, 160, 100);
+  fc.fillStyle = '#e8a33d';
+  fc.fillRect(400, 100, 160, 100);
+  fc.fillStyle = '#000';
+  fc.fillRect(200, 148, 200, 4);
+  const assets = new Map<string, Img>([
+    ['a1', { image: fig as unknown as CanvasImageSource, width: 600, height: 300 }],
+  ]);
   tl.beats.forEach((b, i) => {
     const name = visuals[i]![0];
     it(`${name} at mid-beat matches its golden`, async () => {

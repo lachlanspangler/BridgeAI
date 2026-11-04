@@ -189,7 +189,10 @@ export function toVisual(
       case 'bigNumber': {
         const value = s(v.value);
         if (!sourceHasNumber(src, value)) return fallback;
-        const cv = s(v.compareValue);
+        let cv = s(v.compareValue);
+        // a comparison must be like-for-like and visible: beyond 20:1 it's usually a stock vs a flow
+        const r = Number(normNumber(value)) / Number(normNumber(cv));
+        if (cv && (!Number.isFinite(r) || r > 20 || r < 1 / 20)) cv = '';
         return Visual.parse({
           type: 'bigNumber',
           value: value.replace(/\s*%$/, '%'),
@@ -314,10 +317,14 @@ export function toVisual(
       case 'figure': {
         const a = src.assets.find((x) => x.id === s(v.assetId));
         if (!a) return fallback;
+        // "Figure 4 shows…" may only show Figure 4
+        const said = narration.match(/\bfig(?:ure)?\.?\s*(\d+)/i)?.[1];
+        const has = (a.caption ?? '').match(/^fig(?:ure)?\.?\s*(\d+)/i)?.[1];
+        if (said && has && said !== has) return fallback;
         return Visual.parse({
           type: 'figure',
           assetId: a.id,
-          caption: clampW(s(v.caption) || a.caption || '', 8) || undefined,
+          caption: a.caption ? clampW(a.caption, 12) : undefined,
         });
       }
       case 'tree': {
@@ -331,12 +338,25 @@ export function toVisual(
           focus: sa(v.focus).slice(0, 3),
         });
       }
-      case 'takeaway':
-        return Visual.parse({
-          type: 'takeaway',
-          text: clampW(s(v.text) || narration, 12),
-          highlight: sa(v.highlight).slice(0, 2),
-        });
+      case 'takeaway': {
+        const t = s(v.text);
+        const text =
+          wordCount(t) >= 3 && wordCount(t) <= 12 && !/\b(and|or|the|a|of|to|with|much|but)$/i.test(t)
+            ? t
+            : trimSentence(narration, 12).replace(/[.!?]$/, '');
+        return Visual.parse({ type: 'takeaway', text, highlight: sa(v.highlight).slice(0, 2) });
+      }
+      case 'tokens': {
+        const words = sa(v.words)
+          .slice(0, 8)
+          .map((w) => w.split(/\s+/)[0]!.slice(0, 16));
+        if (words.length < 3) return fallback;
+        const focus = Math.max(0, Math.min(words.length - 1, typeof v.focus === 'number' ? v.focus : 0));
+        const weights = (Array.isArray(v.weights) ? v.weights : [])
+          .map((x) => (typeof x === 'number' && Number.isFinite(x) ? Math.max(0, Math.min(1, x)) : 0.3))
+          .slice(0, words.length);
+        return Visual.parse({ type: 'tokens', title: s(v.title) || undefined, words, focus, weights });
+      }
     }
   } catch {
     return fallback;
@@ -431,11 +451,12 @@ export function parseScript(raw: unknown, src: Source, targetSeconds: number, en
       },
     };
   ensureFigure(beats, src);
-  // a figure is shown once; later repeats become a line of their own narration
+  // a figure is shown once, and figures stay a spice (≤ 1 per ~45 s); repeats become a line of their own narration
   const seen = new Set<string>();
+  const maxFigs = Math.max(1, Math.round(targetSeconds / 45));
   beats.forEach((b, i) => {
     if (b.visual.type !== 'figure') return;
-    if (seen.has(b.visual.assetId))
+    if (seen.has(b.visual.assetId) || seen.size >= maxFigs)
       beats[i] = {
         ...b,
         visual: {
@@ -475,7 +496,7 @@ export function ensureFigure(beats: Beat[], src: Source): void {
     visual: {
       type: 'figure',
       assetId: best.a.id,
-      caption: trimSentence(b.narration, 7).replace(/[.!?]$/, ''),
+      caption: best.a.caption ? best.a.caption.split(/\s+/).slice(0, 12).join(' ') : undefined,
     },
   };
 }

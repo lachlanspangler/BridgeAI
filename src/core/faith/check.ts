@@ -168,6 +168,8 @@ export function visualStrings(v: Visual): string[] {
       return [v.caption ?? ''];
     case 'tree':
       return [v.title ?? ''];
+    case 'tokens':
+      return [v.title ?? '', v.words.join(' ')];
     case 'takeaway':
       return [v.text];
   }

@@ -77,6 +77,7 @@ export const VISUAL_TYPES = [
   'figure',
   'tree',
   'takeaway',
+  'tokens',
 ] as const;
 
 /** Visual variants offered to the model for this source (code/figure/tree only when the source has them). */
@@ -119,6 +120,13 @@ export function visualSchema(src: Source): JsonSchema {
     }),
     obj({ type: t('quote'), text: str('a short exact quote from the source') }),
     obj({ type: t('takeaway'), text: str('≤ 10 words'), highlight: arr(str(), 2) }),
+    obj({
+      type: t('tokens'),
+      title: str(),
+      words: arr(str('one word'), 8, 3),
+      focus: { type: 'integer' },
+      weights: arr({ type: 'number' }, 8),
+    }),
   ];
   if (codeIds.length)
     variants.push(

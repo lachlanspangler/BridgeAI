@@ -126,6 +126,7 @@ const VISUAL_GUIDE = `Visual types (pick the one that SHOWS the idea; vary them;
 - code: show a code segment (by its id) typing itself; focusLines = the 1–3 lines that matter.
 - figure: show a figure from the source (by its id) with a ≤ 7-word caption.
 - tree: show the project's file tree; focus = 1–3 files or folders that matter.
+- tokens: a short phrase (3–8 words) as word chips with curved lines from one word (focus = its index) to the words it relates to; weights 0–1 per word. Use it to SHOW attention, dependencies, which word refers to which.
 - takeaway: the final card: the one sentence to remember (≤ 10 words).`;
 
 export function scriptPrompt(src: Source, ctx: ScriptContext): Prompt {
