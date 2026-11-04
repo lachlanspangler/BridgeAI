@@ -27,6 +27,7 @@ import {
 } from './kit.ts';
 import { drawIcon, iconFor, ICONS } from './icons.ts';
 import { normNumber, wordCount } from '../text/text.ts';
+import { tidyEnd } from '../script/extractive.ts';
 
 export interface SceneProps {
   ctx: Ctx;
@@ -314,9 +315,12 @@ function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): vo
   const b = contentBox(W, H);
   // the screen shows keywords, not the sentence the voice is already saying (rules 13–14)
   if (wordCount(v.text) > 7) {
-    const kw = v.highlight.length ? v.highlight.join(' · ') : clampPhrase(v.text, 5);
-    v = { ...v, text: kw, highlight: v.highlight.length ? v.highlight : [] };
+    const hl = v.highlight.filter((h) => h.trim());
+    const kw = hl.length ? hl.join(' · ') : clampPhrase(v.text, 5);
+    v = { ...v, text: kw, highlight: hl };
   }
+  // never a dangling end on screen ("…faster than crypto.randomUUID and")
+  v = { ...v, text: tidyEnd(v.text.replace(/[.!?]$/, '')) || v.text };
   // an icon only when it IS the noun being said (no chip for "random generators")
   const icon =
     v.icon && v.icon in ICONS ? v.icon : v.highlight.length ? iconFor(v.highlight.join(' '), true) : null;
@@ -406,9 +410,11 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
   ctx.restore();
   // small numbers and suffixed values ("9", "7B") never count: a still must never show a number that isn't true
   const plain = Number(normNumber(v.value));
+  // learner review: any still caught mid count-up shows a number that isn't in the source. Integers only, and only
+  // for the first 0.35 s (the number is final long before it is spoken); decimals and suffixed values never count.
   const shown =
-    Number.isFinite(plain) && plain >= 20 && /^[\d.,]+%?$/.test(v.value.trim())
-      ? countUp(v.value, k)
+    Number.isFinite(plain) && plain >= 20 && /^\d[\d,]*$/.test(v.value.trim()) && k < 1
+      ? countUp(v.value, clamp01(prog(p.t, 0.05, 0.3)))
       : v.value;
   const fit = fitFont(
     ctx,

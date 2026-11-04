@@ -284,7 +284,7 @@ function endCard(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameOpt
   const W = tl.width;
   const H = tl.height;
   const s = H / 1080;
-  const e = easeOutCubic(prog(t, 0, 0.5));
+  const e = easeOutCubic(prog(t, 0, 0.25));
   ctx.save();
   ctx.globalAlpha = e;
   ctx.textAlign = 'center';
