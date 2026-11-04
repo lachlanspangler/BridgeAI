@@ -249,7 +249,10 @@ async function main(): Promise<void> {
         const recheck = checkScript(r.script, src)
           .flatMap((x) => x.verdicts)
           .filter((v) => v.verdict === 'unsupported' && v.by !== 'overlap').length;
-        const u = await understanding(judge, c, r.script, s);
+        const u = await understanding(judge, c, r.script, s).catch((e: Error) => {
+          console.log(`    understanding check failed: ${e.message}`);
+          return { correct: 0, total: questionsFor(c, s).length, answers: [] as string[] };
+        });
         if (args.includes('--verbose'))
           questionsFor(c, s).forEach((q, i) =>
             console.log(`      Q: ${q.q}\n      expected: ${q.a}\n      got: ${u.answers[i]}`),

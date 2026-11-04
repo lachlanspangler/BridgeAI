@@ -165,7 +165,11 @@ export async function runPipeline(
   // 3a. refill: if the gate left the script thin, add beats in the source's own words for ideas not yet covered
   if (script.beats.length < budget.beats.min || scriptWords(script) < budget.words * 0.6) {
     const covered = new Set(script.beats.flatMap((b) => b.claims.flatMap((c) => c.support)));
-    for (const idea of analysis.ideas.slice(0, Math.max(budget.ideas.max + 5, 6))) {
+    const pool = [
+      ...analysis.ideas.slice(0, Math.max(budget.ideas.max + 5, 6)),
+      ...analyzeExtractive(src, 10).ideas.map((x, k) => ({ ...x, id: `e${k + 1}` })),
+    ];
+    for (const idea of pool) {
       if (scriptWords(script) >= budget.words * 0.85 || script.beats.length >= budget.beats.max) break;
       if (idea.evidence.every((e) => covered.has(e.segmentId)) && script.beats.length >= budget.beats.min)
         continue;
@@ -328,6 +332,67 @@ export async function runPipeline(
     script = { ...script, beats: keep.map((b, i) => ({ ...b, id: `b${i + 1}` })) };
   };
   dedupe();
+  // 3c'. the single most important idea is ALWAYS in the video (k1 at every length); short videos also end on it
+  const top = analysis.ideas[0];
+  if (top) {
+    const topSegs = new Set(top.evidence.map((e) => e.segmentId));
+    const topTerms = top.terms.map((t) => t.toLowerCase());
+    const says = (b: Beat) =>
+      b.claims.some((c) => c.support.some((id) => topSegs.has(id))) &&
+      (topTerms.length === 0 || topTerms.some((t) => b.narration.toLowerCase().includes(t)));
+    if (!script.beats.some((b) => b.role !== 'takeaway' && says(b))) {
+      const text = trimSentence(top.statement, budget.wordsPerBeat.max + 4, top.terms);
+      const nb: Beat = {
+        id: 'bt',
+        role: 'idea',
+        narration: text,
+        visual: { type: 'statement', text: screenPhrase(text, 7), highlight: top.terms.slice(0, 1) },
+        claims: [{ text, support: [...topSegs], kind: 'fact' }],
+        ideas: [top.id],
+        keywords: top.terms.slice(0, 2),
+      };
+      const c = checkBeat(nb, src);
+      let ok = c.ok;
+      if (!ok && engines.judge && c.verdicts.every((v) => v.verdict !== 'unsupported' || v.by === 'overlap'))
+        ok = await engines.judge(
+          text,
+          top.evidence.map((e) => seg.get(e.segmentId) ?? '').join('\n'),
+          signal,
+          text,
+        );
+      const alt = ok ? nb : sourceBeat(top, src, budget, 'bt');
+      const use = ok ? nb : alt && checkBeat(alt, src).ok ? alt : null;
+      if (use) {
+        const pos = script.beats[0]?.role === 'hook' ? 1 : 0;
+        script = {
+          ...script,
+          beats: [...script.beats.slice(0, pos), use, ...script.beats.slice(pos)].map((b, i) => ({
+            ...b,
+            id: `b${i + 1}`,
+          })),
+        };
+        faith.actions.push({
+          beatId: `b${pos + 1}`,
+          action: 'rewritten',
+          reason: "added the source's main idea (it was missing)",
+        });
+        // keep the length: drop the weakest idea beat if we're now over budget
+        if (scriptWords(script) > budget.words * 1.15) {
+          const weakest = script.beats
+            .map((b, i) => ({ b, i }))
+            .filter(({ b, i }) => i > pos && b.role !== 'takeaway')
+            .pop();
+          if (weakest)
+            script = {
+              ...script,
+              beats: script.beats
+                .filter((_, i) => i !== weakest.i)
+                .map((b, i) => ({ ...b, id: `b${i + 1}` })),
+            };
+        }
+      }
+    }
+  }
   // 3d. the takeaway must be a sentence that says something new-ish (not a label, not the hook again) and
   //     carry one focal word (design review r3); candidates come from the ranked ideas and pass the same checks
   {

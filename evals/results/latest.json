@@ -1,12 +1,172 @@
 {
-  "stamp": "2026-11-04T03:44:10.128Z",
+  "stamp": "2026-11-04T08:30:32.165Z",
   "engine": "local:qwen3.5-4b-q4_k_m",
   "lengths": [
-    20
+    20,
+    60
   ],
   "rows": [
     {
       "case": "attention-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 18.4,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": false,
+      "coverage": 0,
+      "coveredIds": [],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "attention-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 56.5,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "carbon-cycle-diagram",
+      "kind": "images",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 20.4,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "carbon-cycle-diagram",
+      "kind": "images",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 58.7,
+      "inTolerance": true,
+      "beats": 11,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 3,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "climate-ml-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.5,
+      "inTolerance": true,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "climate-ml-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 57.3,
+      "inTolerance": true,
+      "beats": 7,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "covid-herd-immunity-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 21.3,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "covid-herd-immunity-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 15.9,
+      "inTolerance": false,
+      "beats": 2,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 0.33,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/3",
+      "understandingFrac": 0
+    },
+    {
+      "case": "double-ml-abstract",
       "kind": "text",
       "seconds": 20,
       "engine": "local:qwen3.5-4b-q4_k_m",
@@ -17,6 +177,196 @@
       "recheckUnsupported": 0,
       "dropped": 1,
       "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "double-ml-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 62.4,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 5,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "3/3",
+      "understandingFrac": 1
+    },
+    {
+      "case": "global-temperature-chart",
+      "kind": "images",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 9.3,
+      "inTolerance": false,
+      "beats": 1,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 3,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "global-temperature-chart",
+      "kind": "images",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 52.2,
+      "inTolerance": false,
+      "beats": 6,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": false,
+      "coverage": 0.33,
+      "coveredIds": [
+        "k3"
+      ],
+      "understanding": "0/3",
+      "understandingFrac": 0
+    },
+    {
+      "case": "humanize-repo",
+      "kind": "project",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 12.3,
+      "inTolerance": false,
+      "beats": 2,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": false,
+      "coverage": 0,
+      "coveredIds": [],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "humanize-repo",
+      "kind": "project",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 9.7,
+      "inTolerance": false,
+      "beats": 1,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": false,
+      "coverage": 0,
+      "coveredIds": [],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "hyperfine-repo",
+      "kind": "project",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.8,
+      "inTolerance": true,
+      "beats": 4,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": false,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k2"
+      ],
+      "understanding": "0/1",
+      "understandingFrac": 0
+    },
+    {
+      "case": "hyperfine-repo",
+      "kind": "project",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 0,
+      "inTolerance": false,
+      "beats": 0,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": false,
+      "coverage": 0,
+      "coveredIds": [],
+      "understanding": "-",
+      "understandingFrac": 0,
+      "error": "local model returned invalid JSON: Unterminated string in JSON at position 612"
+    },
+    {
+      "case": "ligo-gw150914-abstract",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.8,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "ligo-gw150914-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 59.9,
+      "inTolerance": true,
+      "beats": 8,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 7,
+      "k1": true,
+      "coverage": 0.67,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "1/3",
+      "understandingFrac": 0.3333333333333333
+    },
+    {
+      "case": "mistral-7b-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 20,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 1,
+      "dropped": 1,
+      "k1": true,
       "coverage": 0.5,
       "coveredIds": [
         "k1"
@@ -25,8 +375,143 @@
       "understandingFrac": 0.5
     },
     {
-      "case": "carbon-cycle-diagram",
+      "case": "mistral-7b-pdf",
+      "kind": "pdf",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 61.5,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "mixtral-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 18.9,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "mixtral-pdf",
+      "kind": "pdf",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 0,
+      "inTolerance": false,
+      "beats": 0,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": false,
+      "coverage": 0,
+      "coveredIds": [],
+      "understanding": "-",
+      "understandingFrac": 0,
+      "error": "local model returned invalid JSON: Unterminated string in JSON at position 903"
+    },
+    {
+      "case": "nanoid-repo",
+      "kind": "project",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 20,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "nanoid-repo",
+      "kind": "project",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 7.6,
+      "inTolerance": false,
+      "beats": 1,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": false,
+      "coverage": 0,
+      "coveredIds": [],
+      "understanding": "0/3",
+      "understandingFrac": 0
+    },
+    {
+      "case": "plate-tectonics-diagrams",
       "kind": "images",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 18.5,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "plate-tectonics-diagrams",
+      "kind": "images",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 51.8,
+      "inTolerance": false,
+      "beats": 6,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "3/3",
+      "understandingFrac": 1
+    },
+    {
+      "case": "tensorflow-abstract",
+      "kind": "text",
       "seconds": 20,
       "engine": "local:qwen3.5-4b-q4_k_m",
       "actual": 19.6,
@@ -34,11 +519,189 @@
       "beats": 3,
       "unsupported": 0,
       "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2"
+      ],
+      "understanding": "2/2",
+      "understandingFrac": 1
+    },
+    {
+      "case": "tensorflow-abstract",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 55.6,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
       "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "2/3",
+      "understandingFrac": 0.6666666666666666
+    },
+    {
+      "case": "tree-of-thoughts-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 18.6,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
       "k1": true,
       "coverage": 0.5,
       "coveredIds": [
         "k1"
+      ],
+      "understanding": "0/1",
+      "understandingFrac": 0
+    },
+    {
+      "case": "tree-of-thoughts-pdf",
+      "kind": "pdf",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 57.1,
+      "inTolerance": true,
+      "beats": 6,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 0.33,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "vllm-pagedattention-pdf",
+      "kind": "pdf",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 18.9,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 1,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "0/2",
+      "understandingFrac": 0
+    },
+    {
+      "case": "vllm-pagedattention-pdf",
+      "kind": "pdf",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 60.6,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 5,
+      "k1": true,
+      "coverage": 0.33,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "1/2",
+      "understandingFrac": 0.5
+    },
+    {
+      "case": "wiki-crispr",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 18.9,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "2/3",
+      "understandingFrac": 0.6666666666666666
+    },
+    {
+      "case": "wiki-crispr",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 63.2,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
+      ],
+      "understanding": "3/3",
+      "understandingFrac": 1
+    },
+    {
+      "case": "wiki-water-cycle",
+      "kind": "text",
+      "seconds": 20,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 19.9,
+      "inTolerance": true,
+      "beats": 3,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 2,
+      "k1": true,
+      "coverage": 0.5,
+      "coveredIds": [
+        "k1"
+      ],
+      "understanding": "1/1",
+      "understandingFrac": 1
+    },
+    {
+      "case": "wiki-water-cycle",
+      "kind": "text",
+      "seconds": 60,
+      "engine": "local:qwen3.5-4b-q4_k_m",
+      "actual": 61.6,
+      "inTolerance": true,
+      "beats": 9,
+      "unsupported": 0,
+      "recheckUnsupported": 0,
+      "dropped": 0,
+      "k1": true,
+      "coverage": 1,
+      "coveredIds": [
+        "k1",
+        "k2",
+        "k3"
       ],
       "understanding": "1/2",
       "understandingFrac": 0.5
