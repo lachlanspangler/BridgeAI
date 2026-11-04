@@ -72,6 +72,10 @@ describe('garbled text filter', () => {
       ),
     ).toBe(true);
     expect(garbled('It reaches 28.4 BLEU on WMT 2014 English-to-German.')).toBe(false);
+    // a diagram label read as a sentence
+    expect(garbled('Fossil fuels, cement, and land-use change 9.')).toBe(true);
+    expect(garbled('Emissions rose to 9.')).toBe(false);
+    expect(garbled('The model was released in 2023.')).toBe(false);
   });
 });
 

@@ -76,6 +76,9 @@ const hasWord = (hay: string, w: string) =>
 const QUANTITY_WORDS =
   /\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|thousand|million|billion|twice|double|triple|half)\b/gi;
 
+const UNIT_AFTER_NUMBER =
+  /\d[\d,.]*\s?-?\s?((?:giga|mega|kilo|milli|micro|nano|centi)?(?:tons?|tonnes?|grams?|meters?|metres?|liters?|litres?|watts?|joules?|seconds?|years?)|miles?|feet|inches|km|kg|mg|gw|mw|kw|kwh|twh|gtc|ppm)\b/gi;
+
 export function missingNumbers(claim: string, support: string): string[] {
   const have = numberSet(support);
   const supTokens = numberTokens(support);
@@ -93,6 +96,12 @@ export function missingNumbers(claim: string, support: string): string[] {
     // single digits used as counts must appear as a standalone number, not inside "1990"
     if (/^\d$/.test(t.n) && hasWord(support, t.n) && magOk) continue;
     out.push(t.raw);
+  }
+  // a unit attached to a number ("10,000-ton", "9 gigatons") must be a unit the source uses: the source said
+  // gigatons, so "tons" is a different (and wrong) claim
+  for (const m of claim.matchAll(UNIT_AFTER_NUMBER)) {
+    const u = m[1]!.toLowerCase().replace(/s$/, '');
+    if (!new RegExp(`\\b${u}s?\\b`, 'i').test(support)) out.push(m[0]);
   }
   // spelled-out quantities ("ten times better") must be in the source as words or digits
   for (const m of claim.match(QUANTITY_WORDS) ?? []) {

@@ -98,3 +98,12 @@ describe('overstatement check', () => {
     expect(checkBeat(beat('The Transformer is based solely on attention mechanisms.'), src).ok).toBe(true);
   });
 });
+
+describe('units on numbers', () => {
+  it('a unit the source never used is a wrong claim ("10,000-ton" when the source says gigatons)', async () => {
+    const { missingNumbers } = await import('../../src/core/faith/check.ts');
+    const sup = 'Fluxes in GtC/y (gigatons of carbon per year). Fossil pool (10,000).';
+    expect(missingNumbers('the 10,000-ton fossil reserve', sup)).toEqual(['10,000-ton']);
+    expect(missingNumbers('the fossil pool holds 10,000 gigatons', sup)).toEqual([]);
+  });
+});
