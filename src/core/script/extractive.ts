@@ -136,7 +136,7 @@ function ideaVisual(idea: Idea, src: Source, budget: Budget): Visual {
 export function sourceBeat(idea: Idea, src: Source, budget: Budget, id: string): Beat | null {
   const quote = idea.evidence.find((e) => e.quote)?.quote ?? idea.statement;
   const narration = trimSentence(quote, budget.wordsPerBeat.max + 2, idea.terms);
-  if (wordCount(narration) < 4) return null;
+  if (wordCount(narration) < 4 || !VERB.test(narration)) return null; // a real sentence, not a fragment
   return {
     id,
     role: 'evidence',

@@ -26,7 +26,7 @@ import {
   type Img,
 } from './kit.ts';
 import { drawIcon, iconFor, ICONS } from './icons.ts';
-import { normNumber } from '../text/text.ts';
+import { normNumber, wordCount } from '../text/text.ts';
 
 export interface SceneProps {
   ctx: Ctx;
@@ -119,7 +119,7 @@ function richText(
   const lh = fit.px * 1.14;
   // centred text: balanced lines (no lone last word), found by shrinking the width while the line count holds
   let wrapW = box.w;
-  if (opts.align === 'center') {
+  {
     const lines = (w: number) => (layoutWords(ctx, text, w, lh, []).at(-1)?.line ?? 0) + 1;
     const n = lines(box.w);
     if (n > 1) {
@@ -151,15 +151,18 @@ function richText(
     if (w.highlight) {
       const at = spokenAt(p.words, w.text, enterAt + 0.4 + w.index * 0.05);
       const sw = easeInOutCubic(prog(p.t, at - 0.05, 0.35));
-      if (sw > 0) {
+      if (sw > 0.12) {
         ctx.save();
-        ctx.fillStyle = withAlpha(hlColor, 0.92);
+        // fade in (no 1-px sliver) and join neighbouring highlighted words into one marker stroke
+        ctx.fillStyle = withAlpha(hlColor, 0.92 * clamp01((sw - 0.12) / 0.3));
         const pad = fit.px * 0.08;
+        const next = ws[ws.indexOf(w) + 1];
+        const joined = next && next.highlight && next.line === w.line ? next.x - w.x - w.w : 0;
         ctx.beginPath();
         // slightly skewed marker stroke
         const hx = x - pad;
         const hy = y - fit.px * 0.82;
-        const hw = (w.w + pad * 2) * sw;
+        const hw = (w.w + joined + pad * 2) * sw;
         const hh = fit.px * 1.0;
         ctx.moveTo(hx + 4, hy + 6);
         ctx.lineTo(hx + hw, hy);
@@ -295,11 +298,28 @@ function iconDisc(
   ctx.restore();
 }
 
+const clampPhrase = (t: string, n: number): string => {
+  const ws = t.replace(/[.!?]$/, '').split(/\s+/);
+  return ws.length <= n
+    ? ws.join(' ')
+    : ws
+        .slice(0, n)
+        .join(' ')
+        .replace(/\s+(and|or|the|a|of|to|with|by|for|in|on|than)$/i, '');
+};
+
 function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): void {
   const { W, H } = p;
   const s = S(p);
   const b = contentBox(W, H);
-  const icon = v.icon && v.icon in ICONS ? v.icon : iconFor(`${v.highlight.join(' ')} ${v.text}`, true);
+  // the screen shows keywords, not the sentence the voice is already saying (rules 13–14)
+  if (wordCount(v.text) > 7) {
+    const kw = v.highlight.length ? v.highlight.join(' · ') : clampPhrase(v.text, 5);
+    v = { ...v, text: kw, highlight: v.highlight.length ? v.highlight : [] };
+  }
+  // an icon only when it IS the noun being said (no chip for "random generators")
+  const icon =
+    v.icon && v.icon in ICONS ? v.icon : v.highlight.length ? iconFor(v.highlight.join(' '), true) : null;
   if (!icon) {
     // no icon that clearly fits: big centred words beat a generic lightbulb
     richText(
@@ -314,6 +334,7 @@ function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): vo
         weight: 700,
         align: 'center',
         enterAt: 0.08,
+        tone: p.theme.tone.primary,
       },
     );
     return;
@@ -326,6 +347,7 @@ function statement(p: SceneProps, v: Extract<Visual, { type: 'statement' }>): vo
     maxLines: 4,
     weight: 700,
     enterAt: 0.12,
+    tone: p.theme.tone.primary,
   } as const;
   if (layout === 2) {
     // centred: icon above, words below
@@ -382,7 +404,12 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
   ctx.fillStyle = rg;
   ctx.fillRect(cx - 400 * s, cy - 400 * s, 800 * s, 800 * s);
   ctx.restore();
-  const shown = countUp(v.value, k);
+  // small numbers and suffixed values ("9", "7B") never count: a still must never show a number that isn't true
+  const plain = Number(normNumber(v.value));
+  const shown =
+    Number.isFinite(plain) && plain >= 20 && /^[\d.,]+%?$/.test(v.value.trim())
+      ? countUp(v.value, k)
+      : v.value;
   const fit = fitFont(
     ctx,
     v.value + (v.unit ? ` ${v.unit}` : ''),
@@ -435,7 +462,7 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
     const g = easeOutCubic(prog(p.t, 0.5, 0.9));
     [
       { val: c, shown: v.compare.value, label: v.compare.label, color: p.theme.tone.neutral, x: bx },
-      { val: a, shown: v.value, label: v.label, color: p.theme.tone.accent, x: bx + bw * 1.7 },
+      { val: a, shown: v.value, label: v.subject ?? v.label, color: p.theme.tone.primary, x: bx + bw * 1.7 },
     ].forEach((bar) => {
       // keep tiny bars visible (≥ 6 px) and always print the value above them
       const h = Math.max(6 * s, (bar.val / max) * hMax) * g;
@@ -447,7 +474,7 @@ function bigNumber(p: SceneProps, v: Extract<Visual, { type: 'bigNumber' }>): vo
       ctx.fillStyle = p.theme.ink;
       if (g > 0.05) ctx.fillText(bar.shown, bar.x + bw / 2, base - h - 16 * s);
       ctx.font = font(36 * s, 600, 'sans');
-      ctx.fillStyle = p.theme.muted;
+      ctx.fillStyle = withAlpha(p.theme.muted, g);
       wrap(ctx, bar.label, bw * 1.7)
         .slice(0, 2)
         .forEach((l, i) => ctx.fillText(l, bar.x + bw / 2, base + 46 * s + i * 40 * s));
@@ -900,7 +927,7 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
   // the whole figure, never cropped, never blown up past 2× its pixels (blur)
   const maxW = b.w * 0.9;
   const maxH = b.h - 20 * s;
-  const scale = Math.min(maxW / img.width, maxH / img.height, (2.5 * H) / 1080);
+  const scale = Math.min(maxW / img.width, maxH / img.height, (3 * H) / 1080);
   const w = img.width * scale;
   const h = img.height * scale;
   const x = W / 2 - w / 2;
@@ -951,7 +978,10 @@ function figure(p: SceneProps, v: Extract<Visual, { type: 'figure' }>): void {
   }
   ctx.restore();
   // a second build: the beat's number pops onto the card when it is said ("8×")
-  const num = p.words.map((wd) => wd.word.replace(/[^\d.,×x%]/g, '')).find((wd) => /\d/.test(wd));
+  // only a whole-token number ("8x", "41.8", not the 7 of "7B") that the figure itself shows
+  const num = p.words
+    .map((wd) => wd.word.replace(/[,.;:!?]+$/, ''))
+    .find((wd) => /^\d+(\.\d+)?(×|x|%)?$/.test(wd) && (v.caption ?? '').includes(wd.replace(/[×x%]$/, '')));
   if (num) {
     const at = spokenAt(p.words, num, p.voice.start + (p.voice.end - p.voice.start) * 0.5);
     const pe = easeOutBack(prog(p.t, at - 0.1, MOTION.pop));
@@ -1057,8 +1087,8 @@ function takeaway(p: SceneProps, v: Extract<Visual, { type: 'takeaway' }>): void
     W / 2,
     b.y + 40 * s,
     TYPE.kicker * s,
-    p.theme.tone.accent,
-    p.theme.onTone.accent,
+    p.theme.tone.primary,
+    p.theme.onTone.primary,
     clamp01(easeOutBack(prog(p.t, 0, MOTION.pop))),
   );
   richText(

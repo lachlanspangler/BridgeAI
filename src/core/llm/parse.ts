@@ -201,6 +201,7 @@ export function toVisual(
           value: value.replace(/\s*%$/, '%'),
           unit: s(v.unit) || undefined,
           label: clampW(s(v.label), 8),
+          subject: src.title.split(/[:—–]/)[0]!.split(/\s+/).slice(0, 3).join(' '),
           compare:
             cv && sourceHasNumber(src, cv)
               ? { value: cv, label: clampW(s(v.compareLabel) || 'before', 4) }
@@ -503,6 +504,27 @@ export function ensureFigure(beats: Beat[], src: Source): void {
     }
   }
   if (src.kind !== 'images' && best.score < 0.25) return; // papers: only when a figure clearly matches
+  if (src.kind !== 'images') {
+    // and on distinctive terms (not title words or "model"/"paper"): at least 2 shared
+    const generic = new Set([
+      ...contentWords(src.title).map(stem),
+      'model',
+      'paper',
+      'figur',
+      'show',
+      'use',
+      'result',
+    ]);
+    const terms = (t: string) =>
+      new Set(
+        contentWords(t)
+          .map(stem)
+          .filter((w) => !generic.has(w)),
+      );
+    const nb = terms(beats[best.i]!.narration);
+    const fc = terms(`${best.a.caption ?? ''} ${best.a.ocr ?? ''}`);
+    if ([...nb].filter((w) => fc.has(w)).length < 2) return;
+  }
   const i = best.i >= 0 && best.score > 0 ? best.i : candidates[0]!.i;
   const b = beats[i]!;
   beats[i] = {

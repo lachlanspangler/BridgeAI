@@ -164,6 +164,8 @@ export const Visual = z.discriminatedUnion('type', [
     label: z.string(),
     /** Optional comparison, e.g. { value: "26.4", label: "previous best" }. */
     compare: z.object({ value: z.string(), label: z.string() }).optional(),
+    /** Who/what the number belongs to (labels its bar in a comparison), e.g. "Mistral 7B". */
+    subject: z.string().optional(),
   }),
   z.object({
     type: z.literal('bullets'),

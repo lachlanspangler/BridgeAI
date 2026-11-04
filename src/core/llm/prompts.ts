@@ -114,7 +114,8 @@ export interface ScriptContext {
   analysis: Analysis;
 }
 
-const VISUAL_GUIDE = `Visual types (pick the one that SHOWS the idea; vary them; every beat gets exactly one):
+const VISUAL_GUIDE = `Visual types (pick the one that SHOWS the idea; vary them; every beat gets exactly one).
+Routing: two or more numbers about the same measure → bars (or bigNumber with compareValue); "X vs Y" → compare with concrete points from the source; steps in order → flow; how words/items relate or attend to each other → tokens; code → code; a figure the narration is about → figure. Use statement at most once per 20 seconds.
 - title: the hook card. title ≤ 7 words.
 - statement: one short line on screen (3–7 words) that makes sense alone, with 1–2 highlighted key words. Use sparingly; prefer a visual that shows the fact.
 - bigNumber: one important number from the source, huge. value = the number exactly as in the source; label ≤ 7 words; compareValue/compareLabel = a second number from the source to compare with, else "".

@@ -196,31 +196,6 @@ export async function runPipeline(
       });
     }
   }
-  // 3a'. no repeats: a beat that mostly restates an earlier one is dropped (learner review: "it feels like a loop")
-  {
-    const bag = (t: string) => new Set(contentWords(t).map(stem));
-    const keep: Beat[] = [];
-    for (const b of script.beats) {
-      const mine = bag(b.narration);
-      const dup =
-        b.role !== 'hook' &&
-        b.role !== 'takeaway' &&
-        keep.some((k) => {
-          const o = bag(k.narration);
-          let n = 0;
-          for (const w of mine) if (o.has(w)) n++;
-          const r = n / Math.max(1, Math.min(mine.size, o.size));
-          // the same headline number said again ("28.4" three times) counts as a repeat at lower overlap
-          const sig = (t: string) => new Set((t.match(/\d+(?:\.\d+)?/g) ?? []).filter((x) => x.length >= 2));
-          const shared = [...sig(b.narration)].some((x) => sig(k.narration).has(x));
-          return r > 0.6 || (shared && r > 0.35);
-        });
-      if (dup)
-        faith.actions.push({ beatId: `x-dup-${b.id}`, action: 'dropped', reason: 'repeats an earlier beat' });
-      else keep.push(b);
-    }
-    script = { ...script, beats: keep.map((b, i) => ({ ...b, id: `b${i + 1}` })) };
-  }
   // real pictures survive the gate: the final script still shows a source figure/image when it has one
   {
     const beats = [...script.beats];
@@ -255,6 +230,12 @@ export async function runPipeline(
       return n / Math.max(1, Math.min(mineBag.size, ob.size)) > 0.6;
     });
     if (echoes) return false;
+    const otherNums = new Set<string>(
+      script.beats.filter((_, j) => j !== i).flatMap((o) => o.narration.match(/\d+(?:\.\d+)?/g) ?? []),
+    );
+    const own: string[] = b.narration.match(/\d+(?:\.\d+)?/g) ?? [];
+    const newNums = (text.match(/\d+(?:\.\d+)?/g) ?? []).filter((x) => !own.includes(x));
+    if (newNums.some((x) => otherNums.has(x))) return false;
     const cand: Beat = { ...b, narration: text, claims: [{ text, support, kind: 'fact' }] };
     const c = checkBeat(cand, src);
     let ok = c.ok;
@@ -297,6 +278,32 @@ export async function runPipeline(
       message: `Script is ${scriptWords(script)} words (target ${budget.words})`,
     });
   }
+  // 3c. no repeats, run LAST (after refill and expansion): a beat that restates an earlier one is dropped
+  const dedupe = () => {
+    const bag = (t: string) => new Set(contentWords(t).map(stem));
+    const keep: Beat[] = [];
+    for (const b of script.beats) {
+      const mine = bag(b.narration);
+      const dup =
+        b.role !== 'hook' &&
+        b.role !== 'takeaway' &&
+        keep.some((k) => {
+          const o = bag(k.narration);
+          let n = 0;
+          for (const w of mine) if (o.has(w)) n++;
+          const r = n / Math.max(1, Math.min(mine.size, o.size));
+          // the same headline number said again ("28.4" three times) counts as a repeat at lower overlap
+          const sig = (t: string) => new Set((t.match(/\d+(?:\.\d+)?/g) ?? []).filter((x) => x.length >= 2));
+          const shared = [...sig(b.narration)].some((x) => sig(k.narration).has(x));
+          return r > 0.6 || (shared && r > 0.2);
+        });
+      if (dup)
+        faith.actions.push({ beatId: `x-dup-${b.id}`, action: 'dropped', reason: 'repeats an earlier beat' });
+      else keep.push(b);
+    }
+    script = { ...script, beats: keep.map((b, i) => ({ ...b, id: `b${i + 1}` })) };
+  };
+  dedupe();
   write(jobDir, 'faith.json', faith);
 
   // 4. voice + fit to length (±10%)

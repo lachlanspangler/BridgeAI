@@ -6,6 +6,7 @@
  */
 import type { Timeline, TimedBeat } from '../schema.ts';
 import { cueAt } from '../captions/captions.ts';
+import { coverage } from '../text/text.ts';
 import { NIGHT, SAFE, TYPE, withAlpha, type Theme } from '../design/tokens.ts';
 import { absoluteWords } from '../timeline/timeline.ts';
 import {
@@ -82,7 +83,10 @@ export function drawFrame(
   else chrome(ctx, tl, t, theme);
   if (tl.beats[0] && tl.beats[0].beat.visual.type !== 'title') sourceTag(ctx, tl, t, theme, opts);
   if (t < last.end) chapterChip(ctx, tl, t, theme);
-  if (opts.burnCaptions && t < last.end) captions(ctx, tl, t, theme, s);
+  const cur = tl.beats.find((b) => t >= b.start && t < b.end);
+  const screenSaysIt =
+    cur?.beat.visual.type === 'takeaway' && coverage(cur.beat.narration, cur.beat.visual.text) > 0.8;
+  if (opts.burnCaptions && t < last.end && !screenSaysIt) captions(ctx, tl, t, theme, s);
   ctx.restore();
 }
 
@@ -284,37 +288,30 @@ function endCard(ctx: Ctx, tl: Timeline, t: number, theme: Theme, opts: FrameOpt
   ctx.save();
   ctx.globalAlpha = e;
   ctx.textAlign = 'center';
-  // the takeaway again (what to remember), then the title and the source
-  const last = tl.beats[tl.beats.length - 1]?.beat;
-  const take = last?.visual.type === 'takeaway' ? last.visual.text : '';
-  let y = H * 0.3;
+  // title + source, vertically centred (the takeaway beat just said the one thing to remember)
+  const f = fitFont(ctx, tl.title, W * 0.7, 2, 72 * s, 48 * s, 700, 'display');
+  const lh = f.px * 1.15;
+  const block = 34 * s + 40 * s + f.lines.length * lh + 30 * s + 40 * s + 56 * s;
+  let y = H / 2 - block / 2;
   pill(
     ctx,
     'Made with Bridge',
     W / 2,
-    y,
+    y + 17 * s,
     30 * s,
     theme.tone.primary,
     theme.onTone.primary,
     clamp01(easeOutBack(prog(t, 0.15, 0.4))),
   );
-  y += 90 * s;
-  if (take) {
-    const tf = fitFont(ctx, take, W * 0.8, 2, 64 * s, 44 * s, 700, 'display');
-    ctx.font = font(tf.px, 700, 'display');
-    ctx.fillStyle = theme.ink;
-    tf.lines.forEach((l, i) => ctx.fillText(l, W / 2, y + i * tf.px * 1.15));
-    y += tf.lines.length * tf.px * 1.15 + 50 * s;
-  }
-  const f = fitFont(ctx, tl.title, W * 0.8, 1, 44 * s, 34 * s, 600, 'sans');
-  ctx.font = font(f.px, 600, 'sans');
+  y += 34 * s + 40 * s + f.px;
+  ctx.font = font(f.px, 700, 'display');
+  ctx.fillStyle = theme.ink;
+  f.lines.forEach((l, i) => ctx.fillText(l, W / 2, y + i * lh));
+  y += (f.lines.length - 1) * lh + 70 * s;
+  ctx.font = font(36 * s, 600, 'sans');
   ctx.fillStyle = theme.muted;
-  ctx.fillText(f.lines[0] ?? '', W / 2, y);
-  y += 56 * s;
-  ctx.font = font(34 * s, 600, 'sans');
   if (opts.origin) ctx.fillText(`Source: ${prettyOrigin(opts.origin)}`, W / 2, y);
   ctx.font = font(32 * s, 500, 'sans');
-  ctx.fillStyle = theme.muted;
   ctx.fillText('Every claim is traced to the source: see the source map.', W / 2, y + 56 * s);
   ctx.restore();
 }

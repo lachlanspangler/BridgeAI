@@ -77,8 +77,15 @@ export function fitFont(
     const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
     if (lines.length <= maxLines && widest <= maxWidth) return { px, lines };
   }
-  ctx.font = font(minPx, weight, family);
-  return { px: minPx, lines: wrap(ctx, text, maxWidth).slice(0, maxLines) };
+  // never drop words silently: shrink a little further, then keep every line (an extra line beats a lie)
+  for (let px = minPx - 2; px >= minPx * 0.75; px -= 2) {
+    ctx.font = font(px, weight, family);
+    const lines = wrap(ctx, text, maxWidth);
+    if (lines.length <= maxLines) return { px, lines };
+  }
+  const px = Math.round(minPx * 0.75);
+  ctx.font = font(px, weight, family);
+  return { px, lines: wrap(ctx, text, maxWidth) };
 }
 
 const norm = (w: string): string =>
